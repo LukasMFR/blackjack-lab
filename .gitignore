@@ -1,3 +1,40 @@
+# Local agent tooling
 .agents/
 .claude/
 skills-lock.json
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Linux
+.directory
+*~
+
+# Editors / IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-workspace
+
+# Logs
+*.log
+logs/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Dependencies & build output (in case tooling is added later)
+node_modules/
+dist/
+build/
+.cache/
