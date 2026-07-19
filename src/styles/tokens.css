@@ -1,0 +1,162 @@
+/*
+ * Design tokens. Two axes:
+ *   data-theme = "classic" | "minimal"   (visual identity)
+ *   data-mode  = "light" | "dark"        (resolved appearance; JS resolves
+ *                                         "system" to one of these)
+ * Every component reads tokens only; no component hardcodes a color.
+ */
+
+:root {
+  /* Type */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --text-xs: 0.75rem;
+  --text-s: 0.875rem;
+  --text-m: 1rem;
+  --text-l: clamp(1.1rem, 1rem + 0.5vw, 1.3rem);
+  --text-xl: clamp(1.3rem, 1.1rem + 1vw, 1.7rem);
+
+  /* Space */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+
+  /* Shape: one coherent scale for the whole app */
+  --radius-s: 6px;
+  --radius-m: 10px;
+  --radius-l: 16px;
+
+  /* Cards (identity-stable across themes and modes) */
+  --card-w: clamp(3.4rem, 9.5vw + 1.4rem, 5.4rem);
+  --card-face: #fdfcf6;
+  --card-face-edge: #d9d4c6;
+  --card-ink: #21211f;
+  --card-red: #b3262e;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 140ms;
+  --dur-med: 260ms;
+
+  /* Layers */
+  --z-controls: 10;
+  --z-toast: 30;
+}
+
+/* ---------------------------------------------------------------- classic */
+
+[data-theme="classic"][data-mode="light"] {
+  --bg: #eae5d9;
+  --surface: #f8f5ee;
+  --surface-raised: #fdfbf6;
+  --border: #cfc8b6;
+  --border-strong: #a89e86;
+  --text: #262218;
+  --text-muted: #6b6353;
+  --felt: #2d6a4b;
+  --felt-deep: #1f5138;
+  --felt-line: #ffffff2e;
+  --on-felt: #f3efe4;
+  --on-felt-muted: #d4dcce;
+  --accent: #8a6a24;
+  --accent-strong: #6f5316;
+  --on-accent: #fdf9ec;
+  --focus: #1651c8;
+  --win: #1c6b43;
+  --loss: #a03028;
+  --push: #6b6353;
+  --gold: #8a6a24;
+  --card-back-a: #7d1f26;
+  --card-back-b: #641318;
+  --shadow: 0 10px 28px rgb(48 40 20 / 0.16);
+}
+
+[data-theme="classic"][data-mode="dark"] {
+  --bg: #141613;
+  --surface: #1d201b;
+  --surface-raised: #262a24;
+  --border: #3a3f36;
+  --border-strong: #565c50;
+  --text: #e9e5d9;
+  --text-muted: #a8a293;
+  --felt: #1c4a34;
+  --felt-deep: #133828;
+  --felt-line: #ffffff24;
+  --on-felt: #ede9dd;
+  --on-felt-muted: #b8c4b2;
+  --accent: #c8a250;
+  --accent-strong: #dcb96b;
+  --on-accent: #241c08;
+  --focus: #8db4ff;
+  --win: #55c98a;
+  --loss: #f08a80;
+  --push: #a8a293;
+  --gold: #d3ab55;
+  --card-back-a: #7d2229;
+  --card-back-b: #55151a;
+  --shadow: 0 10px 28px rgb(0 0 0 / 0.45);
+}
+
+/* ---------------------------------------------------------------- minimal */
+
+[data-theme="minimal"][data-mode="light"] {
+  --bg: #f7f7f5;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --border: #dcdcd7;
+  --border-strong: #b4b4ad;
+  --text: #1d1d1a;
+  --text-muted: #62625b;
+  --felt: #ebebe7;
+  --felt-deep: #e2e2dc;
+  --felt-line: #00000014;
+  --on-felt: #1d1d1a;
+  --on-felt-muted: #62625b;
+  --accent: #04715c;
+  --accent-strong: #035a49;
+  --on-accent: #f4fbf8;
+  --focus: #1651c8;
+  --win: #0d7a4d;
+  --loss: #b32e26;
+  --push: #62625b;
+  --gold: #8a6a24;
+  --card-back-a: #04715c;
+  --card-back-b: #024b3d;
+  --shadow: 0 8px 24px rgb(20 20 15 / 0.08);
+}
+
+[data-theme="minimal"][data-mode="dark"] {
+  --bg: #121214;
+  --surface: #1b1b1e;
+  --surface-raised: #232327;
+  --border: #35353a;
+  --border-strong: #55555c;
+  --text: #ebebe8;
+  --text-muted: #a2a29b;
+  --felt: #202023;
+  --felt-deep: #1a1a1d;
+  --felt-line: #ffffff16;
+  --on-felt: #ebebe8;
+  --on-felt-muted: #a2a29b;
+  --accent: #2fbf9a;
+  --accent-strong: #4cd6b2;
+  --on-accent: #06231b;
+  --focus: #8db4ff;
+  --win: #4ccf92;
+  --loss: #f2887e;
+  --push: #a2a29b;
+  --gold: #d3ab55;
+  --card-back-a: #17705c;
+  --card-back-b: #0e4a3c;
+  --shadow: 0 8px 24px rgb(0 0 0 / 0.5);
+}
+
+/* Dark mode slightly dims card faces so they do not glare. */
+[data-mode="dark"] {
+  --card-face: #efece2;
+  --card-face-edge: #b9b4a4;
+}

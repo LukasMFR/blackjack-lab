@@ -1,0 +1,323 @@
+/* Page structure: header, table column, side column, responsive rules. */
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) clamp(var(--space-3), 3vw, var(--space-6));
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  min-height: 3.5rem;
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.brand__name {
+  font-size: var(--text-l);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-5);
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: clamp(var(--space-3), 3vw, var(--space-6));
+}
+
+.table-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.side-column {
+  min-width: 0;
+}
+
+/* ------------------------------------------------------------- the table */
+
+.table {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(var(--space-3), 2.5vw, var(--space-5));
+  padding: clamp(var(--space-4), 3.5vw, var(--space-6));
+  border-radius: var(--radius-l);
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgb(255 255 255 / 0.07), transparent 60%),
+    radial-gradient(140% 120% at 50% 110%, rgb(0 0 0 / 0.22), transparent 55%),
+    var(--felt);
+  border: 1px solid var(--felt-deep);
+  box-shadow: inset 0 0 0 1px var(--felt-line), var(--shadow);
+  color: var(--on-felt);
+  min-height: clamp(20rem, 52vh, 30rem);
+}
+
+[data-theme="classic"] .table {
+  /* Subtle felt weave, generated locally. */
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgb(255 255 255 / 0.06), transparent 60%),
+    radial-gradient(140% 120% at 50% 110%, rgb(0 0 0 / 0.28), transparent 55%),
+    repeating-linear-gradient(45deg, rgb(255 255 255 / 0.012) 0 2px, transparent 2px 4px),
+    repeating-linear-gradient(-45deg, rgb(0 0 0 / 0.015) 0 2px, transparent 2px 4px),
+    var(--felt);
+  border: 2px solid var(--felt-deep);
+  box-shadow:
+    inset 0 0 0 1px var(--felt-line),
+    inset 0 0 60px rgb(0 0 0 / 0.18),
+    var(--shadow);
+}
+
+[data-theme="minimal"] .table {
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+
+.hand-area {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.hand-area--player {
+  margin-top: auto;
+}
+
+.hand-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.hand-name {
+  font-size: var(--text-s);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--on-felt-muted);
+}
+
+.table-message {
+  min-height: 1.6em;
+  text-align: center;
+  font-size: var(--text-l);
+  font-weight: 600;
+  color: var(--on-felt);
+  text-wrap: balance;
+}
+
+/* Card rows: overlap progressively so long hands never overflow. */
+.cards {
+  display: flex;
+  align-items: flex-start;
+  min-height: calc(var(--card-w) * 1.4 + 2px);
+}
+
+.cards > .card {
+  flex: 0 1 auto;
+  margin-inline-end: calc(var(--card-w) * -0.55);
+}
+
+.cards > .card:last-child {
+  margin-inline-end: 0;
+}
+
+.cards--roomy > .card {
+  margin-inline-end: calc(var(--card-w) * -0.3);
+}
+
+/* Split hands grid */
+.hands {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(11.5rem, 100%), 1fr));
+  gap: var(--space-3);
+  align-items: end;
+}
+
+.hands--single {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+}
+
+/* ------------------------------------------------------------- controls */
+
+.controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-l);
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.status-strip {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+}
+
+.stat {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.stat__label {
+  font-size: var(--text-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+}
+
+.stat__value {
+  font-size: var(--text-l);
+  font-variant-numeric: tabular-nums;
+}
+
+.shoe-count {
+  margin-inline-start: auto;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.panel__prompt {
+  font-weight: 600;
+  font-size: var(--text-m);
+}
+
+.panel__prompt--result {
+  font-size: var(--text-l);
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.button-row--actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(7.2rem, 1fr));
+  gap: var(--space-2);
+}
+
+.fictional-note {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* ------------------------------------------------------------ responsive */
+
+@media (min-width: 1024px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) 19rem;
+    align-items: start;
+  }
+
+  .side-column {
+    position: sticky;
+    top: var(--space-4);
+  }
+}
+
+@media (max-width: 1023.98px) {
+  .side-column {
+    order: 2;
+  }
+}
+
+@media (max-width: 640px) {
+  .layout {
+    padding-inline: var(--space-3);
+    padding-block: var(--space-3) calc(var(--space-3) + env(safe-area-inset-bottom));
+    gap: var(--space-4);
+  }
+
+  /* Keep decisions under the thumb. */
+  .controls {
+    position: sticky;
+    bottom: calc(var(--space-2) + env(safe-area-inset-bottom));
+    z-index: var(--z-controls);
+    box-shadow: var(--shadow);
+  }
+
+  .table {
+    min-height: clamp(17rem, 46vh, 24rem);
+  }
+
+  .status-strip {
+    gap: var(--space-4);
+  }
+
+  .brand__name {
+    font-size: var(--text-m);
+  }
+
+  /* Two-row header: brand and badge on top, actions below. */
+  .app-header {
+    flex-wrap: wrap;
+    row-gap: var(--space-1);
+    padding-block: var(--space-2);
+  }
+
+  .header-actions {
+    margin-inline-start: auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}
+
+/* Short landscape phones: compress vertical rhythm, shrink cards. */
+@media (max-height: 480px) and (orientation: landscape) {
+  :root {
+    --card-w: clamp(2.9rem, 8vh + 1rem, 4rem);
+  }
+
+  .table {
+    min-height: 0;
+    gap: var(--space-2);
+    padding: var(--space-3);
+  }
+
+  .app-header {
+    padding-block: var(--space-1);
+    min-height: 2.5rem;
+  }
+
+  .layout {
+    padding-block: var(--space-2);
+    gap: var(--space-2);
+  }
+
+  .controls {
+    position: static;
+    padding: var(--space-2) var(--space-3);
+  }
+}
