@@ -2,7 +2,7 @@
 
 ## 1. Project Purpose
 
-Build a browser-based blackjack simulator inspired by the standard rules used in French land-based casinos.
+Build a browser-based blackjack simulator that supports the major blackjack rule systems used around the world. The French casino profile remains the default, but the engine must not be France-only.
 
 This project is:
 
@@ -92,45 +92,74 @@ There must be one authoritative implementation for every rule. Do not duplicate 
 
 ---
 
-## 5. Default Game Profile
+## 5. Game Profiles
 
-The default profile is named:
+The engine must support named rule profiles. A profile is a complete, immutable set of blackjack rules.
+
+The default profile is:
 
 ```text
 FRENCH_STANDARD
 ```
 
-Default settings:
+Default French settings:
 
 | Setting | Default |
 |---|---:|
 | Number of decks | 6 |
 | Starting bankroll | 1,000 |
 | Default bet | 50 |
-| Dealer hole card | No |
+| Deal mode | European No Hole Card |
 | Dealer action on soft 17 | Stand |
 | Blackjack payout | 3:2 |
 | Insurance | Available |
 | Surrender | Disabled |
 | Double after split | Allowed |
-| Split aces | Once only |
+| Split Aces | Once only |
+| Dealer blackjack loss mode | All committed bets lost |
 | Side bets | Disabled |
 
-All casino-dependent rules must remain configurable. Do not silently hardcode an establishment-specific variation.
+The engine must include these standard profiles:
+
+| Profile | Main characteristics |
+|---|---|
+| `FRENCH_STANDARD` | 6 decks, ENHC, S17, 3:2, insurance available, no surrender, DAS allowed |
+| `EUROPEAN_ENHC` | European no-hole-card rules with deck count, S17/H17, DAS and surrender configurable |
+| `LAS_VEGAS_STRIP` | American hole card, dealer peek, multi-deck, usually S17, 3:2, DAS allowed |
+| `ATLANTIC_CITY` | 8 decks, American hole card and peek, S17, 3:2, DAS and late surrender allowed |
+| `VEGAS_DOWNTOWN` | 1 or 2 decks, American hole card and peek, commonly H17, 3:2, other rules configurable |
+| `SINGLE_DECK_3_2` | One deck, natural blackjack paid 3:2, all other rules explicit and configurable |
+| `BLACKJACK_6_5` | Standard blackjack engine with natural blackjack paid 6:5; never treat it as equivalent to 3:2 |
+| `CUSTOM` | Every supported rule supplied explicitly by configuration |
+
+Casino names are descriptive presets, not universal truths. Real tables may differ. Every profile value must be visible, explicit, and overridable through configuration.
+
+The architecture must also allow dedicated rule modules for major non-standard blackjack families:
+
+- `SPANISH_21`
+- `PONTOON`
+- `DOUBLE_EXPOSURE`
+- `BLACKJACK_SWITCH`
+- `FREE_BET_BLACKJACK`
+- `SUPER_FUN_21`
+
+These variants must not be simulated by changing only one or two standard settings when their core rules differ. Each one requires its own documented rule module, payout table, legal-action logic, and settlement logic.
 
 ---
 
 ## 6. Cards and Shoe
 
-### 6.1 Card set
+### 6.1 Deck composition
 
-Each deck contains exactly 52 cards:
+A standard blackjack deck contains exactly 52 cards:
 
 - 13 ranks.
 - 4 suits.
 - No jokers.
 
-Six decks contain exactly 312 cards.
+Six standard decks contain exactly 312 cards.
+
+Deck composition must be configurable for dedicated variants. For example, Spanish 21 uses a 48-card Spanish deck with the four rank-10 cards removed while Jacks, Queens, and Kings remain.
 
 ### 6.2 Card values
 
@@ -160,9 +189,11 @@ Never:
 
 ---
 
-## 7. Initial Deal — European No Hole Card
+## 7. Initial Deal Modes
 
-Use the European No Hole Card procedure.
+The active profile determines the dealing procedure.
+
+### 7.1 European No Hole Card (`ENHC`)
 
 Initial dealing order:
 
@@ -170,11 +201,26 @@ Initial dealing order:
 2. One visible card to the dealer.
 3. A second card to the player.
 
-The dealer does **not** receive a hidden second card during the initial deal.
+The dealer does not receive a second card during the initial deal. The dealer draws it only after all active player hands have completed their actions.
 
-The dealer receives the second card only after all active player hands have completed their actions.
+### 7.2 American Hole Card (`AMERICAN_HOLE_CARD`)
 
-All dealt cards are face up.
+Initial dealing order:
+
+1. One card to the player.
+2. One visible card to the dealer.
+3. A second card to the player.
+4. One face-down hole card to the dealer.
+
+When dealer peek is enabled and the upcard is an Ace or a ten-value card, the dealer checks for blackjack before normal player actions begin.
+
+When dealer peek is disabled, the hole card remains unresolved until the dealer turn.
+
+### 7.3 Variant-Specific Deals
+
+Variants such as Double Exposure, Blackjack Switch, Pontoon, and Free Bet Blackjack may use different initial layouts or multiple player hands. Their dealing rules must be implemented in their dedicated variant module.
+
+Player cards are face up. Dealer-card visibility is controlled entirely by the active deal mode.
 
 ---
 
@@ -248,15 +294,16 @@ The default profile allows doubling on any two-card total, including after a spl
 
 A split is allowed only when:
 
-- The hand contains exactly two cards of equal blackjack value.
+- The hand contains exactly two cards accepted as a pair by the active profile.
 - The player has enough fictional bankroll to place an equal additional bet.
 - The configured split limit has not been reached.
 
-Examples of equal blackjack value:
+The profile must explicitly choose one pairing rule:
 
-- 8 and 8.
-- King and Queen.
-- 10 and Jack.
+- `EQUAL_VALUE`: all ten-value cards may be paired together.
+- `IDENTICAL_RANK`: only cards with the same rank may be paired.
+
+Examples under `EQUAL_VALUE` include 8 and 8, King and Queen, or 10 and Jack. Under `IDENTICAL_RANK`, King and Queen may not be split.
 
 After a split:
 
@@ -281,39 +328,50 @@ Under the default profile:
 
 ### 9.6 Surrender
 
-Surrender is disabled in the default profile.
+Surrender is disabled in the default French profile.
 
-The engine may support it as a configurable rule.
+The engine must support these configurable modes:
 
-When enabled:
+- `NONE`
+- `EARLY_SURRENDER`
+- `LATE_SURRENDER`
 
-- It is available only on the original two-card hand.
+General rules:
+
+- Surrender is available only on an eligible original two-card hand.
 - It must occur before hit, double, or split.
-- It is unavailable when the dealer's visible card is an Ace.
-- The player loses half of the hand bet.
-- The other half is returned.
+- The player normally loses half of the hand bet and receives the other half back.
+
+Timing and dealer-upcard restrictions depend on the profile:
+
+- Early surrender occurs before the dealer checks for blackjack.
+- Late surrender occurs only after dealer blackjack has been ruled out.
+- Any restriction against surrendering versus an Ace or ten-value upcard must be explicit in configuration.
 
 ---
 
 ## 10. Dealer Rules
 
-The dealer acts only after every player hand is complete, bust, surrendered, or automatically closed.
+The dealer has no strategic choices. Dealer behavior is controlled by the active profile.
 
-The dealer then draws the second card.
-
-Dealer behavior:
+Common configurable rules:
 
 - Hit on 16 or less.
-- Stand on 17 or more.
-- Stand on soft 17.
-- Continue drawing until reaching at least 17 or going bust.
-- The dealer has no strategic choices.
+- Stand on hard 17 or more.
+- Either stand on soft 17 (`S17`) or hit soft 17 (`H17`).
+- Continue drawing until the configured stopping rule is met or the dealer busts.
 
-An Ace must be counted as 11 when doing so produces a total of at least 17 without exceeding 21.
+Dealer timing depends on the deal mode:
+
+- Under ENHC, the dealer draws the second card after every player hand is complete, bust, surrendered, or automatically closed.
+- Under American hole-card rules, the dealer already has a second card and reveals it at the correct profile-defined time.
+- Under peek rules, dealer blackjack may end the round before normal player actions.
+
+An Ace is counted as 11 whenever that produces the best legal total without exceeding 21.
 
 ---
 
-## 11. Natural Blackjack and European Dealer Blackjack
+## 11. Natural Blackjack and Dealer Blackjack
 
 A player natural blackjack is:
 
@@ -321,36 +379,59 @@ A player natural blackjack is:
 - Exactly two original cards.
 - Not produced after a split.
 
-A natural blackjack pays 3:2 unless the dealer also has a natural blackjack.
+A natural blackjack uses the payout configured by the active profile, normally 3:2 or 6:5.
 
-Because the dealer receives no hole card initially:
+A player natural blackjack against dealer blackjack is a push unless a dedicated variant explicitly defines another result.
 
-- Players may hit, double, or split before the dealer's blackjack is known.
-- If the dealer later receives a ten-value card with an Ace showing, or an Ace with a ten-value card showing, the dealer has blackjack.
-- Under the default profile, dealer blackjack defeats every non-blackjack player hand.
-- All amounts committed to a losing hand, including added double and split bets, are lost.
-- A player natural blackjack against dealer blackjack is a push.
+Dealer-blackjack handling must support these modes:
 
-This behavior must be explicit and must not be replaced with American hole-card behavior.
+### 11.1 `PEEK_PROTECTED`
+
+Used by American peek games.
+
+- The dealer checks for blackjack before normal player actions when required.
+- If the dealer has blackjack, the round ends immediately.
+- Players are not exposed to later double or split wagers.
+
+### 11.2 `ALL_BETS_LOST`
+
+Common European no-hole-card behavior.
+
+- Players may act before the dealer's blackjack is known.
+- If the dealer later has blackjack, every non-blackjack hand loses.
+- All committed wagers on that hand, including double and split additions, are lost.
+
+### 11.3 `ORIGINAL_BETS_ONLY`
+
+Used by some no-hole-card games.
+
+- The original wager may be lost to dealer blackjack.
+- Extra wagers created by doubles or splits are returned according to the configured rule.
+
+Never infer dealer-blackjack behavior from geography alone. It must be an explicit profile setting.
 
 ---
 
 ## 12. Insurance
 
-Insurance is offered only when the dealer's visible card is an Ace.
+Insurance is offered only when the active profile allows it and the dealer's visible card is an Ace.
 
 Insurance rules:
 
-- The insurance bet equals half of the original main bet.
+- The insurance bet normally equals half of the original main bet.
 - The player must have enough fictional bankroll.
-- Insurance is resolved after the dealer draws the second card.
-- If the dealer has blackjack, insurance pays 2:1.
+- If the dealer has blackjack, insurance normally pays 2:1.
 - If the dealer does not have blackjack, the insurance bet is lost.
 - The main hand is resolved separately.
 
-Insurance must never be automatically selected.
+Resolution timing depends on the deal mode:
 
-No “even money” shortcut is required.
+- Under peek rules, resolve insurance immediately after the dealer checks the hole card.
+- Under ENHC, resolve insurance when the dealer receives the second card.
+
+Insurance must never be selected automatically.
+
+An “even money” option may be supported only as an explicit profile feature and must be mathematically equivalent to taking insurance on a player blackjack.
 
 ---
 
@@ -480,22 +561,48 @@ Every state transition must be deliberate and traceable.
 
 ## 17. Configuration
 
-Rules that may vary by casino must be represented as configuration values, including:
+Rules that may vary by casino or variant must be represented as configuration values, including:
 
-- Number of decks.
+- Profile identifier and variant family.
+- Number of decks and deck composition.
+- Deal mode: ENHC, American hole card, double exposure, or variant-specific.
+- Dealer peek behavior.
 - Dealer stands or hits on soft 17.
 - Blackjack payout.
-- Insurance availability.
-- Surrender availability.
+- Normal-win payout.
+- Insurance availability, size, payout, and timing.
+- Surrender type: none, early, or late.
 - Double restrictions.
 - Double after split.
 - Maximum number of split hands.
 - Whether equal-value or identical-rank cards may be split.
 - Whether split Aces may be re-split.
 - Number of cards allowed after splitting Aces.
-- European dealer-blackjack loss behavior.
+- Whether a split 21 counts as blackjack.
+- Dealer-blackjack loss mode: peek protected, all bets lost, or original bets only.
+- Push rules, including special dealer-22 behavior where applicable.
+- Special bonuses and payout tables.
+- Special actions such as switch, free double, free split, or five-card tricks.
+- Side-bet availability.
 
 Do not scatter configuration checks throughout unrelated UI code.
+
+### 17.1 Standard Blackjack Profiles
+
+Standard profiles must use the shared core engine whenever their differences are expressible through configuration.
+
+### 17.2 Dedicated Variant Modules
+
+The following families require dedicated behavior beyond a standard profile:
+
+- **Spanish 21:** Spanish decks omit the four rank-10 cards; player 21 and bonus payouts require dedicated resolution rules.
+- **Pontoon:** terminology, dealer-card visibility, forced-hit rules, five-card tricks, and payout priorities vary by Pontoon ruleset.
+- **Double Exposure:** both dealer cards are visible; altered payouts and dealer-win-on-tie rules may apply.
+- **Blackjack Switch:** two simultaneous hands, card switching, altered blackjack payout, and dealer 22 push behavior.
+- **Free Bet Blackjack:** designated doubles and splits use free wagers; dealer 22 usually pushes non-blackjack hands.
+- **Super Fun 21:** player-friendly action rules and special payouts require a dedicated payout and settlement table.
+
+Every dedicated variant must declare all deviations from standard blackjack in one authoritative specification. Do not blend rules from different variants.
 
 ---
 
@@ -576,7 +683,8 @@ Current scope:
 - Card model.
 - Shoe model.
 - Hand evaluation.
-- Rule configuration.
+- Rule profiles and global configuration.
+- Standard blackjack profiles.
 - Player actions.
 - Dealer behavior.
 - Round settlement.
@@ -598,6 +706,9 @@ Out of scope until explicitly requested:
 - Card counting tools.
 - Advanced analytics.
 - Side bets.
+- Full implementation of dedicated non-standard variants unless explicitly requested.
+
+The architecture must already be compatible with every listed profile and variant family, but implement dedicated variants one at a time only when explicitly requested.
 
 Do not expand the scope without explicit user approval.
 
@@ -605,9 +716,22 @@ Do not expand the scope without explicit user approval.
 
 ## 22. Source of Truth
 
-For the default French profile, the primary rule reference is the French casino regulation:
+There is no single universal blackjack ruleset.
+
+For every named profile or dedicated variant:
+
+- Store the complete rule definition in one place.
+- Document the source used for that profile.
+- Record any deliberate project simplification.
+- Never silently combine rules from different casinos or jurisdictions.
+- Prefer official regulations, official casino rules, or the game owner's published rules over secondary summaries.
+
+For `FRENCH_STANDARD`, the primary reference is the French casino regulation:
 
 - Arrêté du 14 mai 2007 relatif à la réglementation des jeux dans les casinos.
 - Section concerning blackjack, especially Article 55-4.
 
-When a project rule intentionally differs from a casino-specific variation, document the difference clearly in code comments and configuration.
+For geographic presets such as Las Vegas Strip, Downtown Las Vegas, Atlantic City, or generic European blackjack, treat the profile as a documented representative preset. Real casino tables may use different rules, so every setting must remain visible and configurable.
+
+For proprietary variants such as Spanish 21, Blackjack Switch, Free Bet Blackjack, Double Exposure, Pontoon, or Super Fun 21, use a dedicated rules specification and payout table before implementation.
+
