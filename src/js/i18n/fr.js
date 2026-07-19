@@ -199,6 +199,11 @@ export default {
     originalBetsOnly: 'BJ croupier prend les mises initiales',
     peekProtected: 'Le contrôle protège les mises extra',
   },
+  session: {
+    title: 'Session',
+    rounds: 'Manches jouées',
+    net: 'Résultat net',
+  },
   history: {
     title: 'Historique',
     empty: 'Aucune manche jouée pour l’instant.',

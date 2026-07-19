@@ -10,11 +10,11 @@
   /* Type */
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
     "Helvetica Neue", Arial, sans-serif;
-  --text-xs: 0.75rem;
-  --text-s: 0.875rem;
-  --text-m: 1rem;
-  --text-l: clamp(1.1rem, 1rem + 0.5vw, 1.3rem);
-  --text-xl: clamp(1.3rem, 1.1rem + 1vw, 1.7rem);
+  --text-xs: clamp(0.75rem, 0.72rem + 0.15vw, 0.8125rem);
+  --text-s: clamp(0.875rem, 0.845rem + 0.15vw, 0.9375rem);
+  --text-m: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+  --text-l: clamp(1.125rem, 1.04rem + 0.45vw, 1.375rem);
+  --text-xl: clamp(1.35rem, 1.19rem + 0.8vw, 1.8rem);
 
   /* Space */
   --space-1: 0.25rem;
@@ -29,9 +29,10 @@
   --radius-s: 6px;
   --radius-m: 10px;
   --radius-l: 16px;
+  --radius-xl: 24px;
 
   /* Cards (identity-stable across themes and modes) */
-  --card-w: clamp(3.4rem, 9.5vw + 1.4rem, 5.4rem);
+  --card-w: clamp(4rem, 7.5vw + 1.6rem, 7.25rem);
   --card-face: #fdfcf6;
   --card-face-edge: #d9d4c6;
   --card-ink: #21211f;

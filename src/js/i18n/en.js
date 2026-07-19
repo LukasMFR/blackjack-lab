@@ -199,6 +199,11 @@ export default {
     originalBetsOnly: 'Dealer BJ takes original bets only',
     peekProtected: 'Peek protects extra bets',
   },
+  session: {
+    title: 'Session',
+    rounds: 'Rounds played',
+    net: 'Net result',
+  },
   history: {
     title: 'History',
     empty: 'No rounds played yet.',

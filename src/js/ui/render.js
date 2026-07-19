@@ -41,6 +41,10 @@ export function renderStaticLabels() {
   $('btn-rebet').textContent = t('bet.rebet');
   $('btn-deal').textContent = t('bet.deal');
   $('btn-next').textContent = t('round.newRound');
+  $('profile-title').textContent = t('nav.profile');
+  $('session-title').textContent = t('session.title');
+  $('session-rounds-label').textContent = t('session.rounds');
+  $('session-net-label').textContent = t('session.net');
   $('history-title').textContent = t('history.title');
   $('history-empty').textContent = t('history.empty');
   $('live-region').setAttribute('aria-label', t('a11y.announcements'));
@@ -362,6 +366,25 @@ export function renderHistory(entries) {
     }
     item.append(desc, net);
     list.append(item);
+  }
+}
+
+/**
+ * Sidebar session summary.
+ * @param {{rounds: number, netCents: number}} sessionState
+ */
+export function renderSession({ rounds, netCents }) {
+  $('session-rounds').textContent = String(rounds);
+  const netEl = $('session-net');
+  netEl.classList.remove('session__net--win', 'session__net--loss');
+  if (netCents > 0) {
+    netEl.classList.add('session__net--win');
+    netEl.textContent = `+${formatMoney(netCents)}`;
+  } else if (netCents < 0) {
+    netEl.classList.add('session__net--loss');
+    netEl.textContent = `-${formatMoney(-netCents)}`;
+  } else {
+    netEl.textContent = formatMoney(0);
   }
 }
 

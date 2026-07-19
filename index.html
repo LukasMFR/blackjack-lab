@@ -33,11 +33,6 @@
 
   <div class="layout">
     <main class="table-column">
-      <button type="button" id="btn-profile" class="profile-chip" aria-haspopup="dialog">
-        <span class="profile-chip__name" id="profile-chip-name"></span>
-        <span class="profile-chip__meta" id="profile-chip-meta"></span>
-      </button>
-
       <section class="table" id="table" tabindex="-1">
         <section class="hand-area hand-area--dealer" aria-labelledby="dealer-label">
           <header class="hand-header">
@@ -83,8 +78,8 @@
 
         <div id="panel-actions" class="panel" hidden>
           <div class="button-row button-row--actions" role="group" aria-labelledby="controls-label">
-            <button type="button" data-action="HIT" class="btn btn--action"></button>
-            <button type="button" data-action="STAND" class="btn btn--action"></button>
+            <button type="button" data-action="HIT" class="btn btn--action btn--action-primary"></button>
+            <button type="button" data-action="STAND" class="btn btn--action btn--action-primary"></button>
             <button type="button" data-action="DOUBLE" class="btn btn--action"></button>
             <button type="button" data-action="SPLIT" class="btn btn--action"></button>
             <button type="button" data-action="SURRENDER" class="btn btn--action"></button>
@@ -111,8 +106,28 @@
     </main>
 
     <aside class="side-column">
-      <section class="history" aria-labelledby="history-title">
-        <h2 class="history__title" id="history-title"></h2>
+      <button type="button" id="btn-profile" class="side-card profile-chip" aria-haspopup="dialog">
+        <span class="side-title" id="profile-title"></span>
+        <span class="profile-chip__name" id="profile-chip-name"></span>
+        <span class="profile-chip__meta" id="profile-chip-meta"></span>
+      </button>
+
+      <section class="side-card session" aria-labelledby="session-title">
+        <h2 class="side-title" id="session-title"></h2>
+        <dl class="session__stats">
+          <div class="session__row">
+            <dt id="session-rounds-label"></dt>
+            <dd id="session-rounds"></dd>
+          </div>
+          <div class="session__row">
+            <dt id="session-net-label"></dt>
+            <dd id="session-net"></dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="side-card history" aria-labelledby="history-title">
+        <h2 class="side-title" id="history-title"></h2>
         <ol class="history__list" id="history-list"></ol>
         <p class="history__empty fine-print" id="history-empty"></p>
       </section>

@@ -10,7 +10,7 @@ import { formatMoney } from './format.js';
 import { cardLabel } from './cardView.js';
 import { profileSummaryChips } from './profileSummary.js';
 import {
-  announce, renderHistory, renderPanels, renderStaticLabels, renderTable, showToast,
+  announce, renderHistory, renderPanels, renderSession, renderStaticLabels, renderTable, showToast,
 } from './render.js';
 import { initSettingsView } from './settingsView.js';
 
@@ -36,6 +36,7 @@ const state = {
   betCents: 0,
   history: [],
   roundCounter: 0,
+  sessionNetCents: 0,
   roundRecorded: false,
 };
 
@@ -159,12 +160,14 @@ function renderAll() {
     labels: entry.results.map((r) => t(`results.${r}`))
       .concat(entry.insurance ? [t('history.insurance')] : []),
   })));
+  renderSession({ rounds: state.roundCounter, netCents: state.sessionNetCents });
 }
 
 function renderHeaderProfile() {
   $('profile-chip-name').textContent = t(`profiles.${state.profileId}.name`);
   const chips = profileSummaryChips(state.activeProfile);
-  $('profile-chip-meta').textContent = chips.slice(0, 4).join(' · ');
+  // One rule per line; the sidebar card has room for the full summary.
+  $('profile-chip-meta').textContent = chips.join('\n');
   $('btn-profile').setAttribute('aria-label', `${t('nav.profile')}: ${t(`profiles.${state.profileId}.name`)}`);
 }
 
@@ -249,6 +252,7 @@ function mutate(fn, { announceDiff = true } = {}) {
   if (after.roundState === ROUND_STATES.ROUND_COMPLETE && !state.roundRecorded) {
     state.roundRecorded = true;
     state.roundCounter += 1;
+    state.sessionNetCents += after.roundSummary.netCents;
     state.history.push({
       n: state.roundCounter,
       netCents: after.roundSummary.netCents,
@@ -287,6 +291,7 @@ function deal() {
     // Instant resolution (e.g. peeked dealer blackjack, immediate natural).
     state.roundRecorded = true;
     state.roundCounter += 1;
+    state.sessionNetCents += after.roundSummary.netCents;
     state.history.push({
       n: state.roundCounter,
       netCents: after.roundSummary.netCents,
@@ -367,6 +372,7 @@ const controller = {
     storage.clear(bankrollKey());
     state.history = [];
     state.roundCounter = 0;
+    state.sessionNetCents = 0;
     createGame();
     persistBankroll();
     renderAll();

@@ -5,10 +5,10 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  padding: var(--space-3) clamp(var(--space-3), 3vw, var(--space-6));
+  padding: var(--space-3) clamp(var(--space-4), 4vw, var(--space-7));
   border-bottom: 1px solid var(--border);
   background: var(--surface);
-  min-height: 3.5rem;
+  min-height: 4rem;
 }
 
 .brand {
@@ -19,9 +19,9 @@
 }
 
 .brand__name {
-  font-size: var(--text-l);
+  font-size: var(--text-xl);
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
   white-space: nowrap;
 }
 
@@ -34,8 +34,8 @@
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-5);
-  max-width: 1240px;
+  gap: clamp(var(--space-4), 2.5vw, var(--space-6));
+  width: min(100%, 1460px);
   margin: 0 auto;
   padding: clamp(var(--space-3), 3vw, var(--space-6));
 }
@@ -43,11 +43,14 @@
 .table-column {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: clamp(var(--space-4), 2vw, var(--space-5));
   min-width: 0;
 }
 
 .side-column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
   min-width: 0;
 }
 
@@ -57,9 +60,9 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: clamp(var(--space-3), 2.5vw, var(--space-5));
-  padding: clamp(var(--space-4), 3.5vw, var(--space-6));
-  border-radius: var(--radius-l);
+  gap: clamp(var(--space-3), 2.5vw, var(--space-6));
+  padding: clamp(var(--space-4), 3.5vw, var(--space-7));
+  border-radius: var(--radius-xl);
   background:
     radial-gradient(120% 90% at 50% 0%, rgb(255 255 255 / 0.07), transparent 60%),
     radial-gradient(140% 120% at 50% 110%, rgb(0 0 0 / 0.22), transparent 55%),
@@ -67,11 +70,11 @@
   border: 1px solid var(--felt-deep);
   box-shadow: inset 0 0 0 1px var(--felt-line), var(--shadow);
   color: var(--on-felt);
-  min-height: clamp(20rem, 52vh, 30rem);
+  min-height: clamp(22rem, 58vh, 44rem);
 }
 
 [data-theme="classic"] .table {
-  /* Subtle felt weave, generated locally. */
+  /* Subtle felt weave plus an inner rail, generated locally. */
   background:
     radial-gradient(120% 90% at 50% 0%, rgb(255 255 255 / 0.06), transparent 60%),
     radial-gradient(140% 120% at 50% 110%, rgb(0 0 0 / 0.28), transparent 55%),
@@ -81,7 +84,9 @@
   border: 2px solid var(--felt-deep);
   box-shadow:
     inset 0 0 0 1px var(--felt-line),
-    inset 0 0 60px rgb(0 0 0 / 0.18),
+    inset 0 0 0 9px rgb(0 0 0 / 0.1),
+    inset 0 0 0 10px var(--felt-line),
+    inset 0 0 70px rgb(0 0 0 / 0.18),
     var(--shadow);
 }
 
@@ -90,19 +95,23 @@
   border: 1px solid var(--border);
 }
 
+/* Dealer zone, message zone, and player zone share one centred axis. */
 .hand-area {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-3);
+  align-items: center;
 }
 
 .hand-area--player {
   margin-top: auto;
+  align-items: stretch;
 }
 
 .hand-header {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-3);
 }
 
@@ -114,25 +123,42 @@
   color: var(--on-felt-muted);
 }
 
+/* Centre message band with fading rules on either side. */
 .table-message {
-  min-height: 1.6em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  min-height: 2.4em;
   text-align: center;
-  font-size: var(--text-l);
-  font-weight: 600;
+  font-size: var(--text-xl);
+  font-weight: 700;
   color: var(--on-felt);
-  text-wrap: balance;
+}
+
+.table-message::before,
+.table-message::after {
+  content: "";
+  flex: 1 1 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--felt-line));
+}
+
+.table-message::after {
+  background: linear-gradient(to left, transparent, var(--felt-line));
 }
 
 /* Card rows: overlap progressively so long hands never overflow. */
 .cards {
   display: flex;
   align-items: flex-start;
+  justify-content: center;
   min-height: calc(var(--card-w) * 1.4 + 2px);
 }
 
 .cards > .card {
   flex: 0 1 auto;
-  margin-inline-end: calc(var(--card-w) * -0.55);
+  margin-inline-end: calc(var(--card-w) * -0.5);
 }
 
 .cards > .card:last-child {
@@ -140,15 +166,19 @@
 }
 
 .cards--roomy > .card {
-  margin-inline-end: calc(var(--card-w) * -0.3);
+  margin-inline-end: calc(var(--card-w) * -0.28);
 }
 
-/* Split hands grid */
+/* Split hands grid; several hands share the row with slightly smaller cards. */
 .hands {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(11.5rem, 100%), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
   gap: var(--space-3);
   align-items: end;
+}
+
+.hands:not(.hands--single) {
+  --card-w: clamp(3.6rem, 4.5vw + 1.4rem, 5.6rem);
 }
 
 .hands--single {
@@ -161,8 +191,8 @@
 .controls {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  padding: var(--space-4);
+  gap: var(--space-4);
+  padding: clamp(var(--space-4), 2vw, var(--space-5));
   border-radius: var(--radius-l);
   background: var(--surface);
   border: 1px solid var(--border);
@@ -170,15 +200,15 @@
 
 .status-strip {
   display: flex;
-  align-items: baseline;
-  gap: var(--space-5);
+  align-items: flex-end;
+  gap: clamp(var(--space-5), 4vw, var(--space-7));
   flex-wrap: wrap;
 }
 
 .stat {
   display: flex;
-  align-items: baseline;
-  gap: var(--space-2);
+  flex-direction: column;
+  gap: var(--space-1);
 }
 
 .stat__label {
@@ -189,12 +219,14 @@
 }
 
 .stat__value {
-  font-size: var(--text-l);
+  font-size: var(--text-xl);
+  line-height: 1.1;
   font-variant-numeric: tabular-nums;
 }
 
 .shoe-count {
   margin-inline-start: auto;
+  align-self: flex-end;
   font-size: var(--text-xs);
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
@@ -208,11 +240,11 @@
 
 .panel__prompt {
   font-weight: 600;
-  font-size: var(--text-m);
+  font-size: var(--text-l);
 }
 
 .panel__prompt--result {
-  font-size: var(--text-l);
+  font-size: var(--text-xl);
 }
 
 .button-row {
@@ -221,10 +253,11 @@
   gap: var(--space-2);
 }
 
+/* Desktop: one clean horizontal action bar. Narrow screens: a 2-up grid. */
 .button-row--actions {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(7.2rem, 1fr));
-  gap: var(--space-2);
+  grid-template-columns: repeat(auto-fit, minmax(min(8.5rem, 100%), 1fr));
+  gap: var(--space-3);
 }
 
 .fictional-note {
@@ -237,13 +270,27 @@
 
 @media (min-width: 1024px) {
   .layout {
-    grid-template-columns: minmax(0, 1fr) 19rem;
+    grid-template-columns: minmax(0, 1fr) clamp(19rem, 26vw, 23rem);
     align-items: start;
   }
 
   .side-column {
     position: sticky;
-    top: var(--space-4);
+    top: var(--space-5);
+  }
+}
+
+/* Tablet: sidebar content sits below the table in two columns. */
+@media (min-width: 641px) and (max-width: 1023.98px) {
+  .side-column {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+    align-items: start;
+  }
+
+  .side-column .history {
+    grid-column: 2;
+    grid-row: 1 / span 2;
   }
 }
 
@@ -269,22 +316,33 @@
   }
 
   .table {
-    min-height: clamp(17rem, 46vh, 24rem);
+    min-height: clamp(19rem, 48vh, 26rem);
+    border-radius: var(--radius-l);
   }
 
   .status-strip {
-    gap: var(--space-4);
+    gap: var(--space-5);
+  }
+
+  .button-row--actions {
+    grid-template-columns: repeat(auto-fit, minmax(min(7rem, 100%), 1fr));
+    gap: var(--space-2);
   }
 
   .brand__name {
-    font-size: var(--text-m);
+    font-size: var(--text-l);
   }
 
-  /* Two-row header: brand and badge on top, actions below. */
+  /* Language lives in the settings panel on small screens. */
+  .select--compact {
+    display: none;
+  }
+
   .app-header {
     flex-wrap: wrap;
     row-gap: var(--space-1);
     padding-block: var(--space-2);
+    min-height: 3.25rem;
   }
 
   .header-actions {
