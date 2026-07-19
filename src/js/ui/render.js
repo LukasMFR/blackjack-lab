@@ -49,7 +49,9 @@ export function renderStaticLabels() {
   $('history-empty').textContent = t('history.empty');
   $('live-region').setAttribute('aria-label', t('a11y.announcements'));
   for (const button of document.querySelectorAll('[data-action]')) {
-    button.textContent = t(`actions.${button.dataset.action}`);
+    // Icon-bearing buttons keep their SVG: only the label span is rewritten.
+    const label = button.querySelector('.btn__label');
+    (label ?? button).textContent = t(`actions.${button.dataset.action}`);
   }
   for (const button of document.querySelectorAll('[data-close-dialog]')) {
     button.textContent = t('settings.close');

@@ -88,20 +88,99 @@ kbd {
 
 .btn--action {
   min-height: 3.5rem;
+  padding-inline: var(--space-3);
   font-size: var(--text-m);
   font-weight: 700;
 }
 
-/* Hit and Stand are the primary decisions of the action bar. */
-.btn--action-primary:not(.is-disabled) {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--on-accent);
+.btn__icon {
+  display: inline-flex;
+  flex-shrink: 0;
 }
 
-.btn--action-primary:not(.is-disabled):hover {
-  background: var(--accent-strong);
-  border-color: var(--accent-strong);
+.btn__icon svg {
+  display: block;
+  width: 1.2em;
+  height: 1.2em;
+}
+
+/* Each action carries one semantic hue; the tokens live in tokens.css so
+   every theme/mode pair tunes them. Color never works alone: icon shape
+   and the translated label always carry the meaning too. */
+.btn--action[data-action="HIT"] {
+  --act: var(--act-hit);
+  --act-strong: var(--act-hit-strong);
+  --act-ink: var(--act-hit-ink);
+  --on-act: var(--on-act-hit);
+}
+
+.btn--action[data-action="STAND"] {
+  --act: var(--act-stand);
+  --act-strong: var(--act-stand-strong);
+  --act-ink: var(--act-stand-ink);
+  --on-act: var(--on-act-stand);
+}
+
+.btn--action[data-action="DOUBLE"] {
+  --act: var(--act-double);
+  --act-strong: var(--act-double-strong);
+  --act-ink: var(--act-double-ink);
+  --on-act: var(--on-act-double);
+}
+
+.btn--action[data-action="SPLIT"] {
+  --act: var(--act-split);
+  --act-strong: var(--act-split-strong);
+  --act-ink: var(--act-split-ink);
+  --on-act: var(--on-act-split);
+}
+
+/* Hit and Stand are the frequent decisions: solid semantic fill. */
+.btn--action-primary:not(.is-disabled) {
+  background: var(--act, var(--accent));
+  border-color: var(--act, var(--accent));
+  color: var(--on-act, var(--on-accent));
+}
+
+.btn--action-primary:not(.is-disabled):hover,
+.btn--action-primary:not(.is-disabled):active {
+  background: var(--act-strong, var(--accent-strong));
+  border-color: var(--act-strong, var(--accent-strong));
+}
+
+/* Double and Split share the same shape but sit one step quieter:
+   a tinted surface with a hue-carrying border and icon. */
+.btn--action-secondary:not(.is-disabled) {
+  background: color-mix(in srgb, var(--act) 9%, var(--surface-raised));
+  border-color: color-mix(in srgb, var(--act) 42%, var(--border-strong));
+}
+
+.btn--action-secondary:not(.is-disabled):hover {
+  background: color-mix(in srgb, var(--act) 16%, var(--surface-raised));
+  border-color: color-mix(in srgb, var(--act) 72%, var(--border-strong));
+}
+
+.btn--action-secondary:not(.is-disabled):active {
+  background: color-mix(in srgb, var(--act) 22%, var(--surface-raised));
+}
+
+.btn--action-secondary:not(.is-disabled) .btn__icon {
+  color: var(--act-ink);
+}
+
+/* Illegal actions drop their hue entirely: neutral surface, muted but
+   readable label, dimmed icon. The reason stays exposed via title and
+   aria-description (see renderActionPanel). */
+.btn--action.is-disabled {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text-muted);
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+.btn--action.is-disabled .btn__icon {
+  opacity: 0.55;
 }
 
 .select {

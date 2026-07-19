@@ -74,6 +74,24 @@
   --card-back-a: #7d1f26;
   --card-back-b: #641318;
   --shadow: 0 10px 28px rgb(48 40 20 / 0.16);
+
+  /* Action-bar semantic hues (fill, hover fill, icon-on-surface, text-on-fill) */
+  --act-hit: #33628e;
+  --act-hit-strong: #294f74;
+  --act-hit-ink: #2c5a83;
+  --on-act-hit: #f3f7fb;
+  --act-stand: #916013;
+  --act-stand-strong: #7a4f0a;
+  --act-stand-ink: #82560e;
+  --on-act-stand: #fdf7ea;
+  --act-double: #2f7050;
+  --act-double-strong: #265d41;
+  --act-double-ink: #276046;
+  --on-act-double: #eff8f2;
+  --act-split: #6d4f96;
+  --act-split-strong: #5b4180;
+  --act-split-ink: #5f4488;
+  --on-act-split: #f6f2fb;
 }
 
 [data-theme="classic"][data-mode="dark"] {
@@ -100,6 +118,23 @@
   --card-back-a: #7d2229;
   --card-back-b: #55151a;
   --shadow: 0 10px 28px rgb(0 0 0 / 0.45);
+
+  --act-hit: #8ab4dd;
+  --act-hit-strong: #a0c3e7;
+  --act-hit-ink: #8ab4dd;
+  --on-act-hit: #0e2137;
+  --act-stand: #d9a845;
+  --act-stand-strong: #e3b75f;
+  --act-stand-ink: #d9a845;
+  --on-act-stand: #2a1d04;
+  --act-double: #74c197;
+  --act-double-strong: #8bcdaa;
+  --act-double-ink: #74c197;
+  --on-act-double: #0a2b18;
+  --act-split: #af93d8;
+  --act-split-strong: #bfa5e2;
+  --act-split-ink: #af93d8;
+  --on-act-split: #221439;
 }
 
 /* ---------------------------------------------------------------- minimal */
@@ -128,6 +163,23 @@
   --card-back-a: #04715c;
   --card-back-b: #024b3d;
   --shadow: 0 8px 24px rgb(20 20 15 / 0.08);
+
+  --act-hit: #2b5f9e;
+  --act-hit-strong: #234e83;
+  --act-hit-ink: #27568d;
+  --on-act-hit: #f2f6fb;
+  --act-stand: #8f5f10;
+  --act-stand-strong: #784e08;
+  --act-stand-ink: #80550c;
+  --on-act-stand: #fcf6e9;
+  --act-double: #2f7444;
+  --act-double-strong: #265f38;
+  --act-double-ink: #2a683d;
+  --on-act-double: #f0f8f2;
+  --act-split: #6b4f9e;
+  --act-split-strong: #594084;
+  --act-split-ink: #604790;
+  --on-act-split: #f5f1fb;
 }
 
 [data-theme="minimal"][data-mode="dark"] {
@@ -154,6 +206,23 @@
   --card-back-a: #17705c;
   --card-back-b: #0e4a3c;
   --shadow: 0 8px 24px rgb(0 0 0 / 0.5);
+
+  --act-hit: #7fb0de;
+  --act-hit-strong: #95c0e6;
+  --act-hit-ink: #7fb0de;
+  --on-act-hit: #0d2036;
+  --act-stand: #d3a343;
+  --act-stand-strong: #ddb25d;
+  --act-stand-ink: #d3a343;
+  --on-act-stand: #251a04;
+  --act-double: #64bd88;
+  --act-double-strong: #7cc99c;
+  --act-double-ink: #64bd88;
+  --on-act-double: #08260f;
+  --act-split: #a58bd6;
+  --act-split-strong: #b59ee0;
+  --act-split-ink: #a58bd6;
+  --on-act-split: #1f1338;
 }
 
 /* Dark mode slightly dims card faces so they do not glare. */
