@@ -351,24 +351,40 @@ export function renderHelp() {
   const body = $('help-body');
   body.textContent = '';
 
-  const section = (titleKey, texts) => {
+  // Two columns on wide screens (CSS collapses them to one below the
+  // breakpoint): rules of play on the left, this-table facts on the right.
+  const columns = document.createElement('div');
+  columns.className = 'help-columns';
+  const left = document.createElement('div');
+  left.className = 'help-col';
+  const right = document.createElement('div');
+  right.className = 'help-col';
+  columns.append(left, right);
+  body.append(columns);
+
+  const section = (column, titleText) => {
+    const wrap = document.createElement('section');
+    wrap.className = 'help-section';
     const h = document.createElement('h3');
-    h.textContent = t(titleKey);
-    body.append(h);
-    for (const text of texts) {
-      const p = document.createElement('p');
-      p.textContent = text;
-      body.append(p);
-    }
+    h.textContent = titleText;
+    wrap.append(h);
+    column.append(wrap);
+    return wrap;
   };
 
-  section('help.goal', [t('help.goalBody')]);
-  section('help.blackjack', [t('help.blackjackBody')]);
+  const paragraph = (parent, text, className) => {
+    const p = document.createElement('p');
+    if (className) p.className = className;
+    p.textContent = text;
+    parent.append(p);
+  };
 
-  const actionsTitle = document.createElement('h3');
-  actionsTitle.textContent = t('help.actionsTitle');
-  body.append(actionsTitle);
+  paragraph(section(left, t('help.goal')), t('help.goalBody'));
+  paragraph(section(left, t('help.blackjack')), t('help.blackjackBody'));
+
+  const actionsSection = section(left, t('help.actionsTitle'));
   const actionList = document.createElement('ul');
+  actionList.className = 'help-list';
   const actionRows = [
     ['actions.HIT', 'help.hitBody'],
     ['actions.STAND', 'help.standBody'],
@@ -383,26 +399,20 @@ export function renderHelp() {
     li.append(strong, document.createTextNode(t(bodyKey)));
     actionList.append(li);
   }
-  body.append(actionList);
+  actionsSection.append(actionList);
 
-  section('help.insuranceTitle', [t('help.insuranceBody')]);
+  paragraph(section(left, t('help.insuranceTitle')), t('help.insuranceBody'));
 
-  const tableTitle = document.createElement('h3');
-  tableTitle.textContent = `${t('help.tableTitle')} : ${t(`profiles.${state.profileId}.name`)}`;
-  body.append(tableTitle);
-  const chips = document.createElement('p');
-  chips.className = 'fine-print';
-  chips.textContent = profileSummaryChips(profile).join(' · ');
-  body.append(chips);
-  const note = document.createElement('p');
-  note.className = 'fine-print';
-  note.textContent = t('profiles.presetNote');
-  body.append(note);
+  const tableSection = section(
+    right,
+    `${t('help.tableTitle')} : ${t(`profiles.${state.profileId}.name`)}`
+  );
+  paragraph(tableSection, profileSummaryChips(profile).join(' · '));
+  paragraph(tableSection, t('profiles.presetNote'), 'fine-print');
 
-  const shortcutsTitle = document.createElement('h3');
-  shortcutsTitle.textContent = t('help.shortcutsTitle');
-  body.append(shortcutsTitle);
+  const shortcutsSection = section(right, t('help.shortcutsTitle'));
   const shortcutList = document.createElement('ul');
+  shortcutList.className = 'shortcut-list';
   const shortcuts = [
     ['H', t('help.shortcutHit')],
     ['S', t('help.shortcutStand')],
@@ -418,10 +428,7 @@ export function renderHelp() {
     li.append(kbd, document.createTextNode(` ${label}`));
     shortcutList.append(li);
   }
-  body.append(shortcutList);
+  shortcutsSection.append(shortcutList);
 
-  const fairness = document.createElement('p');
-  fairness.className = 'fine-print';
-  fairness.textContent = t('help.fairness');
-  body.append(fairness);
+  paragraph(right, t('help.fairness'), 'fine-print');
 }

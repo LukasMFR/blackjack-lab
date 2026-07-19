@@ -466,14 +466,31 @@ kbd {
 
 /* ------------------------------------------------------------------ dialogs */
 
+/*
+ * One dialog shell, two sizes:
+ *   .dialog          — default (and .dialog--confirm stays compact)
+ *   .dialog--wide    — content-heavy panels (settings, help)
+ * An open dialog is a column: the header never scrolls away, only the
+ * body scrolls, so the close button always stays inside the viewport.
+ */
 .dialog {
   width: min(38rem, calc(100vw - 2rem));
-  max-height: calc(100dvh - 2rem);
+  max-height: min(88dvh, 56.25rem);
   padding: 0;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-l);
   background: var(--surface);
   box-shadow: var(--shadow);
+}
+
+/* Scoped to [open] so the closed dialog keeps its native display: none. */
+.dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.dialog--wide {
+  width: min(92vw, 56.25rem);
 }
 
 .dialog--confirm {
@@ -485,6 +502,7 @@ kbd {
 }
 
 .dialog__header {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -497,13 +515,27 @@ kbd {
   font-size: var(--text-l);
 }
 
+.dialog--wide .dialog__header h2 {
+  font-size: var(--text-dialog-title);
+}
+
 .dialog__body {
+  flex: 1 1 auto;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
   padding: var(--space-5);
   overflow-y: auto;
-  max-height: calc(100dvh - 8rem);
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.dialog--wide .dialog__body {
+  gap: var(--space-6);
+  padding: clamp(var(--space-5), 3vw, var(--space-7));
+  font-size: var(--text-dialog-body);
+  line-height: 1.65;
 }
 
 .dialog__body h3 {
@@ -511,8 +543,73 @@ kbd {
   margin-bottom: var(--space-1);
 }
 
+.dialog--wide .dialog__body h3 {
+  font-size: var(--text-dialog-heading);
+}
+
 .dialog__body p + h3 {
   margin-top: var(--space-3);
+}
+
+.dialog--wide .fine-print {
+  font-size: var(--text-s);
+}
+
+.dialog--wide kbd {
+  font-size: var(--text-s);
+}
+
+/* Help content: one column by default, two balanced columns once the
+   wide dialog actually has the horizontal room for them. */
+.help-columns {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+}
+
+.help-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-width: 0;
+}
+
+.help-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.help-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.shortcut-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.shortcut-list li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+@media (min-width: 55rem) {
+  .help-columns {
+    grid-template-columns: 1fr 1fr;
+    column-gap: var(--space-7);
+    align-items: start;
+  }
+
+  .dialog--wide .profile-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+  }
 }
 
 .field-group {
