@@ -203,7 +203,7 @@ export default {
     sourceTitle: 'Code source',
     sourceBody: 'Le code source complet de Blackjack Lab — moteur, suite de tests et documentation des ressources compris — se trouve dans le dépôt Git du projet sur GitHub :',
     copyrightTitle: 'Droits d’auteur et remerciements',
-    copyrightBody1: 'Le code et les créations originales de Blackjack Lab sont © 2026 Lukas Mauffré. Le dépôt n’inclut pas, pour l’instant, de fichier de licence publié. Les ressources tierces restent la propriété de leurs auteurs, selon les licences listées ci-dessus.',
+    copyrightBody1: 'Le code et les créations originales de Blackjack Lab sont © 2026 les auteurs de Blackjack Lab. Le dépôt n’inclut pas, pour l’instant, de fichier de licence publié. Les ressources tierces restent la propriété de leurs auteurs, selon les licences listées ci-dessus.',
     copyrightBody2: 'Le blackjack est un jeu de cartes traditionnel ; aucun droit n’est revendiqué sur le jeu lui-même. Merci à Kevin MacLeod et à Kenney de publier leur travail sous des licences qui rendent possible ce genre de projet.',
     responsibleTitle: 'Jeu responsable',
     responsibleBody1: 'Blackjack Lab ne distribue que des jetons fictifs, mais les mathématiques simulées sont réelles : quel que soit le profil, les règles avantagent la maison sur la durée, et aucune stratégie de mise ou de jeu ne peut garantir un gain. Les résultats obtenus ici ne prédisent pas les résultats réels.',
