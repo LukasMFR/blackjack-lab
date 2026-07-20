@@ -1,4 +1,5 @@
 import { test, assert, assertEqual, assertThrows } from './runner.js';
+import { useFakeStorage, withoutStorage } from './fakeStorage.js';
 import {
   BANKROLL_ERRORS,
   MAX_BANKROLL_UNITS,
@@ -7,31 +8,11 @@ import {
   loadStartingBankrollCents,
   parseStartingBankroll,
   saveStartingBankrollCents,
-  startingBankrollKey,
 } from '../src/js/ui/bankrollSettings.js';
+import { readSession } from '../src/js/ui/sessionStore.js';
 import { BlackjackGame } from '../src/js/game/engine.js';
 import { PROFILES } from '../src/js/config/profiles.js';
 import { unitsToCents } from '../src/js/game/money.js';
-
-/**
- * A minimal in-memory localStorage so the persistence path is exercised for
- * real (storage.js reads globalThis.localStorage on every call).
- */
-function useFakeStorage(initial = {}) {
-  const data = new Map(Object.entries(initial));
-  globalThis.localStorage = {
-    getItem: (key) => (data.has(key) ? data.get(key) : null),
-    setItem: (key, value) => data.set(key, String(value)),
-    removeItem: (key) => data.delete(key),
-  };
-  return data;
-}
-
-function withoutStorage() {
-  delete globalThis.localStorage;
-}
-
-const PREFIXED = (profileId) => `bjlab.${startingBankrollKey(profileId)}`;
 
 // ------------------------------------------------------------- validation
 
@@ -139,13 +120,25 @@ test('an unset profile falls back to the profile default', () => {
 });
 
 test('a tampered stored amount is discarded, not trusted', () => {
-  for (const bad of ['-500', 'abc', '99', '999999999999', '100050']) {
-    const data = useFakeStorage({ [PREFIXED('FRENCH_STANDARD')]: bad });
-    assertEqual(loadStartingBankrollCents('FRENCH_STANDARD', 100000), 100000, bad);
-    assert(!data.has(PREFIXED('FRENCH_STANDARD')), `"${bad}" should have been cleared`);
+  for (const bad of [-500, 'abc', 9900, 999999999999, 100050]) {
+    useFakeStorage();
+    saveStartingBankrollCents('FRENCH_STANDARD', 250000);
+    // Tamper with the stored record the way a hand-edited storage entry would.
+    saveSessionRaw('FRENCH_STANDARD', bad);
+    assertEqual(loadStartingBankrollCents('FRENCH_STANDARD', 100000), 100000, String(bad));
+    assertEqual(readSession('FRENCH_STANDARD').startingBankrollCents, null,
+      `"${bad}" should have been cleared`);
     withoutStorage();
   }
 });
+
+/** Write a starting bankroll straight into storage, bypassing validation. */
+function saveSessionRaw(profileId, startingBankrollCents) {
+  const key = 'bjlab.sessions';
+  const blob = JSON.parse(globalThis.localStorage.getItem(key));
+  blob.profiles[profileId].startingBankrollCents = startingBankrollCents;
+  globalThis.localStorage.setItem(key, JSON.stringify(blob));
+}
 
 test('an out-of-range amount is refused instead of being stored', () => {
   const data = useFakeStorage();

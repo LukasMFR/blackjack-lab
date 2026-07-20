@@ -16,7 +16,10 @@ import {
   announce, renderHistory, renderPanels, renderSession, renderStaticLabels, renderTable, showToast,
 } from './render.js';
 import { initSettingsView } from './settingsView.js';
-import { loadStartingBankrollCents, saveStartingBankrollCents } from './bankrollSettings.js';
+import { isBankrollInRange, loadStartingBankrollCents } from './bankrollSettings.js';
+import {
+  HISTORY_LIMIT, isPersistableRoundState, readSession, resetSession, saveSession,
+} from './sessionStore.js';
 import { initLanguageMenu, setLanguageMenuValue } from './languageMenu.js';
 
 /**
@@ -134,10 +137,6 @@ function resolveProfile() {
   return PROFILES[state.profileId];
 }
 
-function bankrollKey() {
-  return `bankroll.${state.profileId}`;
-}
-
 /**
  * The bankroll a fresh session starts from: the player's stored choice for
  * this profile, else the profile's own default.
@@ -148,14 +147,26 @@ function startingBankrollCents() {
   return loadStartingBankrollCents(state.profileId, unitsToCents(profile.startingBankrollUnits));
 }
 
+/**
+ * Build the engine for the active profile and restore that profile's saved
+ * session: bankroll, history, round count, and session net. Each profile is
+ * restored from its own record, so switching never carries data across.
+ */
 function createGame() {
   const profile = resolveProfile();
   state.activeProfile = profile;
-  const savedBankroll = storage.getAmount(bankrollKey());
+  const session = readSession(state.profileId);
   state.game = new BlackjackGame({
     profile,
-    bankrollCents: savedBankroll ?? startingBankrollCents(),
+    bankrollCents: session.bankrollCents ?? startingBankrollCents(),
   });
+  state.history = session.history;
+  state.roundCounter = session.roundCount;
+  state.sessionNetCents = session.netCents;
+  // A round interrupted by a reload was never settled: the engine restarts at
+  // WAITING_FOR_BET and the bankroll is the last settled amount, so the
+  // committed bet is returned rather than silently lost.
+  state.roundRecorded = false;
   renderCtx.seenCardIds.clear();
   renderCtx.prevHoleHidden = false;
   state.betCents = clampBet(state.game.lastBetCents);
@@ -167,11 +178,19 @@ function clampBet(cents) {
   return cents;
 }
 
-function persistBankroll() {
-  const roundState = state.game.roundState;
-  if (roundState === ROUND_STATES.WAITING_FOR_BET || roundState === ROUND_STATES.ROUND_COMPLETE) {
-    storage.setAmount(bankrollKey(), state.game.bankrollCents);
-  }
+/**
+ * Commit the active profile's session in one write. Mid-round states are
+ * skipped: only a settled bankroll is worth restoring, and a reload during a
+ * round must fall back to the last settled figure.
+ */
+function persistSession() {
+  if (!isPersistableRoundState(state.game.roundState)) return;
+  saveSession(state.profileId, {
+    bankrollCents: state.game.bankrollCents,
+    roundCount: state.roundCounter,
+    netCents: state.sessionNetCents,
+    history: state.history,
+  });
 }
 
 function isRoundActive() {
@@ -283,6 +302,26 @@ function roundOutcomeText(snapshot) {
 /* -------------------------------------------------------------- mutations */
 
 /**
+ * Record a finished round in the history and session totals, then commit.
+ * Guarded by `roundRecorded` so a round is never counted twice.
+ * @param {object} snapshot - the settled round snapshot
+ */
+function recordCompletedRound(snapshot) {
+  if (state.roundRecorded) return;
+  state.roundRecorded = true;
+  state.roundCounter += 1;
+  state.sessionNetCents += snapshot.roundSummary.netCents;
+  state.history.push({
+    n: state.roundCounter,
+    netCents: snapshot.roundSummary.netCents,
+    results: snapshot.hands.map((hand) => hand.result),
+    insurance: snapshot.insurance.taken,
+  });
+  if (state.history.length > HISTORY_LIMIT) state.history.shift();
+  persistSession();
+}
+
+/**
  * Run an engine mutation, then handle persistence, history, announcements
  * and rendering. Engine errors surface as a toast without corrupting state.
  */
@@ -298,19 +337,7 @@ function mutate(fn, { announceDiff = true } = {}) {
   }
   const after = state.game.getSnapshot();
   gameAudio.roundTransition(before, after);
-  if (after.roundState === ROUND_STATES.ROUND_COMPLETE && !state.roundRecorded) {
-    state.roundRecorded = true;
-    state.roundCounter += 1;
-    state.sessionNetCents += after.roundSummary.netCents;
-    state.history.push({
-      n: state.roundCounter,
-      netCents: after.roundSummary.netCents,
-      results: after.hands.map((hand) => hand.result),
-      insurance: after.insurance.taken,
-    });
-    if (state.history.length > 30) state.history.shift();
-    persistBankroll();
-  }
+  if (after.roundState === ROUND_STATES.ROUND_COMPLETE) recordCompletedRound(after);
   if (announceDiff) announceAfterAction(before, after);
   renderAll();
 }
@@ -340,18 +367,9 @@ function deal() {
   gameAudio.dealConfirmed(after.shoe.justShuffled);
   gameAudio.roundTransition(before, after, { baseDelay: 0.25 });
   if (after.shoe.justShuffled) showToast(t('round.shuffled'));
-  if (after.roundState === ROUND_STATES.ROUND_COMPLETE && !state.roundRecorded) {
+  if (after.roundState === ROUND_STATES.ROUND_COMPLETE) {
     // Instant resolution (e.g. peeked dealer blackjack, immediate natural).
-    state.roundRecorded = true;
-    state.roundCounter += 1;
-    state.sessionNetCents += after.roundSummary.netCents;
-    state.history.push({
-      n: state.roundCounter,
-      netCents: after.roundSummary.netCents,
-      results: after.hands.map((hand) => hand.result),
-      insurance: after.insurance.taken,
-    });
-    persistBankroll();
+    recordCompletedRound(after);
     announceAfterAction(before, after);
   } else {
     announceAfterDeal(after);
@@ -364,7 +382,7 @@ function nextRound() {
   mutate(() => {
     state.game.nextRound();
     state.betCents = clampBet(state.game.lastBetCents);
-    persistBankroll();
+    persistSession();
   }, { announceDiff: false });
   announce(t('bet.placeYourBet'));
 }
@@ -399,7 +417,7 @@ const controller = {
   setProfile(profileId) {
     if (isRoundActive() || profileId === state.profileId) return;
     try {
-      persistBankroll();
+      persistSession();
       state.profileId = profileId;
       storage.setChoice('profile', profileId);
       createGame();
@@ -419,7 +437,7 @@ const controller = {
       state.customSettings = settings;
       storage.setObject('customProfile', settings);
       if (state.profileId === 'CUSTOM') {
-        persistBankroll();
+        persistSession();
         createGame();
         renderAll();
       }
@@ -431,25 +449,32 @@ const controller = {
   getStartingBankrollCents: () => startingBankrollCents(),
   /**
    * Apply a new starting bankroll for the active profile. This is a session
-   * boundary: the live bankroll, the round history and the session total all
-   * restart from the new amount.
+   * boundary: the live bankroll, the round history, the round count and the
+   * session total all restart from the new amount.
+   *
+   * The reset is committed in one write before any state is rebuilt, so the
+   * new session is durable immediately and a reload can never land on a
+   * half-reset profile. Only the active profile is touched.
    * @param {number} cents
    */
   setStartingBankroll(cents) {
+    // Refused mid-round: the reset would wipe committed wagers.
     if (isRoundActive()) return;
+    if (!isBankrollInRange(cents)) {
+      console.error(new Error(`Invalid starting bankroll: ${cents}`));
+      showToast(t('errors.generic'));
+      return;
+    }
     try {
-      saveStartingBankrollCents(state.profileId, cents);
+      resetSession(state.profileId, cents);
     } catch (error) {
       console.error(error);
       showToast(t('errors.generic'));
       return;
     }
-    storage.clear(bankrollKey());
-    state.history = [];
-    state.roundCounter = 0;
-    state.sessionNetCents = 0;
+    // createGame() reads the record just written: bankroll, empty history,
+    // zeroed counters and a cleared unfinished round all come from one source.
     createGame();
-    persistBankroll();
     renderAll();
     gameAudio.bankrollReset();
     showToast(t('settings.bankrollApplied', { amount: formatMoney(cents) }));

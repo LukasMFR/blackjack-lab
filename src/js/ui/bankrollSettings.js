@@ -1,5 +1,5 @@
 import { unitsToCents, CENTS_PER_UNIT } from '../game/money.js';
-import * as storage from './storage.js';
+import { readSession, saveSession } from './sessionStore.js';
 
 /**
  * Starting-bankroll preference: parsing, validation, and persistence.
@@ -75,24 +75,19 @@ export function isBankrollInRange(cents) {
     && cents <= MAX_BANKROLL_CENTS;
 }
 
-/** Each rule profile keeps its own starting bankroll. */
-export function startingBankrollKey(profileId) {
-  return `startingBankroll.${profileId}`;
-}
-
 /**
  * Read the stored starting bankroll for a profile. A missing, corrupt, or
  * out-of-range entry is discarded in favour of the profile default.
+ * Each rule profile keeps its own amount inside its own session record.
  * @param {string} profileId
  * @param {number} fallbackCents - the profile's own starting bankroll
  * @returns {number} cents
  */
 export function loadStartingBankrollCents(profileId, fallbackCents) {
-  const key = startingBankrollKey(profileId);
-  const stored = storage.getAmount(key);
+  const stored = readSession(profileId).startingBankrollCents;
   if (stored === null) return fallbackCents;
   if (!isBankrollInRange(stored)) {
-    storage.clear(key);
+    saveSession(profileId, { startingBankrollCents: null });
     return fallbackCents;
   }
   return stored;
@@ -108,5 +103,5 @@ export function saveStartingBankrollCents(profileId, cents) {
   if (!isBankrollInRange(cents)) {
     throw new Error(`Invalid starting bankroll: ${cents}`);
   }
-  storage.setAmount(startingBankrollKey(profileId), cents);
+  saveSession(profileId, { startingBankrollCents: cents });
 }
