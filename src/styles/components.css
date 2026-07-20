@@ -1113,17 +1113,20 @@ kbd {
 }
 
 /* Keeps the grid steady when labels wrap unevenly (a long translation next to
- * a short one). The label area reserves two lines everywhere, and the control
- * is pushed to the bottom of its stretched cell, so every control in a row
- * shares a baseline even if some label needs a third line. The submit row then
- * always starts at the same offset. */
+ * a short one). Each field is bottom-aligned inside its stretched cell, and the
+ * label reserves two lines whose text sits at the bottom of that area, so the
+ * label stays attached to its control and any slack lands above the label
+ * rather than between the two. Rows stay aligned even if one label needs a
+ * third line, and the submit row always starts at the same offset. */
 @container (min-width: 27rem) {
-  .custom-editor .field:not(.field--submit) label {
-    min-height: 3em;
+  .custom-editor .field:not(.field--submit) {
+    justify-content: flex-end;
   }
 
-  .custom-editor .field:not(.field--submit) > :last-child {
-    margin-top: auto;
+  .custom-editor .field:not(.field--submit) label {
+    display: flex;
+    align-items: flex-end;
+    min-height: 3em;
   }
 }
 
