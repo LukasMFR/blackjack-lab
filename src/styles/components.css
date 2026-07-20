@@ -204,6 +204,23 @@ kbd {
   background: var(--surface-raised);
 }
 
+/* In the header the select sits in a row of ghost buttons, so it borrows
+   their box: same height, same padding rhythm, same border treatment. */
+.app-header .select {
+  min-height: 3rem;
+  padding: var(--space-2) var(--space-3);
+  background: transparent;
+  color: var(--text);
+  font-weight: 600;
+  transition: background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+
+.app-header .select:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-raised);
+}
+
 /* -------------------------------------------------------------------- badges */
 
 .badge {

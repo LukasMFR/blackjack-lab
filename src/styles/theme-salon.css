@@ -123,9 +123,15 @@
 }
 
 [data-theme="salon"] .app-header .select {
-  background: rgb(242 231 212 / 0.08);
+  background: transparent;
   color: var(--wood-ink);
   border-color: rgb(242 231 212 / 0.28);
+  box-shadow: none;
+}
+
+[data-theme="salon"] .app-header .select:hover {
+  background: rgb(242 231 212 / 0.1);
+  border-color: rgb(242 231 212 / 0.48);
 }
 
 /* Light-blue focus ring stays visible on dark wood and dark felt alike. */
