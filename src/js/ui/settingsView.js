@@ -28,7 +28,34 @@ const THEME_LABEL_KEYS = {
   minimal: 'settings.themeMinimal',
   salon: 'settings.themeSalon',
 };
+const THEME_DESC_KEYS = {
+  classic: 'settings.themeClassicDesc',
+  minimal: 'settings.themeMinimalDesc',
+  salon: 'settings.themeSalonDesc',
+};
 const LANGUAGE_LABELS = { en: 'English', fr: 'Français' };
+
+/* Decorative option icons (aria-hidden): stroke follows currentColor, so
+   they take each theme's segment and badge colors without any theme CSS. */
+const svg = (inner) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
+
+const APPEARANCE_ICONS = {
+  system: svg('<circle cx="12" cy="12" r="8.25"/><path d="M12 3.75a8.25 8.25 0 0 1 0 16.5z" fill="currentColor" stroke="none"/>'),
+  light: svg('<circle cx="12" cy="12" r="4"/><path d="M12 2.5V5M12 19v2.5M2.5 12H5M19 12h2.5M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M19.1 4.9l-1.8 1.8M6.7 17.3l-1.8 1.8"/>'),
+  dark: svg('<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9z"/>'),
+};
+
+const ANIMATION_ICONS = {
+  enhanced: svg('<path d="M11 4.6 12.5 9l4.4 1.5-4.4 1.5L11 16.4 9.5 12 5.1 10.5 9.5 9z"/><path d="m18 15.4.8 2.3 2.3.8-2.3.8-.8 2.3-.8-2.3-2.3-.8 2.3-.8z"/>'),
+  classic: svg('<path d="M5.5 10v4M9 7.5v9M12.5 5.5v13M16 7.5v9M19.5 10v4"/>'),
+  off: svg('<circle cx="12" cy="12" r="8.5"/><path d="M8.5 12h7"/>'),
+};
+
+const THEME_ICONS = {
+  classic: svg('<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.75"/><path d="M12 3.5v4.75M12 15.75v4.75M3.5 12h4.75M15.75 12h4.75"/>'),
+  minimal: svg('<path d="M12 3.5 19 12l-7 8.5L5 12z"/>'),
+  salon: svg('<path d="m3.5 8 1.6 9.5h13.8L20.5 8l-4.6 3.2L12 5l-3.9 6.2z"/>'),
+};
 
 /** @param {object} appController */
 export function initSettingsView(appController) {
@@ -129,11 +156,10 @@ export function renderSettings() {
 
   buildSegment($('settings-appearance'), APPEARANCES, state.appearance,
     (value) => t(`settings.appearance${value[0].toUpperCase()}${value.slice(1)}`),
-    (value) => controller.setAppearance(value));
+    (value) => controller.setAppearance(value),
+    (value) => APPEARANCE_ICONS[value]);
 
-  buildSegment($('settings-theme'), THEMES, state.theme,
-    (value) => t(THEME_LABEL_KEYS[value]),
-    (value) => controller.setTheme(value));
+  buildThemeList(state);
 
   renderAnimationSection();
   renderAudioSection();
@@ -141,7 +167,7 @@ export function renderSettings() {
   buildCustomEditor(state);
 }
 
-function buildSegment(container, values, current, labelOf, onSelect) {
+function buildSegment(container, values, current, labelOf, onSelect, iconOf) {
   container.textContent = '';
   for (const value of values) {
     const option = document.createElement('button');
@@ -149,10 +175,56 @@ function buildSegment(container, values, current, labelOf, onSelect) {
     option.className = 'segment__option';
     option.setAttribute('role', 'radio');
     option.setAttribute('aria-checked', String(value === current));
-    option.textContent = labelOf(value);
+    if (iconOf) {
+      const icon = document.createElement('span');
+      icon.className = 'segment__icon';
+      icon.innerHTML = iconOf(value);
+      option.append(icon);
+    }
+    const label = document.createElement('span');
+    label.textContent = labelOf(value);
+    option.append(label);
     option.addEventListener('click', () => {
       if (value !== current) controller.audio.settingChanged();
       onSelect(value);
+      renderSettings();
+    });
+    container.append(option);
+  }
+}
+
+function buildThemeList(state) {
+  const container = $('settings-theme');
+  container.textContent = '';
+  for (const value of THEMES) {
+    const option = document.createElement('button');
+    option.type = 'button';
+    option.className = 'theme-option';
+    option.setAttribute('role', 'radio');
+    option.setAttribute('aria-checked', String(value === state.theme));
+
+    const badge = document.createElement('span');
+    badge.className = 'theme-option__badge';
+    badge.innerHTML = THEME_ICONS[value];
+
+    const text = document.createElement('span');
+    text.className = 'theme-option__text';
+    const name = document.createElement('span');
+    name.className = 'theme-option__name';
+    name.textContent = t(THEME_LABEL_KEYS[value]);
+    const desc = document.createElement('span');
+    desc.className = 'theme-option__desc';
+    desc.textContent = t(THEME_DESC_KEYS[value]);
+    text.append(name, desc);
+
+    const radio = document.createElement('span');
+    radio.className = 'theme-option__radio';
+    radio.setAttribute('aria-hidden', 'true');
+
+    option.append(badge, text, radio);
+    option.addEventListener('click', () => {
+      if (value !== state.theme) controller.audio.settingChanged();
+      controller.setTheme(value);
       renderSettings();
     });
     container.append(option);
@@ -165,7 +237,8 @@ function renderAnimationSection() {
   $('set-animations-label').textContent = t('settings.animations');
   buildSegment($('settings-animations'), ANIMATION_MODES, controller.getAnimationMode(),
     (value) => t(`settings.animations${value[0].toUpperCase()}${value.slice(1)}`),
-    (value) => controller.setAnimationMode(value));
+    (value) => controller.setAnimationMode(value),
+    (value) => ANIMATION_ICONS[value]);
   $('animations-note').textContent = t('settings.animationsNote');
   // Reduced-motion users see why the default is calmer than Enhanced.
   const reducedNote = $('animations-reduced-note');

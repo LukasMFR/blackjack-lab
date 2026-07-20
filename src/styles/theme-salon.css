@@ -427,9 +427,14 @@
   letter-spacing: 0.02em;
 }
 
-[data-theme="salon"] .segment__option[aria-checked="true"] {
+[data-theme="salon"] .segment__option[aria-checked="true"],
+[data-theme="salon"] .theme-option[aria-checked="true"] {
   background: color-mix(in srgb, var(--accent) 14%, var(--surface-raised));
   border-color: color-mix(in srgb, var(--accent) 60%, var(--border-strong));
+}
+
+[data-theme="salon"] .theme-option__badge {
+  border-color: color-mix(in srgb, var(--gold) 50%, var(--border-strong));
 }
 
 [data-theme="salon"] .custom-editor {

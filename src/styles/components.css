@@ -952,27 +952,59 @@ kbd {
   gap: var(--space-3);
 }
 
-/* Segmented choices (language, appearance, theme) */
+/*
+ * Segmented choices (language, appearance, animations): one row of equal
+ * columns filling the group's width, each option optionally stacking a
+ * small icon over its label. Every option count in use fits one row on
+ * phones because the long-labelled theme choice is a .theme-list instead.
+ */
 .segment {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
   gap: var(--space-1);
   padding: var(--space-1);
   border-radius: var(--radius-m);
   background: var(--bg);
   border: 1px solid var(--border);
-  align-self: flex-start;
 }
 
 .segment__option {
-  padding: var(--space-1) var(--space-3);
-  min-height: 2.25rem;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-1);
+  min-height: 2.75rem;
   border-radius: var(--radius-s);
   border: 1px solid transparent;
   background: transparent;
   cursor: pointer;
   color: var(--text-muted);
   font-weight: 600;
+  text-align: center;
+  /* Capped below the wide dialog's enlarged body size: three long localized
+     labels must share one row on a phone. */
+  font-size: var(--text-s);
+}
+
+/* Hairline dividers between neighbours, dropped around the checked option:
+   its own frame already separates it. */
+.segment__option:not(:first-child)::before {
+  content: "";
+  position: absolute;
+  left: calc(-0.5 * var(--space-1) - 0.5px);
+  top: 22%;
+  bottom: 22%;
+  width: 1px;
+  background: var(--border);
+}
+
+.segment__option[aria-checked="true"]::before,
+.segment__option[aria-checked="true"] + .segment__option::before {
+  background: transparent;
 }
 
 .segment__option[aria-checked="true"] {
@@ -981,29 +1013,96 @@ kbd {
   color: var(--text);
 }
 
-/*
- * Narrow screens: flex wrapping produces ragged rows and orphaned options
- * (long localized labels never share a row cleanly), so segments become a
- * stacked grid of equal, full-width rows. Groups of two or four options fit
- * a balanced two-column grid instead; odd counts stay single-column so no
- * option is ever left alone in a row.
- */
-@media (max-width: 640px) {
-  .segment {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    align-self: stretch;
-  }
+.segment__icon,
+.segment__icon svg {
+  display: block;
+  width: 1.25rem;
+  height: 1.25rem;
+}
 
-  .segment:has(> .segment__option:nth-child(2):last-child),
-  .segment:has(> .segment__option:nth-child(4):last-child) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+/* Visual-theme picker: one row per theme with an icon badge, a name and
+   short description, and a radio indicator. Same container material as
+   .segment, so the two controls read as one family. */
+.theme-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border-radius: var(--radius-m);
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
 
-  .segment__option {
-    min-height: 2.75rem;
-    text-align: center;
-  }
+.theme-option {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-s);
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.theme-option[aria-checked="true"] {
+  background: var(--surface-raised);
+  border-color: var(--border-strong);
+}
+
+.theme-option__badge {
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--gold);
+}
+
+.theme-option__badge svg {
+  display: block;
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
+.theme-option__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1em;
+  min-width: 0;
+}
+
+.theme-option__name {
+  font-weight: 700;
+}
+
+.theme-option__desc {
+  font-size: var(--text-s);
+  color: var(--text-muted);
+}
+
+.theme-option__radio {
+  display: grid;
+  place-items: center;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 50%;
+  border: 2px solid var(--border-strong);
+}
+
+.theme-option[aria-checked="true"] .theme-option__radio {
+  border-color: var(--accent);
+}
+
+.theme-option[aria-checked="true"] .theme-option__radio::after {
+  content: "";
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: var(--accent);
 }
 
 /* Audio settings */
