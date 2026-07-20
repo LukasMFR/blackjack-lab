@@ -122,16 +122,22 @@
   border-color: rgb(242 231 212 / 0.48);
 }
 
-[data-theme="salon"] .app-header .select {
+/* The closed dropdown is a ghost button on wood; the open list is a panel
+   on the page below it, so only the button takes the wood treatment. */
+[data-theme="salon"] .app-header .menu-select__button {
   background: transparent;
   color: var(--wood-ink);
   border-color: rgb(242 231 212 / 0.28);
   box-shadow: none;
 }
 
-[data-theme="salon"] .app-header .select:hover {
+[data-theme="salon"] .app-header .menu-select__button:hover {
   background: rgb(242 231 212 / 0.1);
   border-color: rgb(242 231 212 / 0.48);
+}
+
+[data-theme="salon"] .menu-select__list {
+  box-shadow: inset 0 1px 0 var(--panel-sheen), var(--shadow);
 }
 
 /* Light-blue focus ring stays visible on dark wood and dark felt alike. */

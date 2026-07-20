@@ -16,6 +16,7 @@ import {
   announce, renderHistory, renderPanels, renderSession, renderStaticLabels, renderTable, showToast,
 } from './render.js';
 import { initSettingsView } from './settingsView.js';
+import { initLanguageMenu, setLanguageMenuValue } from './languageMenu.js';
 
 /**
  * Application controller: owns the engine instance, user preferences,
@@ -183,7 +184,7 @@ function betState() {
 
 function renderAll() {
   document.documentElement.lang = state.language;
-  $('language-select').value = state.language;
+  setLanguageMenuValue(state.language);
   renderStaticLabels();
   updateSoundButton();
   renderHeaderProfile();
@@ -459,9 +460,11 @@ function wireEvents() {
 
   $('btn-sound').addEventListener('click', toggleSound);
 
-  $('language-select').addEventListener('change', (event) => {
-    controller.setLanguage(event.target.value);
-    gameAudio.settingChanged();
+  initLanguageMenu({
+    onSelect: (language) => {
+      controller.setLanguage(language);
+      gameAudio.settingChanged();
+    },
   });
 
   $('chip-row').addEventListener('click', (event) => {

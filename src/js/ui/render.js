@@ -25,8 +25,8 @@ export function renderStaticLabels() {
   $('skip-link').textContent = t('a11y.skipToTable');
   $('fictional-badge').textContent = t('app.fictionalBadge');
   $('fictional-note').textContent = t('app.fictionalNote');
+  // Names the button ("Language, French") and the listbox, via aria-labelledby.
   $('language-label').textContent = t('a11y.chooseLanguage');
-  $('language-select').setAttribute('aria-label', t('a11y.chooseLanguage'));
   $('btn-help').textContent = t('nav.help');
   $('btn-settings').textContent = t('nav.settings');
   $('btn-help').setAttribute('aria-label', t('a11y.openHelp'));

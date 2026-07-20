@@ -35,15 +35,28 @@
       <span class="badge badge--fictional" id="fictional-badge"></span>
     </div>
     <div class="header-actions">
-      <label class="sr-only" for="language-select" id="language-label"></label>
-      <div class="select-field select--compact">
-        <select id="language-select" class="select">
-          <option value="en">English</option>
-          <option value="fr">Français</option>
-        </select>
-        <svg class="select-field__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="m6 9 6 6 6-6"/>
-        </svg>
+      <div class="menu-select select--compact" id="language-menu">
+        <span class="sr-only" id="language-label"></span>
+        <button type="button" class="menu-select__button" id="language-button" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-controls="language-listbox" aria-labelledby="language-label language-button">
+          <span id="language-value"></span>
+          <svg class="menu-select__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
+        </button>
+        <ul class="menu-select__list" id="language-listbox" role="listbox" aria-labelledby="language-label" hidden>
+          <li class="menu-select__option" id="language-option-en" role="option" data-value="en" aria-selected="false">
+            <span>English</span>
+            <svg class="menu-select__check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m5 12.5 4.5 4.5L19 7.5"/>
+            </svg>
+          </li>
+          <li class="menu-select__option" id="language-option-fr" role="option" data-value="fr" aria-selected="false">
+            <span>Français</span>
+            <svg class="menu-select__check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m5 12.5 4.5 4.5L19 7.5"/>
+            </svg>
+          </li>
+        </ul>
       </div>
       <button type="button" id="btn-sound" class="btn btn--ghost btn--icon" aria-pressed="false">
         <svg class="icon-sound-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">

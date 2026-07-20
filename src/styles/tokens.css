@@ -54,6 +54,7 @@
 
   /* Layers */
   --z-controls: 10;
+  --z-menu: 20;
   --z-toast: 30;
 }
 
