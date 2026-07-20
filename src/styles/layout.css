@@ -520,9 +520,34 @@
     padding: var(--space-3);
   }
 
+  /* The side notch insets shrink the usable width to roughly a portrait
+     phone's, so the header gets the same compact treatment as max-width
+     640px: smaller brand, no language select (it lives in the settings
+     panel), and wrapping instead of overlapping when space runs out. */
   .app-header {
+    --header-pad-inline: var(--space-3);
+    flex-wrap: wrap;
+    row-gap: var(--space-1);
     padding-block: calc(var(--space-1) + var(--safe-top)) var(--space-1);
     min-height: 2.5rem;
+  }
+
+  .brand__name {
+    font-size: var(--text-l);
+  }
+
+  .brand__logo {
+    height: 1.6rem;
+  }
+
+  .header-actions {
+    margin-inline-start: auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .header-actions .select--compact {
+    display: none;
   }
 
   .layout {
