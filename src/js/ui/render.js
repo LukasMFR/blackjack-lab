@@ -32,9 +32,10 @@ export function renderStaticLabels() {
   $('btn-multiplayer').setAttribute('aria-label', t('nav.multiplayer'));
   $('btn-multiplayer').title = t('nav.multiplayer');
   $('btn-help').textContent = t('nav.help');
-  $('btn-settings').textContent = t('nav.settings');
   $('btn-help').setAttribute('aria-label', t('a11y.openHelp'));
+  // Icon-only entry: the accessible name and tooltip carry the label.
   $('btn-settings').setAttribute('aria-label', t('a11y.openSettings'));
+  $('btn-settings').title = t('nav.settings');
   $('dealer-label').textContent = t('hand.dealer');
   $('player-label').textContent = t('a11y.playerHands');
   $('controls-label').textContent = t('a11y.controls');
