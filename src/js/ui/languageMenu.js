@@ -22,6 +22,7 @@ const TYPEAHEAD_RESET_MS = 500;
 let button = null;
 let listbox = null;
 let valueEl = null;
+let codeEl = null;
 let optionEls = [];
 
 let isOpen = false;
@@ -44,6 +45,7 @@ export function initLanguageMenu(config) {
   button = $('language-button');
   listbox = $('language-listbox');
   valueEl = $('language-value');
+  codeEl = $('language-code');
   optionEls = [...listbox.querySelectorAll('[role="option"]')];
 
   button.addEventListener('click', () => (isOpen ? closeMenu() : openMenu()));
@@ -81,11 +83,12 @@ export function setLanguageMenuValue(language) {
   selectedIndex = index;
   optionEls.forEach((el, i) => el.setAttribute('aria-selected', String(i === index)));
 
-  // The globe shows no text, so the language reaches assistive tech through
-  // the hidden value span (part of the button's accessible name) and sighted
-  // users through the tooltip — the same split the sound button uses.
+  // The button shows a code; the hidden span carries the full name into the
+  // accessible name, and the tooltip expands the code for sighted users —
+  // the same split the sound button uses.
   const label = optionEls[index].querySelector('span').textContent;
   valueEl.textContent = label;
+  codeEl.textContent = optionEls[index].dataset.value.toUpperCase();
   button.title = label;
 }
 

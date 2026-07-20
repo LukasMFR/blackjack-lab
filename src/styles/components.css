@@ -227,10 +227,17 @@ kbd {
     border-color var(--dur-fast) var(--ease-out);
 }
 
-/* Icon-only trigger, sized like .btn--icon so the header row stays even. */
-.menu-select__button--icon svg {
+/* Matches the icon size the other header buttons use. */
+.menu-select__globe {
   width: 1.35rem;
   height: 1.35rem;
+}
+
+/* Shorthand for the active language: quieter than the surrounding labels,
+   so the globe stays the thing you notice. */
+.menu-select__code {
+  font-size: var(--text-s);
+  letter-spacing: 0.04em;
 }
 
 .menu-select__button:hover {
@@ -238,11 +245,15 @@ kbd {
   background: var(--surface-raised);
 }
 
-/* An icon-only trigger has no caret to turn, so the open menu is signalled
-   by holding the button in its hover treatment. */
-.menu-select__button[aria-expanded="true"] {
-  border-color: var(--border-strong);
-  background: var(--surface-raised);
+.menu-select__arrow {
+  width: 0.9rem;
+  height: 0.9rem;
+  opacity: 0.75;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.menu-select__button[aria-expanded="true"] .menu-select__arrow {
+  transform: rotate(180deg);
 }
 
 /* The list sits inside the header, which sets its own ink in some themes,

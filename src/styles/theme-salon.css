@@ -131,8 +131,7 @@
   box-shadow: none;
 }
 
-[data-theme="salon"] .app-header .menu-select__button:hover,
-[data-theme="salon"] .app-header .menu-select__button[aria-expanded="true"] {
+[data-theme="salon"] .app-header .menu-select__button:hover {
   background: rgb(242 231 212 / 0.1);
   border-color: rgb(242 231 212 / 0.48);
 }

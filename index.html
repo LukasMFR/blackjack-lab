@@ -37,14 +37,20 @@
     <div class="header-actions">
       <div class="menu-select select--compact" id="language-menu">
         <span class="sr-only" id="language-label"></span>
-        <button type="button" class="menu-select__button menu-select__button--icon" id="language-button" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-controls="language-listbox" aria-labelledby="language-label language-button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <button type="button" class="menu-select__button" id="language-button" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-controls="language-listbox" aria-labelledby="language-label language-value">
+          <svg class="menu-select__globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <circle cx="12" cy="12" r="9"/>
             <path d="M3 12h18"/>
             <path d="M12 3a14.5 14.5 0 0 0 0 18 14.5 14.5 0 0 0 0-18"/>
           </svg>
-          <!-- Carries the current language into the button's accessible name. -->
+          <!-- The code is shorthand for sighted users. The name is built from
+               #language-value rather than the button, so the code never has to
+               be excluded from it. -->
+          <span class="menu-select__code" id="language-code" aria-hidden="true"></span>
           <span class="sr-only" id="language-value"></span>
+          <svg class="menu-select__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
         </button>
         <ul class="menu-select__list" id="language-listbox" role="listbox" aria-labelledby="language-label" hidden>
           <li class="menu-select__option" id="language-option-en" role="option" data-value="en" aria-selected="false">
