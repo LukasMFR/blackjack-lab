@@ -291,7 +291,7 @@ kbd {
   /* Wider than the icon trigger it hangs from, so the panel reads as a menu. */
   min-width: 10rem;
   /* Long rule names wrap inside the panel instead of widening it off-screen. */
-  max-width: min(22rem, calc(100vw - 2rem));
+  max-width: min(22rem, calc(100vw - 2rem - var(--safe-left) - var(--safe-right)));
   max-height: 18rem;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -665,8 +665,8 @@ kbd {
  * body scrolls, so the close button always stays inside the viewport.
  */
 .dialog {
-  width: min(38rem, calc(100vw - 2rem));
-  max-height: min(88dvh, 56.25rem);
+  width: min(38rem, calc(100vw - 2rem - var(--safe-left) - var(--safe-right)));
+  max-height: min(calc(88dvh - var(--safe-top) - var(--safe-bottom)), 56.25rem);
   padding: 0;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-l);
@@ -681,11 +681,11 @@ kbd {
 }
 
 .dialog--wide {
-  width: min(92vw, 56.25rem);
+  width: min(92vw, calc(100vw - 2rem - var(--safe-left) - var(--safe-right)), 56.25rem);
 }
 
 .dialog--confirm {
-  width: min(24rem, calc(100vw - 2rem));
+  width: min(24rem, calc(100vw - 2rem - var(--safe-left) - var(--safe-right)));
 }
 
 .dialog::backdrop {
@@ -981,6 +981,31 @@ kbd {
   color: var(--text);
 }
 
+/*
+ * Narrow screens: flex wrapping produces ragged rows and orphaned options
+ * (long localized labels never share a row cleanly), so segments become a
+ * stacked grid of equal, full-width rows. Groups of two or four options fit
+ * a balanced two-column grid instead; odd counts stay single-column so no
+ * option is ever left alone in a row.
+ */
+@media (max-width: 640px) {
+  .segment {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-self: stretch;
+  }
+
+  .segment:has(> .segment__option:nth-child(2):last-child),
+  .segment:has(> .segment__option:nth-child(4):last-child) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .segment__option {
+    min-height: 2.75rem;
+    text-align: center;
+  }
+}
+
 /* Audio settings */
 .audio-controls {
   display: flex;
@@ -1215,10 +1240,10 @@ kbd {
 .toast {
   position: fixed;
   left: 50%;
-  bottom: calc(var(--space-5) + env(safe-area-inset-bottom));
+  bottom: calc(var(--space-5) + var(--safe-bottom));
   transform: translateX(-50%);
   z-index: var(--z-toast);
-  max-width: min(26rem, calc(100vw - 2rem));
+  max-width: min(26rem, calc(100vw - 2rem - var(--safe-left) - var(--safe-right)));
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-m);
   background: var(--text);

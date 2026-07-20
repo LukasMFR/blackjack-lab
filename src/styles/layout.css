@@ -5,7 +5,10 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  padding: var(--space-3) clamp(var(--space-4), 4vw, var(--space-7));
+  --header-pad-inline: clamp(var(--space-4), 4vw, var(--space-7));
+  padding-block: calc(var(--space-3) + var(--safe-top)) var(--space-3);
+  padding-inline: calc(var(--header-pad-inline) + var(--safe-left))
+    calc(var(--header-pad-inline) + var(--safe-right));
   border-bottom: 1px solid var(--border);
   background: var(--surface);
   min-height: 4rem;
@@ -55,7 +58,10 @@
   gap: clamp(var(--space-4), 2.5vw, var(--space-6));
   width: min(100%, 1460px);
   margin: 0 auto;
-  padding: clamp(var(--space-3), 3vw, var(--space-6));
+  --layout-pad: clamp(var(--space-3), 3vw, var(--space-6));
+  padding-block: var(--layout-pad);
+  padding-inline: calc(var(--layout-pad) + var(--safe-left))
+    calc(var(--layout-pad) + var(--safe-right));
 }
 
 .table-column {
@@ -368,15 +374,15 @@
 
 @media (max-width: 640px) {
   .layout {
-    padding-inline: var(--space-3);
-    padding-block: var(--space-3) calc(var(--space-3) + env(safe-area-inset-bottom));
+    --layout-pad: var(--space-3);
+    padding-block: var(--space-3) calc(var(--space-3) + var(--safe-bottom));
     gap: var(--space-4);
   }
 
   /* Keep decisions under the thumb. */
   .controls {
     position: sticky;
-    bottom: calc(var(--space-2) + env(safe-area-inset-bottom));
+    bottom: calc(var(--space-2) + var(--safe-bottom));
     z-index: var(--z-controls);
     box-shadow: var(--shadow);
   }
@@ -413,7 +419,7 @@
   .app-header {
     flex-wrap: wrap;
     row-gap: var(--space-1);
-    padding-block: var(--space-2);
+    padding-block: calc(var(--space-2) + var(--safe-top)) var(--space-2);
     min-height: 3.25rem;
   }
 
@@ -440,7 +446,7 @@
 
   .app-header {
     min-height: 3rem;
-    padding-block: var(--space-2);
+    padding-block: calc(var(--space-2) + var(--safe-top)) var(--space-2);
   }
 
   .layout {
@@ -515,12 +521,12 @@
   }
 
   .app-header {
-    padding-block: var(--space-1);
+    padding-block: calc(var(--space-1) + var(--safe-top)) var(--space-1);
     min-height: 2.5rem;
   }
 
   .layout {
-    padding-block: var(--space-2);
+    padding-block: var(--space-2) calc(var(--space-2) + var(--safe-bottom));
     gap: var(--space-2);
   }
 

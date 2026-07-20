@@ -118,10 +118,24 @@ function applyAppearance() {
     ? (darkQuery.matches ? 'dark' : 'light')
     : state.appearance;
   document.documentElement.dataset.mode = mode;
+  updateThemeColor();
 }
 
 function applyTheme() {
   document.documentElement.dataset.theme = state.theme;
+  updateThemeColor();
+}
+
+/**
+ * Keep the browser chrome (Safari tab bar, Android status bar) on the active
+ * theme's surface colour: the token the header and overscroll canvas use.
+ */
+function updateThemeColor() {
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (!meta) return;
+  const surface = getComputedStyle(document.documentElement)
+    .getPropertyValue('--surface').trim();
+  if (surface) meta.setAttribute('content', surface);
 }
 
 darkQuery.addEventListener('change', () => {

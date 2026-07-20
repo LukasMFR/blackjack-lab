@@ -56,6 +56,14 @@
   --z-controls: 10;
   --z-menu: 20;
   --z-toast: 30;
+
+  /* Device safe areas (iPhone notch, Dynamic Island, home indicator).
+     Every edge-aligned rule adds exactly one of these to its own padding,
+     so insets are never applied twice on the same edge. */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
 }
 
 /* ---------------------------------------------------------------- classic */

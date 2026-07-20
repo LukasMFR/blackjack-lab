@@ -8,6 +8,21 @@
 
 html {
   height: 100%;
+  /* The canvas behind rubber-band overscroll. Matches the header surface and
+     the <meta name="theme-color"> value, so Safari's chrome, the top edge of
+     the page, and overscroll read as one continuous colour. */
+  background: var(--surface);
+  transition: background-color var(--dur-med) var(--ease-out);
+}
+
+/* The appearance the app resolved (JS maps "system" onto one of these), so
+   form controls, scrollbars, and UA surfaces follow the app, not the OS. */
+[data-mode="light"] {
+  color-scheme: light;
+}
+
+[data-mode="dark"] {
+  color-scheme: dark;
 }
 
 body {
@@ -79,8 +94,8 @@ dialog {
 
 .skip-link {
   position: absolute;
-  top: var(--space-2);
-  left: var(--space-2);
+  top: calc(var(--space-2) + var(--safe-top));
+  left: calc(var(--space-2) + var(--safe-left));
   z-index: var(--z-toast);
   padding: var(--space-2) var(--space-4);
   background: var(--surface-raised);
