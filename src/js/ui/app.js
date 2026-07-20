@@ -35,7 +35,7 @@ const CHIP_VALUES = [5, 10, 25, 50, 100, 500];
 const state = {
   language: 'en',
   appearance: 'system', // 'system' | 'light' | 'dark'
-  theme: 'classic', // 'classic' | 'minimal' | 'salon'
+  theme: 'salon', // 'classic' | 'minimal' | 'salon'
   profileId: DEFAULT_PROFILE_ID,
   customSettings: null,
   customProfile: null,
@@ -90,7 +90,7 @@ function loadPreferences() {
   setI18nLanguage(state.language);
 
   state.appearance = storage.getChoice('appearance', ['system', 'light', 'dark'], 'system');
-  state.theme = storage.getChoice('theme', ['classic', 'minimal', 'salon'], 'classic');
+  state.theme = storage.getChoice('theme', ['classic', 'minimal', 'salon'], 'salon');
   state.profileId = storage.getChoice('profile', PROFILE_IDS, DEFAULT_PROFILE_ID);
   state.customSettings = storage.getObject('customProfile');
 
