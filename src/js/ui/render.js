@@ -28,12 +28,12 @@ export function renderStaticLabels() {
   // First half of the button's name ("Language, French") and the listbox's,
   // both via aria-labelledby.
   $('language-label').textContent = t('a11y.chooseLanguage');
-  // Icon-only entry: the accessible name and tooltip carry the label.
+  // Icon-only entries: the accessible name and tooltip carry the label, so
+  // none of these may be given textContent — it would replace the inline SVG.
   $('btn-multiplayer').setAttribute('aria-label', t('nav.multiplayer'));
   $('btn-multiplayer').title = t('nav.multiplayer');
-  $('btn-help').textContent = t('nav.help');
   $('btn-help').setAttribute('aria-label', t('a11y.openHelp'));
-  // Icon-only entry: the accessible name and tooltip carry the label.
+  $('btn-help').title = t('nav.help');
   $('btn-settings').setAttribute('aria-label', t('a11y.openSettings'));
   $('btn-settings').title = t('nav.settings');
   $('dealer-label').textContent = t('hand.dealer');
