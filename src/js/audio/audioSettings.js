@@ -16,9 +16,10 @@ export const DEFAULT_AUDIO_SETTINGS = Object.freeze({
   effectsEnabled: true,
   effectsVolume: 0.8,
   uiSoundsEnabled: true,
+  variationEnabled: true,
 });
 
-const BOOL_KEYS = ['enabled', 'muted', 'musicEnabled', 'ambienceEnabled', 'effectsEnabled', 'uiSoundsEnabled'];
+const BOOL_KEYS = ['enabled', 'muted', 'musicEnabled', 'ambienceEnabled', 'effectsEnabled', 'uiSoundsEnabled', 'variationEnabled'];
 const VOLUME_KEYS = ['masterVolume', 'musicVolume', 'ambienceVolume', 'effectsVolume'];
 
 /**

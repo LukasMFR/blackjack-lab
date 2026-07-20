@@ -323,6 +323,36 @@ test('rapid identical sounds are throttled to one', async () => {
   manager.dispose();
 });
 
+test('disabling variation makes every press identical', async () => {
+  // random() would pick the LAST variant and max jitter; with variation
+  // off the first variant must play at exactly its base gain and rate 1.
+  const ctx = new FakeContext();
+  let clock = 0;
+  const manager = new AudioManager({
+    settings: { ...DEFAULT_AUDIO_SETTINGS, variationEnabled: false },
+    createContext: () => ctx,
+    fetchArrayBuffer: async (url) => {
+      const buf = new ArrayBuffer(url.includes('music/') ? 100 : 8);
+      return buf;
+    },
+    now: () => { clock += 1000; return clock; },
+    random: () => 0.999,
+  });
+  manager.unlock();
+  await settle();
+  const before = ctx.startedSources.length;
+  assertEqual(manager.playSound('chipAdd'), true);
+  const source = ctx.startedSources[before];
+  assertEqual(source.playbackRate.value, 1, 'no pitch jitter');
+  const gainNode = source.connections[0];
+  assertEqual(gainNode.gain.value, SOUNDS.chipAdd.gain, 'exact base gain');
+  manager.updateSettings({ variationEnabled: true });
+  assertEqual(manager.playSound('cardDeal'), true);
+  const varied = ctx.startedSources[ctx.startedSources.length - 1];
+  assert(varied.playbackRate.value !== 1, 'variation restored');
+  manager.dispose();
+});
+
 test('a missing audio file is silent, harmless, and non-fatal', async () => {
   const failing = SOUNDS.resultPush.files.concat(SOUNDS.knock.files);
   const { manager } = makeManager({ failFiles: failing });

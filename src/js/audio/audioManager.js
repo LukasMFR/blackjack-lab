@@ -328,12 +328,14 @@ export class AudioManager {
     try {
       const source = this.#ctx.createBufferSource();
       source.buffer = entry.buffer;
-      const jitter = def.pitchJitter ?? 0;
+      // With variation disabled, every press is pitch-perfect and identical.
+      const vary = s.variationEnabled;
+      const jitter = vary ? (def.pitchJitter ?? 0) : 0;
       if (jitter > 0 && source.playbackRate) {
         source.playbackRate.value = 1 + (this.#random() * 2 - 1) * jitter;
       }
       const level = (def.gain ?? 1) * gainScale
-        * (1 + (this.#random() * 2 - 1) * (def.gainJitter ?? 0));
+        * (vary ? 1 + (this.#random() * 2 - 1) * (def.gainJitter ?? 0) : 1);
       const gainNode = this.#ctx.createGain();
       gainNode.gain.value = Math.max(0, level);
       source.connect(gainNode);
@@ -362,6 +364,7 @@ export class AudioManager {
       for (const file of def.files) this.#loadBuffer(file);
       return null;
     }
+    if (!this.#settings.variationEnabled) return candidates[0];
     return candidates[Math.floor(this.#random() * candidates.length)];
   }
 

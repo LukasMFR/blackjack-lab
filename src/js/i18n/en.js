@@ -156,6 +156,7 @@ export default {
     audioEffects: 'Sound effects',
     audioEffectsVolume: 'Effects volume',
     audioUi: 'Interface sounds',
+    audioVariation: 'Sound variation',
     audioTest: 'Test sound',
     audioDefaults: 'Restore audio defaults',
     audioOn: 'Sound on',

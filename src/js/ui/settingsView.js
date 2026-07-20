@@ -161,6 +161,9 @@ function renderAudioSection() {
     switchRow('audio-ui', t('settings.audioUi'), s.uiSoundsEnabled,
       !s.enabled || !s.effectsEnabled,
       (value) => patch({ uiSoundsEnabled: value })),
+    switchRow('audio-variation', t('settings.audioVariation'), s.variationEnabled,
+      !s.enabled || !s.effectsEnabled,
+      (value) => patch({ variationEnabled: value })),
   );
 
   const actions = document.createElement('div');
