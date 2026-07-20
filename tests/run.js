@@ -7,6 +7,7 @@ import './qr.test.js';
 import './multiplayerTable.test.js';
 import './protocol.test.js';
 import './multiplayerSession.test.js';
+import './menuSelect.test.js';
 import { runAll } from './runner.js';
 
 await runAll();

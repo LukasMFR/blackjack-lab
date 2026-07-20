@@ -61,6 +61,11 @@ export function bindMenuSelect({ root, onSelect, onValueShown }) {
   let trackingFrame = 0;
   let lastAnchor = '';
 
+  // Whether the menu was open when the current pointer gesture began, or null
+  // when no gesture is in flight. A press has to act on the state it started
+  // from rather than the state at click time; see the click handler.
+  let openAtGestureStart = null;
+
   /* ------------------------------------------------------------ placement */
 
   // Fixed placement has to be recomputed by hand: below the trigger when
@@ -170,12 +175,36 @@ export function bindMenuSelect({ root, onSelect, onValueShown }) {
 
   /* --------------------------------------------------------------- events */
 
+  /**
+   * Whether a pointer event landed on this control.
+   *
+   * The composed path decides, not event.target. Safari can report a target
+   * that is not the element pressed, and reading it made a press on the
+   * trigger look like an outside click: the menu closed on pointerdown and
+   * the trigger's own click reopened it, so one gesture produced two state
+   * changes and the menu never appeared to close. The path also survives
+   * shadow roots, where a retargeted event.target is the documented result
+   * rather than a quirk.
+   */
+  function isInsideControl(event) {
+    const path = typeof event.composedPath === 'function' ? event.composedPath() : null;
+    if (path && path.length > 0) {
+      return path.includes(button) || path.includes(listbox) || path.includes(root);
+    }
+    return root.contains(event.target);
+  }
+
   function handleDocumentPointerDown(event) {
-    if (!root.contains(event.target)) closeMenu({ restoreFocus: false });
+    if (!isInsideControl(event)) closeMenu({ restoreFocus: false });
   }
 
   function handleKeydown(event) {
     const { key } = event;
+
+    // Keyboard activation belongs to no pointer gesture. Clearing here drops
+    // a reading left behind by a press that never produced a click, such as
+    // a drag off the trigger or a cancelled touch.
+    openAtGestureStart = null;
 
     if (!isOpen) {
       if (OPENING_KEYS.has(key)) {
@@ -237,7 +266,20 @@ export function bindMenuSelect({ root, onSelect, onValueShown }) {
     if (match !== -1) setActive(match);
   }
 
-  button.addEventListener('click', () => (isOpen ? closeMenu() : openMenu()));
+  // pointerdown runs before anything this gesture might trigger elsewhere, so
+  // it is the one reading of the open state that cannot be corrupted midway.
+  button.addEventListener('pointerdown', () => { openAtGestureStart = isOpen; });
+
+  button.addEventListener('click', () => {
+    // Act on the state the gesture began in. Were this to read isOpen, a
+    // close that happened between pointerdown and click would leave the menu
+    // shut and turn this click into a reopen, which is exactly how one tap
+    // used to close and immediately reopen the menu. Keyboard-driven clicks
+    // carry no gesture and fall back to the live state.
+    const wasOpen = openAtGestureStart ?? isOpen;
+    openAtGestureStart = null;
+    if (wasOpen) closeMenu(); else openMenu();
+  });
   button.addEventListener('keydown', handleKeydown);
 
   // Pointer-down on an option would blur the button and close the menu before
