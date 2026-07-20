@@ -16,6 +16,7 @@ import {
   announce, renderHistory, renderPanels, renderSession, renderStaticLabels, renderTable, showToast,
 } from './render.js';
 import { initSettingsView } from './settingsView.js';
+import { loadStartingBankrollCents, saveStartingBankrollCents } from './bankrollSettings.js';
 import { initLanguageMenu, setLanguageMenuValue } from './languageMenu.js';
 
 /**
@@ -137,13 +138,23 @@ function bankrollKey() {
   return `bankroll.${state.profileId}`;
 }
 
+/**
+ * The bankroll a fresh session starts from: the player's stored choice for
+ * this profile, else the profile's own default.
+ * @returns {number} cents
+ */
+function startingBankrollCents() {
+  const profile = state.activeProfile ?? resolveProfile();
+  return loadStartingBankrollCents(state.profileId, unitsToCents(profile.startingBankrollUnits));
+}
+
 function createGame() {
   const profile = resolveProfile();
   state.activeProfile = profile;
   const savedBankroll = storage.getAmount(bankrollKey());
   state.game = new BlackjackGame({
     profile,
-    bankrollCents: savedBankroll ?? unitsToCents(profile.startingBankrollUnits),
+    bankrollCents: savedBankroll ?? startingBankrollCents(),
   });
   renderCtx.seenCardIds.clear();
   renderCtx.prevHoleHidden = false;
@@ -417,7 +428,22 @@ const controller = {
       showToast(t('errors.generic'));
     }
   },
-  resetBankroll() {
+  getStartingBankrollCents: () => startingBankrollCents(),
+  /**
+   * Apply a new starting bankroll for the active profile. This is a session
+   * boundary: the live bankroll, the round history and the session total all
+   * restart from the new amount.
+   * @param {number} cents
+   */
+  setStartingBankroll(cents) {
+    if (isRoundActive()) return;
+    try {
+      saveStartingBankrollCents(state.profileId, cents);
+    } catch (error) {
+      console.error(error);
+      showToast(t('errors.generic'));
+      return;
+    }
     storage.clear(bankrollKey());
     state.history = [];
     state.roundCounter = 0;
@@ -426,6 +452,8 @@ const controller = {
     persistBankroll();
     renderAll();
     gameAudio.bankrollReset();
+    showToast(t('settings.bankrollApplied', { amount: formatMoney(cents) }));
+    announce(t('settings.bankrollApplied', { amount: formatMoney(cents) }));
   },
 
   /* ------------------------------------------------------------- audio */

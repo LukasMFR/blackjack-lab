@@ -258,7 +258,8 @@
       </fieldset>
       <form class="custom-editor" id="custom-editor" hidden></form>
       <div class="field-group field-group--danger">
-        <button type="button" id="btn-reset-bankroll" class="btn btn--danger"></button>
+        <button type="button" id="btn-set-bankroll" class="btn btn--danger"></button>
+        <p class="fine-print" id="bankroll-locked-note" hidden></p>
       </div>
     </div>
   </dialog>
@@ -271,17 +272,25 @@
     <div class="dialog__body" id="help-body"></div>
   </dialog>
 
-  <dialog class="dialog dialog--confirm" id="dialog-reset" aria-labelledby="reset-title">
+  <dialog class="dialog dialog--confirm" id="dialog-bankroll" aria-labelledby="bankroll-title">
     <header class="dialog__header">
-      <h2 id="reset-title"></h2>
+      <h2 id="bankroll-title"></h2>
     </header>
-    <div class="dialog__body">
-      <p id="reset-body"></p>
-      <div class="button-row">
-        <button type="button" id="btn-reset-cancel" class="btn"></button>
-        <button type="button" id="btn-reset-confirm" class="btn btn--danger"></button>
+    <form class="dialog__body" id="bankroll-form" novalidate>
+      <p class="callout callout--warning" id="bankroll-warning"></p>
+      <div class="field">
+        <label for="bankroll-amount" id="bankroll-amount-label"></label>
+        <input class="text-input" type="text" id="bankroll-amount" inputmode="numeric"
+               autocomplete="off" spellcheck="false"
+               aria-describedby="bankroll-hint bankroll-error">
+        <p class="fine-print" id="bankroll-hint"></p>
+        <p class="field__error" id="bankroll-error" role="alert" hidden></p>
       </div>
-    </div>
+      <div class="button-row">
+        <button type="button" id="btn-bankroll-cancel" class="btn"></button>
+        <button type="submit" id="btn-bankroll-confirm" class="btn btn--danger"></button>
+      </div>
+    </form>
   </dialog>
 
   <script type="module" src="src/js/ui/app.js"></script>

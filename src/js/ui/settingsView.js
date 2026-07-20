@@ -3,8 +3,11 @@ import { formatMoney, formatRatio } from './format.js';
 import { profileSummaryChips } from './profileSummary.js';
 import { PROFILE_IDS, PROFILES } from '../config/profiles.js';
 import { DEAL_MODES } from '../game/constants.js';
-import { unitsToCents } from '../game/money.js';
+import { CENTS_PER_UNIT } from '../game/money.js';
 import { buildMenuSelect } from './menuSelect.js';
+import {
+  MAX_BANKROLL_CENTS, MIN_BANKROLL_CENTS, parseStartingBankroll,
+} from './bankrollSettings.js';
 
 /**
  * Settings and help dialogs. Receives a controller object from app.js and
@@ -47,17 +50,13 @@ export function initSettingsView(appController) {
     controller.audio.dialogOpened();
     $('dialog-help').showModal();
   });
-  $('btn-reset-bankroll').addEventListener('click', () => {
-    renderResetDialog();
-    controller.audio.dialogOpened();
-    $('dialog-reset').showModal();
+  $('btn-set-bankroll').addEventListener('click', () => {
+    if (controller.isRoundActive()) return;
+    openBankrollDialog();
   });
-  $('btn-reset-cancel').addEventListener('click', () => $('dialog-reset').close());
-  $('btn-reset-confirm').addEventListener('click', () => {
-    $('dialog-reset').close();
-    $('dialog-settings').close();
-    controller.resetBankroll();
-  });
+  $('btn-bankroll-cancel').addEventListener('click', () => $('dialog-bankroll').close());
+  $('bankroll-amount').addEventListener('input', clearBankrollError);
+  $('bankroll-form').addEventListener('submit', submitBankroll);
 }
 
 function openSettings() {
@@ -77,7 +76,7 @@ export function renderSettings() {
   $('set-profile-label').textContent = t('settings.profile');
   $('profile-note').textContent = t('profiles.presetNote');
   $('profile-change-note').textContent = t('settings.profileChangeNote');
-  $('btn-reset-bankroll').textContent = t('settings.resetBankroll');
+  renderBankrollButton();
 
   buildSegment($('settings-language'), ['en', 'fr'], state.language,
     (value) => LANGUAGE_LABELS[value],
@@ -485,16 +484,84 @@ function parseDraft(draft) {
   };
 }
 
-/* ----------------------------------------------------------- reset dialog */
+/* -------------------------------------------------------- bankroll dialog */
 
-function renderResetDialog() {
-  const state = controller.getState();
-  $('reset-title').textContent = t('settings.resetTitle');
-  $('reset-body').textContent = t('settings.resetBody', {
-    amount: formatMoney(unitsToCents(state.activeProfile.startingBankrollUnits)),
+/**
+ * The starting bankroll is locked mid-round: applying it would wipe a hand
+ * that already holds committed bets.
+ */
+function renderBankrollButton() {
+  const locked = controller.isRoundActive();
+  const button = $('btn-set-bankroll');
+  button.textContent = t('settings.setBankroll');
+  button.disabled = locked;
+  const note = $('bankroll-locked-note');
+  note.textContent = t('settings.bankrollLocked');
+  note.hidden = !locked;
+}
+
+function openBankrollDialog() {
+  const current = controller.getStartingBankrollCents();
+
+  $('bankroll-title').textContent = t('settings.bankrollTitle');
+  $('bankroll-warning').textContent = t('settings.bankrollWarning');
+  $('bankroll-amount-label').textContent = t('settings.bankrollLabel');
+  $('bankroll-hint').textContent = t('settings.bankrollHint', {
+    min: formatMoney(MIN_BANKROLL_CENTS),
+    max: formatMoney(MAX_BANKROLL_CENTS),
   });
-  $('btn-reset-cancel').textContent = t('settings.resetCancel');
-  $('btn-reset-confirm').textContent = t('settings.resetConfirm');
+  $('btn-bankroll-cancel').textContent = t('settings.bankrollCancel');
+  $('btn-bankroll-confirm').textContent = t('settings.bankrollApply');
+
+  // Pre-filled with the amount in force, so confirming without editing is a
+  // no-op rather than a surprise.
+  const input = $('bankroll-amount');
+  input.value = String(current / CENTS_PER_UNIT);
+  clearBankrollError();
+
+  controller.audio.dialogOpened();
+  $('dialog-bankroll').showModal();
+  input.select();
+}
+
+function clearBankrollError() {
+  const error = $('bankroll-error');
+  error.hidden = true;
+  error.textContent = '';
+  $('bankroll-amount').removeAttribute('aria-invalid');
+}
+
+function showBankrollError(key, params) {
+  const error = $('bankroll-error');
+  error.textContent = t(key, params);
+  error.hidden = false;
+  const input = $('bankroll-amount');
+  input.setAttribute('aria-invalid', 'true');
+  input.focus();
+  controller.audio.actionRejected();
+}
+
+function submitBankroll(event) {
+  event.preventDefault();
+
+  const parsed = parseStartingBankroll($('bankroll-amount').value);
+  if (!parsed.ok) {
+    showBankrollError(parsed.errorKey, {
+      min: formatMoney(MIN_BANKROLL_CENTS),
+      max: formatMoney(MAX_BANKROLL_CENTS),
+    });
+    return;
+  }
+
+  // The round may have started between opening the dialog and confirming.
+  if (controller.isRoundActive()) {
+    showBankrollError('errors.bankrollRoundActive', {});
+    return;
+  }
+
+  $('dialog-bankroll').close();
+  $('dialog-settings').close();
+  controller.setStartingBankroll(parsed.cents);
 }
 
 /* -------------------------------------------------------------- help body */
