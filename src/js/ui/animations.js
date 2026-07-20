@@ -9,10 +9,10 @@ import * as storage from './storage.js';
  * with GPU-friendly motion (transforms and opacity).
  *
  * Modes (persisted under "animations", resolved onto <html data-anim>):
- *   enhanced — full casino motion: card flights and flips, chip payouts,
+ *   enhanced: full casino motion, card flights and flips, chip payouts,
  *              money count-ups, result glows;
- *   classic  — the original light CSS animations, untouched;
- *   off      — non-essential motion neutralized (see animations.css).
+ *   classic: the original light CSS animations, untouched;
+ *   off: non-essential motion neutralized (see animations.css).
  *
  * Users who ask their system for reduced motion default to classic, which
  * the global reduced-motion rule keeps instant; an explicit non-off choice

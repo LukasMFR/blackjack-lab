@@ -10,6 +10,7 @@ import { APP_VERSION } from '../version.js';
 
 const REPO_URL = 'https://github.com/LukasMFR/blackjack-lab';
 const REPO_LABEL = 'github.com/LukasMFR/blackjack-lab';
+const GITHUB_PAGES_PRIVACY_URL = 'https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages#data-collection';
 
 /*
  * Third-party credits. The descriptive sentence is translated; creator and
@@ -20,7 +21,7 @@ const CREDITS = [
   {
     bodyKey: 'info.creditFont',
     links: [
-      { label: 'Marcellus — Google Fonts', url: 'https://fonts.google.com/specimen/Marcellus' },
+      { label: 'Marcellus, Google Fonts', url: 'https://fonts.google.com/specimen/Marcellus' },
       { label: 'SIL Open Font License 1.1', url: 'https://openfontlicense.org' },
     ],
   },
@@ -35,14 +36,14 @@ const CREDITS = [
   {
     bodyKey: 'info.creditCasinoSfx',
     links: [
-      { label: 'Kenney — Casino Audio', url: 'https://kenney.nl/assets/casino-audio' },
+      { label: 'Kenney, Casino Audio', url: 'https://kenney.nl/assets/casino-audio' },
       { label: 'CC0 1.0', url: 'https://creativecommons.org/publicdomain/zero/1.0/' },
     ],
   },
   {
     bodyKey: 'info.creditUiSfx',
     links: [
-      { label: 'Kenney — Interface Sounds', url: 'https://kenney.nl/assets/interface-sounds' },
+      { label: 'Kenney, Interface Sounds', url: 'https://kenney.nl/assets/interface-sounds' },
       { label: 'CC0 1.0', url: 'https://creativecommons.org/publicdomain/zero/1.0/' },
     ],
   },
@@ -97,6 +98,7 @@ export function renderInfoPage(container) {
   const privacy = section('info.privacyTitle');
   paragraph(privacy, t('info.privacyBody1'));
   paragraph(privacy, t('info.privacyBody2'));
+  privacy.append(linkRow([{ label: t('info.privacyHostLink'), url: GITHUB_PAGES_PRIVACY_URL }]));
 
   const data = section('info.dataTitle');
   paragraph(data, t('info.dataBody1'));

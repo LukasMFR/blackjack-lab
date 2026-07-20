@@ -4,8 +4,8 @@ import { ACTIONS, HAND_STATUS, RESULTS, ROUND_STATES } from '../game/constants.j
  * Game-event → sound director.
  *
  * The app controller calls these semantic hooks; card, bust, and result
- * sounds are derived by diffing engine snapshots (structured data — card
- * ids, statuses, round state — never rendered text). The blackjack
+ * sounds are derived by diffing engine snapshots (structured data such as card
+ * ids, statuses and round state, never rendered text). The blackjack
  * engine itself is untouched.
  */
 
@@ -107,8 +107,8 @@ export function createGameAudio(manager) {
 
     /**
      * Voice the difference between two engine snapshots: newly dealt
-     * cards, the hole-card reveal, fresh busts, and — exactly once per
-     * round, on the edge into ROUND_COMPLETE — the round's result sound.
+     * cards, the hole-card reveal, fresh busts and, exactly once per
+     * round on the edge into ROUND_COMPLETE, the round's result sound.
      * @param {object} before - snapshot taken before the mutation
      * @param {object} after - snapshot taken after the mutation
      * @param {{baseDelay?: number}} [options]

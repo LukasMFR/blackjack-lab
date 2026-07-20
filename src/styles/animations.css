@@ -2,11 +2,11 @@
  * Animation preference system. ui/animations.js resolves the stored
  * preference and prefers-reduced-motion onto <html data-anim>:
  *
- *   enhanced — the rules in this file: card flights from the shoe, 3D
+ *   enhanced: the rules in this file, card flights from the shoe, 3D
  *              flips, chip ghosts, result glows;
- *   classic  — the original light animations (cards.css, components.css),
+ *   classic: the original light animations (cards.css, components.css),
  *              untouched: nothing in this file applies;
- *   off      — the neutralizer below silences non-essential motion.
+ *   off: the neutralizer below silences non-essential motion.
  *
  * Everything animates transform and opacity only, so the work stays on
  * the compositor and degrades gracefully on slower devices.

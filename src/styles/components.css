@@ -659,8 +659,8 @@ kbd {
 
 /*
  * One dialog shell, two sizes:
- *   .dialog          — default (and .dialog--confirm stays compact)
- *   .dialog--wide    — content-heavy panels (settings, help)
+ *   .dialog: default (and .dialog--confirm stays compact)
+ *   .dialog--wide: content-heavy panels (settings, help)
  * An open dialog is a column: the header never scrolls away, only the
  * body scrolls, so the close button always stays inside the viewport.
  */

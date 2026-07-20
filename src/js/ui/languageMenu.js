@@ -26,7 +26,7 @@ export function initLanguageMenu(config) {
     onSelect: config.onSelect,
     // The button shows a code; the hidden value span carries the full name
     // into the accessible name, and the tooltip expands the code for sighted
-    // users — the same split the sound button uses.
+    // users, which is the same split the sound button uses.
     onValueShown: (option) => {
       codeEl.textContent = option.dataset.value.toUpperCase();
       button.title = option.querySelector('span').textContent;

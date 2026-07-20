@@ -427,7 +427,7 @@
 /*
  * Compact laptop mode: desktop widths with limited vertical space
  * (13"–16" laptops, ~1280x720 up to ~1512x823). Trim only vertical
- * rhythm — cards and controls stay comfortably readable and clickable.
+ * rhythm, so cards and controls stay comfortably readable and clickable.
  */
 @media (min-width: 900px) and (max-height: 920px) {
   :root {

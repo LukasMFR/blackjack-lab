@@ -1,6 +1,6 @@
 /**
  * Audio preference model: defaults, validation, and (de)serialization.
- * Pure data — no Web Audio, no DOM — so it is fully testable in Node.
+ * Pure data with no Web Audio or DOM, so it is fully testable in Node.
  */
 
 export const AUDIO_SETTINGS_KEY = 'audio';

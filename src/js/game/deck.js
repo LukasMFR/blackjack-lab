@@ -5,7 +5,7 @@ import { createCard } from './card.js';
  * Build the ordered (unshuffled) contents of a shoe.
  * @param {number} deckCount - number of 52-card decks
  * @param {string[]} [removedRanks] - ranks omitted from every deck
- *   (e.g. ['10'] for a 48-card Spanish deck — architecture hook)
+ *   (e.g. ['10'] for a 48-card Spanish deck; architecture hook)
  * @returns {ReturnType<typeof createCard>[]}
  */
 export function buildShoeCards(deckCount, removedRanks = []) {

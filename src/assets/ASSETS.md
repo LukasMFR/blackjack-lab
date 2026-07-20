@@ -12,8 +12,8 @@ CDN is used at runtime.
 - Source: Google Fonts, https://fonts.google.com/specimen/Marcellus
   (downloaded 2026-07-20 from fonts.gstatic.com, family version v14)
 - License: SIL Open Font License 1.1 (OFL),
-  https://openfontlicense.org — free for commercial use, embedding, and
-  redistribution with software.
+  https://openfontlicense.org (free for commercial use, embedding, and
+  redistribution with software).
 - Usage: display face for the "Salon privé" visual theme only (headings,
   table message, bankroll figures). Declared with `font-display: swap`;
   browsers download it only when the theme actually uses it.
@@ -25,17 +25,17 @@ CDN is used at runtime.
 The Blackjack Lab identity lives in `logo/` and is an original work created
 for this project (same terms as the project; no third-party artwork used):
 
-- `logo/mark.svg` — the compact mark: the "dissected spade", one half solid
+- `logo/mark.svg`: the compact mark, the "dissected spade", one half solid
   ink, the other half a fine gold construction outline split by a hairline
   seam (the casino and the lab reading the same card). Adapts to the OS
   color scheme via `prefers-color-scheme`; intended for standalone use
   (documentation, about screens).
-- `logo/logo-full.svg` — the primary horizontal lockup: mark plus the
+- `logo/logo-full.svg`: the primary horizontal lockup, mark plus the
   "BLACKJACK LAB" wordmark. The wordmark letterforms were outlined to
   vector paths from the locally bundled Marcellus font (SIL Open Font
   License 1.1, see Fonts above; the OFL permits embedding and conversion),
   so the file is fully self-contained and needs no font at render time.
-- `logo/favicon.svg` — the app icon: solid ivory spade with the gold seam
+- `logo/favicon.svg`: the app icon, a solid ivory spade with the gold seam
   on a bordeaux plate with a fine brass keyline, legible at 16 px in both
   light and dark tab strips.
 
@@ -53,7 +53,7 @@ with `loudnorm I=-17`).
 
 ### Music
 
-#### "Lobby Time" — Kevin MacLeod
+#### "Lobby Time" by Kevin MacLeod
 
 - File: `audio/music/lobby-time.mp3`
 - Original title: Lobby Time
@@ -62,15 +62,15 @@ with `loudnorm I=-17`).
   https://incompetech.com/music/royalty-free/mp3-royaltyfree/Lobby%20Time.mp3
   (downloaded 2026-07-20)
 - License: Creative Commons Attribution 4.0 International (CC BY 4.0),
-  https://creativecommons.org/licenses/by/4.0/ — free for commercial
-  use and redistribution with attribution.
+  https://creativecommons.org/licenses/by/4.0/ (free for commercial
+  use and redistribution with attribution).
 - Attribution: "Lobby Time" Kevin MacLeod (incompetech.com),
   Licensed under Creative Commons: By Attribution 4.0.
-- Modifications: re-encoded from 256 kbps to VBR ~130 kbps,
-  loudness-normalized. No musical edits.
+- Technical modifications: re-encoded from 256 kbps to VBR ~130 kbps and
+  loudness-normalized, with no change to the musical composition.
 - Usage: background music, crossfade-looped at runtime.
 
-### Card and chip sound effects — Kenney "Casino Audio" pack
+### Card and chip sound effects from Kenney's "Casino Audio" pack
 
 - Files: `audio/cards/deal-1..4.mp3` (from `card-slide-1/2/3/5.ogg`),
   `audio/cards/reveal-1..2.mp3` (from `card-place-1/2.ogg`),
@@ -89,7 +89,7 @@ with `loudnorm I=-17`).
 - Modifications: converted OGG → mono MP3, peak-normalized, leading
   silence trimmed, files renamed.
 
-### Interface sound effects — Kenney "Interface Sounds" pack
+### Interface sound effects from Kenney's "Interface Sounds" pack
 
 - Files: `audio/ui/click-1..3.mp3` (from `click_002/003/004.ogg`),
   `audio/ui/toggle-1..2.mp3` (from `switch_004/005.ogg`),

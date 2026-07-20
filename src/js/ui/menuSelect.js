@@ -8,15 +8,15 @@
  * control, exactly as a native select has.
  *
  * Two entry points share one behaviour core:
- *   bindMenuSelect  — drive markup that already exists (the header globe).
- *   buildMenuSelect — create the standard markup, then drive it.
+ *   bindMenuSelect: drive markup that already exists (the header globe).
+ *   buildMenuSelect: create the standard markup, then drive it.
  *
  * The panel is positioned as a fixed element rather than an absolute one so
  * it escapes scroll containers: the custom-rules editor lives inside the
  * settings dialog's scrolling body, which would otherwise clip it. Fixed
- * placement then has to be maintained by hand — see trackAnchor.
+ * placement then has to be maintained by hand; see trackAnchor.
  *
- * This module owns presentation only — chosen values are reported through
+ * This module owns presentation only. Chosen values are reported through
  * onSelect and no caller state is touched.
  */
 

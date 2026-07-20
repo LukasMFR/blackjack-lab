@@ -5,7 +5,7 @@
 # Blackjack Lab
 
 A browser-based blackjack simulator with authentic international rule
-profiles. **All money is fictional** — there are no deposits, payments,
+profiles. **All money is fictional**: there are no deposits, payments,
 accounts, prizes, or any real-money functionality of any kind. This is a
 learning and entertainment project.
 
@@ -87,7 +87,7 @@ configuration only):
 | Blackjack 6:5 | 6:5 natural payout (deliberately worse odds) |
 | Custom | Every supported rule chosen explicitly; contradictory combinations are coerced or rejected |
 
-Casino presets are documented representatives — real tables vary, which is
+Casino presets are documented representatives. Real tables vary, which is
 why every setting is visible and the custom profile exists. The
 `FRENCH_STANDARD` profile follows the Arrêté du 14 mai 2007 (French casino
 regulation, blackjack section); table minimums/maximums are project

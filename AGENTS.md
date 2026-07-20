@@ -1,4 +1,4 @@
-# Blackjack Lab — Project Rules
+# Blackjack Lab: Project Rules
 
 ## 1. Project Purpose
 
@@ -734,4 +734,3 @@ For `FRENCH_STANDARD`, the primary reference is the French casino regulation:
 For geographic presets such as Las Vegas Strip, Downtown Las Vegas, Atlantic City, or generic European blackjack, treat the profile as a documented representative preset. Real casino tables may use different rules, so every setting must remain visible and configurable.
 
 For proprietary variants such as Spanish 21, Blackjack Switch, Free Bet Blackjack, Double Exposure, Pontoon, or Super Fun 21, use a dedicated rules specification and payout table before implementation.
-

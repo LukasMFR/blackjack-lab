@@ -28,7 +28,7 @@ export function assertAmount(cents, label = 'amount') {
 
 /**
  * Multiply a bet by a payout ratio, exactly. Throws when the result is not
- * a whole number of cents — payouts must never be silently rounded.
+ * a whole number of cents because payouts must never be silently rounded.
  * @param {number} betCents
  * @param {{numerator: number, denominator: number}} ratio
  * @returns {number} profit in cents

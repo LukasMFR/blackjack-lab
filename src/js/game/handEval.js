@@ -6,7 +6,7 @@ import { SPLIT_PAIRING } from './constants.js';
  *
  * `isNaturalCandidate` only says the cards themselves form an Ace + ten-value
  * two-card 21. Whether that counts as a *natural blackjack* also depends on
- * hand context (original hand, not created by a split) — the engine combines
+ * hand context (original hand, not created by a split). The engine combines
  * both facts.
  *
  * @param {Array<{rank: string, suit: string}>} cards

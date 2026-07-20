@@ -12,7 +12,7 @@ export function assert(condition, message) {
 
 export function assertEqual(actual, expected, message = '') {
   if (actual !== expected) {
-    throw new Error(`${message} — expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
+    throw new Error(`${message}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`);
   }
 }
 
@@ -21,7 +21,7 @@ export function assertThrows(fn, pattern, message = 'expected an error') {
     fn();
   } catch (error) {
     if (pattern && !String(error.message).includes(pattern)) {
-      throw new Error(`${message} — error "${error.message}" does not match "${pattern}"`);
+      throw new Error(`${message}: error "${error.message}" does not match "${pattern}"`);
     }
     return;
   }

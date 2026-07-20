@@ -698,7 +698,7 @@ export class BlackjackGame {
 
   /**
    * Immutable view of the game for rendering. The dealer hole card is
-   * masked while hidden — the UI never sees it early.
+   * masked while hidden, so the UI never sees it early.
    * @returns {object}
    */
   getSnapshot() {

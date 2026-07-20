@@ -9,7 +9,7 @@ import {
 
 /**
  * Rule profiles. A profile is a complete, immutable, explicit rule set.
- * Geographic presets are documented representatives, not universal truths —
+ * Geographic presets are documented representatives, not universal truths;
  * every value here is visible and (via CUSTOM) overridable.
  *
  * Sources:
