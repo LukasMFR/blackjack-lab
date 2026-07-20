@@ -37,8 +37,9 @@
   --radius-l: 16px;
   --radius-xl: 24px;
 
-  /* Cards (identity-stable across themes and modes) */
-  --card-w: clamp(4rem, 7.5vw + 1.6rem, 7.25rem);
+  /* Cards (identity-stable across themes and modes). Sized by width AND
+     height so short laptop viewports get proportionally shorter cards. */
+  --card-w: clamp(4rem, min(7.5vw + 1.6rem, 10vh), 7.25rem);
   --card-face: #fdfcf6;
   --card-face-edge: #d9d4c6;
   --card-ink: #21211f;

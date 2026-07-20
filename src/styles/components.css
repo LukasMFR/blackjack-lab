@@ -464,6 +464,44 @@ kbd {
 .history__net--loss { color: var(--loss); }
 .history__net--even { color: var(--text-muted); }
 
+/* Desktop sidebar: history fills the leftover column height and scrolls
+   internally, so a long session never grows the page. */
+@media (min-width: 1024px) {
+  .side-column .history {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .history__list {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
+  }
+}
+
+/* Compact laptop mode (same trigger as layout.css): trim component
+   padding while keeping every target at a comfortable size. */
+@media (min-width: 900px) and (max-height: 920px) {
+  .btn--action {
+    min-height: 3rem;
+  }
+
+  .chip {
+    width: clamp(3rem, 2.4rem + 1.2vh, 3.8rem);
+    height: clamp(3rem, 2.4rem + 1.2vh, 3.8rem);
+  }
+
+  .side-card {
+    padding: var(--space-3) var(--space-4);
+    gap: var(--space-2);
+  }
+
+  .hand {
+    padding: var(--space-2);
+    gap: var(--space-2);
+  }
+}
+
 /* ------------------------------------------------------------------ dialogs */
 
 /*
