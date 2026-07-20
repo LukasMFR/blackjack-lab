@@ -1034,6 +1034,7 @@ kbd {
 }
 
 .theme-option {
+  position: relative;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
@@ -1103,6 +1104,60 @@ kbd {
   height: 0.6rem;
   border-radius: 50%;
   background: var(--accent);
+}
+
+/*
+ * Wider screens: segment icons move beside their labels, and the theme
+ * choice becomes three side-by-side cards (badge and radio on top, name
+ * and description beneath), separated by the same hairlines as segments.
+ */
+@media (min-width: 55rem) {
+  .segment__option {
+    flex-direction: row;
+    gap: var(--space-2);
+  }
+
+  .theme-list {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+  }
+
+  .theme-option {
+    grid-template-areas:
+      "badge radio"
+      "text  text";
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    padding: var(--space-3);
+  }
+
+  .theme-option__badge {
+    grid-area: badge;
+  }
+
+  .theme-option__radio {
+    grid-area: radio;
+  }
+
+  .theme-option__text {
+    grid-area: text;
+  }
+
+  .theme-option:not(:first-child)::before {
+    content: "";
+    position: absolute;
+    left: calc(-0.5 * var(--space-1) - 0.5px);
+    top: 22%;
+    bottom: 22%;
+    width: 1px;
+    background: var(--border);
+  }
+
+  .theme-option[aria-checked="true"]::before,
+  .theme-option[aria-checked="true"] + .theme-option::before {
+    background: transparent;
+  }
 }
 
 /* Audio settings */
