@@ -406,7 +406,7 @@
   }
 
   /* Language lives in the settings panel on small screens. */
-  .select--compact {
+  .header-actions .select--compact {
     display: none;
   }
 

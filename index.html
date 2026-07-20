@@ -36,10 +36,15 @@
     </div>
     <div class="header-actions">
       <label class="sr-only" for="language-select" id="language-label"></label>
-      <select id="language-select" class="select select--compact">
-        <option value="en">English</option>
-        <option value="fr">Français</option>
-      </select>
+      <div class="select-field select--compact">
+        <select id="language-select" class="select">
+          <option value="en">English</option>
+          <option value="fr">Français</option>
+        </select>
+        <svg class="select-field__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="m6 9 6 6 6-6"/>
+        </svg>
+      </div>
       <button type="button" id="btn-sound" class="btn btn--ghost btn--icon" aria-pressed="false">
         <svg class="icon-sound-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M11 5 6.5 8.5H3.5v7h3L11 19z"/>

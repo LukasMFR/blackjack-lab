@@ -196,19 +196,44 @@ kbd {
   opacity: 0.55;
 }
 
+/* Safari sizes a native select from its own font metrics and ignores an
+   explicit height, so the control is stripped to a plain box and given
+   the arrow back through .select-field. */
 .select {
+  appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
   min-height: 2.75rem;
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-m);
   border: 1px solid var(--border);
   background: var(--surface-raised);
+  font: inherit;
+  color: var(--text);
+}
+
+.select-field {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.select-field__arrow {
+  position: absolute;
+  right: var(--space-3);
+  width: 0.9rem;
+  height: 0.9rem;
+  pointer-events: none;
+  color: currentcolor;
+  opacity: 0.75;
 }
 
 /* In the header the select sits in a row of ghost buttons, so it borrows
-   their box: same height, same padding rhythm, same border treatment. */
+   their box: same height, same padding rhythm, same border treatment.
+   height (not min-height) is what keeps Safari and Chrome identical. */
 .app-header .select {
-  min-height: 3rem;
-  padding: var(--space-2) var(--space-3);
+  height: 3rem;
+  padding: var(--space-2) var(--space-6) var(--space-2) var(--space-3);
   background: transparent;
   color: var(--text);
   font-weight: 600;
