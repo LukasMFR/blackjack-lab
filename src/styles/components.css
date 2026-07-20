@@ -210,7 +210,7 @@ kbd {
 .menu-select__button {
   display: inline-flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: var(--space-2);
   box-sizing: border-box;
   height: 3rem;
@@ -227,20 +227,22 @@ kbd {
     border-color var(--dur-fast) var(--ease-out);
 }
 
+/* Icon-only trigger, sized like .btn--icon so the header row stays even. */
+.menu-select__button--icon svg {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
 .menu-select__button:hover {
   border-color: var(--border-strong);
   background: var(--surface-raised);
 }
 
-.menu-select__arrow {
-  width: 0.9rem;
-  height: 0.9rem;
-  opacity: 0.75;
-  transition: transform var(--dur-fast) var(--ease-out);
-}
-
-.menu-select__button[aria-expanded="true"] .menu-select__arrow {
-  transform: rotate(180deg);
+/* An icon-only trigger has no caret to turn, so the open menu is signalled
+   by holding the button in its hover treatment. */
+.menu-select__button[aria-expanded="true"] {
+  border-color: var(--border-strong);
+  background: var(--surface-raised);
 }
 
 /* The list sits inside the header, which sets its own ink in some themes,
@@ -250,7 +252,8 @@ kbd {
   top: calc(100% + var(--space-2));
   left: 0;
   z-index: var(--z-menu);
-  min-width: 100%;
+  /* Wider than the icon trigger it hangs from, so the panel reads as a menu. */
+  min-width: max(100%, 10rem);
   margin: 0;
   padding: var(--space-1);
   list-style: none;

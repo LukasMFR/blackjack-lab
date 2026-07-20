@@ -80,7 +80,13 @@ export function setLanguageMenuValue(language) {
 
   selectedIndex = index;
   optionEls.forEach((el, i) => el.setAttribute('aria-selected', String(i === index)));
-  valueEl.textContent = optionEls[index].querySelector('span').textContent;
+
+  // The globe shows no text, so the language reaches assistive tech through
+  // the hidden value span (part of the button's accessible name) and sighted
+  // users through the tooltip — the same split the sound button uses.
+  const label = optionEls[index].querySelector('span').textContent;
+  valueEl.textContent = label;
+  button.title = label;
 }
 
 /* ------------------------------------------------------------- open state */
