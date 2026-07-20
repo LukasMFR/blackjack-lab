@@ -1,9 +1,11 @@
 /*
  * Design tokens. Two axes:
- *   data-theme = "classic" | "minimal"   (visual identity)
+ *   data-theme = "classic" | "minimal" | "salon"   (visual identity)
  *   data-mode  = "light" | "dark"        (resolved appearance; JS resolves
  *                                         "system" to one of these)
  * Every component reads tokens only; no component hardcodes a color.
+ * Salon-only material tokens (wood, leather, brass, textures) live in
+ * theme-salon.css next to the rules that consume them.
  */
 
 :root {
@@ -230,6 +232,99 @@
   --act-split-strong: #b59ee0;
   --act-split-ink: #a58bd6;
   --on-act-split: #1f1338;
+}
+
+/* ------------------------------------------------------------------ salon */
+/*
+ * "Salon privé": a private high-limit room. Bordeaux felt, walnut wood,
+ * aged brass, warm ivory. Light mode is the room by day; dark mode is the
+ * same room by lamplight.
+ */
+
+[data-theme="salon"][data-mode="light"] {
+  --bg: #e8ddc8;
+  --surface: #f4ecdb;
+  --surface-raised: #faf4e6;
+  --border: #d3c3a4;
+  --border-strong: #a68f66;
+  --text: #2b2115;
+  --text-muted: #675841;
+  --felt: #6e2536;
+  --felt-deep: #4e1826;
+  --felt-line: #e8c88a4d;
+  --on-felt: #f6ecdc;
+  --on-felt-muted: #decab8;
+  --accent: #8a6432;
+  --accent-strong: #6f4f24;
+  --on-accent: #fdf7e9;
+  --focus: #1651c8;
+  --win: #2b6b45;
+  --loss: #a1332c;
+  --push: #675841;
+  --gold: #d6ac5e;
+  --card-back-a: #6b202d;
+  --card-back-b: #471119;
+  --shadow: 0 12px 30px rgb(64 38 20 / 0.22);
+
+  --act-hit: #39608a;
+  --act-hit-strong: #2e4f73;
+  --act-hit-ink: #345a81;
+  --on-act-hit: #f2f6fb;
+  --act-stand: #8a5a10;
+  --act-stand-strong: #744a09;
+  --act-stand-ink: #7d520c;
+  --on-act-stand: #fdf7ea;
+  --act-double: #2e6d4b;
+  --act-double-strong: #255a3d;
+  --act-double-ink: #296044;
+  --on-act-double: #eff8f2;
+  --act-split: #6d4468;
+  --act-split-strong: #5a3756;
+  --act-split-ink: #613c5c;
+  --on-act-split: #f7f1f7;
+}
+
+[data-theme="salon"][data-mode="dark"] {
+  --bg: #171009;
+  --surface: #221910;
+  --surface-raised: #2c2115;
+  --border: #40331f;
+  --border-strong: #64512f;
+  --text: #eee3cd;
+  --text-muted: #b5a486;
+  --felt: #4c1826;
+  --felt-deep: #310f1a;
+  --felt-line: #e5c07b3d;
+  --on-felt: #f2e6d2;
+  --on-felt-muted: #d4b6a6;
+  --accent: #c9a35c;
+  --accent-strong: #dcb977;
+  --on-accent: #291c07;
+  --focus: #96b9ff;
+  --win: #74c795;
+  --loss: #ef9184;
+  --push: #b5a486;
+  --gold: #d6ac5e;
+  --card-back-a: #6d2431;
+  --card-back-b: #421019;
+  --shadow: 0 12px 32px rgb(0 0 0 / 0.55);
+
+  --act-hit: #90b6dc;
+  --act-hit-strong: #a6c5e6;
+  --act-hit-ink: #90b6dc;
+  --on-act-hit: #0e2137;
+  --act-stand: #d9a845;
+  --act-stand-strong: #e3b75f;
+  --act-stand-ink: #d9a845;
+  --on-act-stand: #2a1d04;
+  --act-double: #7cc79c;
+  --act-double-strong: #92d2ae;
+  --act-double-ink: #7cc79c;
+  --on-act-double: #0a2b18;
+  --act-split: #c79ec0;
+  --act-split-strong: #d3b0cd;
+  --act-split-ink: #c79ec0;
+  --on-act-split: #33102c;
 }
 
 /* Dark mode slightly dims card faces so they do not glare. */

@@ -16,7 +16,12 @@ let controller = null;
 let customDraft = null;
 
 const APPEARANCES = ['system', 'light', 'dark'];
-const THEMES = ['classic', 'minimal'];
+const THEMES = ['classic', 'minimal', 'salon'];
+const THEME_LABEL_KEYS = {
+  classic: 'settings.themeClassic',
+  minimal: 'settings.themeMinimal',
+  salon: 'settings.themeSalon',
+};
 const LANGUAGE_LABELS = { en: 'English', fr: 'Français' };
 
 /** @param {object} appController */
@@ -77,7 +82,7 @@ export function renderSettings() {
     (value) => controller.setAppearance(value));
 
   buildSegment($('settings-theme'), THEMES, state.theme,
-    (value) => t(value === 'classic' ? 'settings.themeClassic' : 'settings.themeMinimal'),
+    (value) => t(THEME_LABEL_KEYS[value]),
     (value) => controller.setTheme(value));
 
   buildProfileList(state);

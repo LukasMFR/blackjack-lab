@@ -106,10 +106,15 @@ Card indices localize too: `A J Q K` in English, `A V D R` in French.
 
 - **Appearance:** System / Light / Dark (System follows
   `prefers-color-scheme` live).
-- **Visual themes:** *Classic casino* (felt table, restrained warm accents)
-  and *Minimal* (neutral surfaces). Both support light and dark modes; all
-  four combinations use the same CSS custom-property tokens
-  (`data-theme` × `data-mode`), never duplicated stylesheets.
+- **Visual themes:** *Classic casino* (felt table, restrained warm accents),
+  *Minimal* (neutral surfaces), and *Salon privé* (an immersive private
+  casino room: bordeaux felt in a walnut rail, aged brass, suede panels,
+  and the Marcellus display face; all textures are generated locally with
+  CSS/SVG, see `src/assets/ASSETS.md`). Every theme supports light and
+  dark modes; all combinations use the same CSS custom-property tokens
+  (`data-theme` × `data-mode`), never duplicated stylesheets. Salon-only
+  material skins live in `theme-salon.css`, fully scoped under
+  `[data-theme="salon"]`.
 
 ## Cards
 

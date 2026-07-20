@@ -105,6 +105,7 @@ export default {
     theme: 'Visual theme',
     themeClassic: 'Classic casino',
     themeMinimal: 'Minimal',
+    themeSalon: 'Salon privé',
     profile: 'Rule profile',
     resetBankroll: 'Reset bankroll',
     resetTitle: 'Reset bankroll?',

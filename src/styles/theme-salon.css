@@ -1,0 +1,434 @@
+/*
+ * "Salon privé" theme: a private high-limit blackjack room.
+ *
+ * Materials: bordeaux felt, walnut wood, aged brass, suede and paper.
+ * Every texture is generated locally (SVG feTurbulence data URIs and CSS
+ * gradients); the only binary asset is the Marcellus display font
+ * (SIL OFL 1.1, see src/assets/ASSETS.md).
+ *
+ * Everything here is scoped under [data-theme="salon"], so the Classic and
+ * Minimal themes are untouched. Color tokens live in tokens.css; this file
+ * holds salon-only material tokens and component skins.
+ */
+
+@font-face {
+  font-family: "Marcellus";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/marcellus-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+2000-206F, U+20AC, U+2122;
+}
+
+@font-face {
+  font-family: "Marcellus";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../assets/fonts/marcellus-latin-ext.woff2") format("woff2");
+  unicode-range: U+0100-02BA, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0;
+}
+
+/* ------------------------------------------------------ material tokens */
+
+[data-theme="salon"] {
+  --font-display: "Marcellus", Georgia, "Times New Roman", serif;
+
+  /* Fine fabric/felt grain: mid-gray noise, blended with soft-light. */
+  --tex-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)'/%3E%3C/svg%3E");
+
+  /* Horizontal wood streaks: low x / high y turbulence frequency. */
+  --tex-wood: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='90'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.014 0.26' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.32 0 0 0 0 0.2 0 0 0 0 0.1 0.8 0 0 0 0'/%3E%3C/filter%3E%3Crect width='300' height='90' filter='url(%23w)'/%3E%3C/svg%3E");
+}
+
+[data-theme="salon"][data-mode="light"] {
+  --wood-hi: #5a3a26;
+  --wood-lo: #38200f;
+  --wood-edge: #2a1809;
+  --wood-ink: #f2e7d4;
+  --brass-line: rgb(216 178 100 / 0.55);
+  --lamp-glow: rgb(255 236 200 / 0.12);
+  --room-glow: rgb(255 246 224 / 0.65);
+  --bg-hi: #efe5d2;
+  --panel-hi: #f4ebd8;
+  --panel-lo: #e8dabd;
+  --panel-edge: #c2ad85;
+  --panel-sheen: rgb(255 255 255 / 0.5);
+}
+
+[data-theme="salon"][data-mode="dark"] {
+  --wood-hi: #462c1a;
+  --wood-lo: #22120a;
+  --wood-edge: #120a04;
+  --wood-ink: #ead9bd;
+  --brass-line: rgb(216 178 100 / 0.4);
+  --lamp-glow: rgb(255 214 150 / 0.1);
+  --room-glow: rgb(255 196 130 / 0.06);
+  --bg-hi: #1e150c;
+  --panel-hi: #2d2214;
+  --panel-lo: #201709;
+  --panel-edge: #4c3c22;
+  --panel-sheen: rgb(255 255 255 / 0.05);
+}
+
+/* --------------------------------------------------------------- the room */
+
+[data-theme="salon"] body {
+  background:
+    var(--tex-grain),
+    radial-gradient(120% 90% at 50% -10%, var(--room-glow), transparent 60%),
+    linear-gradient(180deg, var(--bg-hi), var(--bg));
+  background-blend-mode: soft-light, normal, normal;
+}
+
+[data-theme="salon"] ::selection {
+  background: color-mix(in srgb, var(--accent) 32%, transparent);
+}
+
+/* ------------------------------------------------------- header: wood bar */
+
+/* The header is a dark walnut bar in both modes; its children switch to
+   light ink so the room identity holds in light appearance too. */
+[data-theme="salon"] .app-header {
+  background:
+    var(--tex-wood),
+    linear-gradient(180deg, var(--wood-hi), var(--wood-lo));
+  background-blend-mode: soft-light, normal;
+  border-bottom: 1px solid var(--wood-edge);
+  box-shadow: inset 0 -1px 0 var(--brass-line), 0 4px 16px rgb(20 10 4 / 0.25);
+  color: var(--wood-ink);
+}
+
+[data-theme="salon"] .brand__name {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+}
+
+[data-theme="salon"] .app-header .badge--fictional {
+  color: #dcb977;
+  border-color: rgb(220 185 119 / 0.55);
+}
+
+[data-theme="salon"] .app-header .btn--ghost {
+  color: var(--wood-ink);
+  border-color: rgb(242 231 212 / 0.28);
+  background: transparent;
+  box-shadow: none;
+}
+
+[data-theme="salon"] .app-header .btn--ghost:hover:not(:disabled) {
+  background: rgb(242 231 212 / 0.1);
+  border-color: rgb(242 231 212 / 0.48);
+}
+
+[data-theme="salon"] .app-header .select {
+  background: rgb(242 231 212 / 0.08);
+  color: var(--wood-ink);
+  border-color: rgb(242 231 212 / 0.28);
+}
+
+/* Light-blue focus ring stays visible on dark wood and dark felt alike. */
+[data-theme="salon"] .app-header :focus-visible,
+[data-theme="salon"] .table :focus-visible,
+[data-theme="salon"] .table:focus-visible {
+  outline-color: #a9c7ff;
+}
+
+/* -------------------------------------------- the table: felt in a rail */
+
+/* Bordeaux felt (padding-box layers) framed by a walnut rail (border-box
+   layers); the inset brass pinline sits exactly where felt meets wood. */
+[data-theme="salon"] .table {
+  border: clamp(10px, 1.1vw, 15px) solid transparent;
+  background:
+    radial-gradient(110% 70% at 50% 6%, var(--lamp-glow), transparent 62%) padding-box,
+    radial-gradient(140% 120% at 50% 118%, rgb(0 0 0 / 0.3), transparent 55%) padding-box,
+    var(--tex-grain) padding-box,
+    repeating-linear-gradient(45deg, rgb(255 255 255 / 0.014) 0 2px, transparent 2px 4px) padding-box,
+    repeating-linear-gradient(-45deg, rgb(0 0 0 / 0.02) 0 2px, transparent 2px 4px) padding-box,
+    linear-gradient(180deg, var(--felt), var(--felt-deep)) padding-box,
+    var(--tex-wood) border-box,
+    linear-gradient(180deg, var(--wood-hi), var(--wood-lo)) border-box;
+  background-blend-mode: normal, normal, soft-light, normal, normal, normal, soft-light, normal;
+  box-shadow:
+    inset 0 0 0 1px var(--brass-line),
+    inset 0 3px 14px rgb(0 0 0 / 0.38),
+    inset 0 0 80px rgb(0 0 0 / 0.22),
+    0 0 0 1px var(--wood-edge),
+    0 1px 0 rgb(255 255 255 / 0.06),
+    var(--shadow);
+}
+
+[data-theme="salon"] .hand-name {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.16em;
+}
+
+[data-theme="salon"] .table-message {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.35);
+}
+
+[data-theme="salon"] .hand-total {
+  box-shadow: inset 0 0 0 1px rgb(230 200 140 / 0.28);
+}
+
+/* Lamplight on the active hand: a soft brass edge, never a neon glow. */
+[data-theme="salon"] .hand--active {
+  border-color: color-mix(in srgb, var(--gold) 70%, #fff2d8);
+  background: rgb(255 240 210 / 0.07);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.18), 0 0 26px rgb(255 210 140 / 0.14);
+}
+
+/* --------------------------------------------------- controls: suede rest */
+
+[data-theme="salon"] .controls {
+  border: 1px solid var(--panel-edge);
+  background:
+    var(--tex-grain),
+    linear-gradient(180deg, var(--panel-hi), var(--panel-lo));
+  background-blend-mode: soft-light, normal;
+  box-shadow: inset 0 1px 0 var(--panel-sheen), var(--shadow);
+}
+
+[data-theme="salon"] .stat__value {
+  font-family: var(--font-display);
+  font-weight: 400;
+}
+
+[data-theme="salon"] .stat__label {
+  letter-spacing: 0.12em;
+}
+
+[data-theme="salon"] .panel__prompt--result {
+  font-family: var(--font-display);
+  font-weight: 400;
+}
+
+/* ----------------------------------------------------------------- buttons */
+
+[data-theme="salon"] .btn {
+  border-radius: var(--radius-m);
+  background: linear-gradient(180deg, var(--surface-raised),
+    color-mix(in srgb, var(--surface-raised) 86%, var(--border)));
+  box-shadow: inset 0 1px 0 var(--panel-sheen), 0 1px 2px rgb(20 10 4 / 0.14);
+}
+
+/* Brass primary: darker in daylight, aged gold under the lamps. */
+[data-theme="salon"] .btn--primary {
+  background: linear-gradient(180deg, #a07a3f, var(--accent-strong));
+  border-color: var(--accent-strong);
+  color: var(--on-accent);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.26), 0 1px 3px rgb(20 10 4 / 0.2);
+  text-shadow: 0 1px 1px rgb(0 0 0 / 0.25);
+}
+
+[data-theme="salon"] .btn--primary:hover:not(:disabled) {
+  background: linear-gradient(180deg, #ab8347, #7a5a2a);
+  border-color: #6f4f24;
+}
+
+[data-theme="salon"][data-mode="dark"] .btn--primary {
+  background: linear-gradient(180deg, #d9b76f, #b8904a);
+  border-color: #a37d3b;
+  text-shadow: none;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 1px 3px rgb(0 0 0 / 0.4);
+}
+
+[data-theme="salon"][data-mode="dark"] .btn--primary:hover:not(:disabled) {
+  background: linear-gradient(180deg, #e3c583, #c69d55);
+  border-color: #b8904a;
+}
+
+[data-theme="salon"] .btn--ghost {
+  background: transparent;
+  box-shadow: none;
+  border-color: var(--border);
+}
+
+[data-theme="salon"] .btn--ghost:hover:not(:disabled) {
+  background: var(--surface-raised);
+  border-color: var(--border-strong);
+}
+
+[data-theme="salon"] .btn--danger {
+  background: transparent;
+  box-shadow: none;
+  border-color: var(--loss);
+  color: var(--loss);
+}
+
+[data-theme="salon"] .btn--danger:hover:not(:disabled) {
+  background: var(--loss);
+  color: var(--surface);
+}
+
+/* Action buttons keep their semantic hues; salon adds a gentle bevel. */
+[data-theme="salon"] .btn--action-primary:not(.is-disabled) {
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--act) 90%, white),
+    color-mix(in srgb, var(--act) 84%, black));
+  border-color: color-mix(in srgb, var(--act) 80%, black);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.22), 0 1px 3px rgb(20 10 4 / 0.18);
+}
+
+[data-theme="salon"] .btn--action-primary:not(.is-disabled):hover,
+[data-theme="salon"] .btn--action-primary:not(.is-disabled):active {
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--act-strong) 92%, white),
+    var(--act-strong));
+  border-color: var(--act-strong);
+}
+
+[data-theme="salon"] .btn--action-secondary:not(.is-disabled) {
+  background: color-mix(in srgb, var(--act) 9%, var(--surface-raised));
+  box-shadow: inset 0 1px 0 var(--panel-sheen);
+}
+
+[data-theme="salon"] .btn--action-secondary:not(.is-disabled):hover {
+  background: color-mix(in srgb, var(--act) 16%, var(--surface-raised));
+  border-color: color-mix(in srgb, var(--act) 72%, var(--border-strong));
+}
+
+[data-theme="salon"] .btn--action.is-disabled {
+  background: var(--surface);
+  border-color: var(--border);
+  box-shadow: none;
+}
+
+/* -------------------------------------------------------- chips: clay set */
+
+/* Edge spots via a conic ring under a solid center disc, plus a soft
+   ceramic highlight. The label keeps its own shadow for readability. */
+[data-theme="salon"] .chip {
+  border: none;
+  outline: none;
+  color: #fdf8ee;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.55);
+  background:
+    radial-gradient(circle at 34% 26%, rgb(255 255 255 / 0.22), transparent 44%),
+    radial-gradient(circle, var(--chip-color) 0 61%, transparent 62%),
+    repeating-conic-gradient(rgb(246 238 220 / 0.92) 0 11deg, transparent 11deg 30deg),
+    radial-gradient(circle, color-mix(in srgb, var(--chip-color) 85%, white) 0 70%,
+      color-mix(in srgb, var(--chip-color) 55%, black) 71% 100%);
+  box-shadow:
+    inset 0 0 0 1px rgb(0 0 0 / 0.28),
+    inset 0 0 0 2px rgb(255 255 255 / 0.08),
+    0 3px 7px rgb(20 8 4 / 0.35);
+}
+
+[data-theme="salon"] .chip:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+[data-theme="salon"] .chip[data-value="5"] { --chip-color: #8e2f38; }
+[data-theme="salon"] .chip[data-value="10"] { --chip-color: #2f5d8a; }
+[data-theme="salon"] .chip[data-value="25"] { --chip-color: #226b46; }
+[data-theme="salon"] .chip[data-value="50"] { --chip-color: #5d3f78; }
+[data-theme="salon"] .chip[data-value="100"] { --chip-color: #26262b; }
+[data-theme="salon"] .chip[data-value="500"] { --chip-color: #8a6432; }
+
+/* ------------------------------------------------------------------- cards */
+
+[data-theme="salon"] .card {
+  box-shadow: 0 3px 10px rgb(20 8 4 / 0.35);
+}
+
+/* Card back: bordeaux with a fine gold lattice and an ivory frame. */
+[data-theme="salon"] .card--back {
+  background:
+    repeating-linear-gradient(45deg, rgb(220 185 119 / 0.18) 0 2px, transparent 2px 8px),
+    repeating-linear-gradient(-45deg, rgb(220 185 119 / 0.18) 0 2px, transparent 2px 8px),
+    linear-gradient(160deg, var(--card-back-a), var(--card-back-b));
+  border-color: var(--card-back-b);
+  box-shadow:
+    inset 0 0 0 calc(var(--card-w) * 0.05) #f2e9d8,
+    inset 0 0 0 calc(var(--card-w) * 0.05 + 1px) rgb(190 150 90 / 0.85),
+    0 2px 6px rgb(0 0 0 / 0.28);
+}
+
+/* -------------------------------------------------- sidebar: paper cards */
+
+[data-theme="salon"] .side-card {
+  border: 1px solid var(--border);
+  background:
+    var(--tex-grain),
+    linear-gradient(180deg, var(--surface-raised), var(--surface));
+  background-blend-mode: soft-light, normal;
+  box-shadow: 0 2px 10px rgb(40 22 8 / 0.1);
+}
+
+[data-theme="salon"] .profile-chip:hover {
+  border-color: var(--border-strong);
+  background:
+    var(--tex-grain),
+    linear-gradient(180deg, var(--surface-raised), var(--surface-raised));
+  background-blend-mode: soft-light, normal;
+}
+
+[data-theme="salon"] .side-title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.16em;
+}
+
+[data-theme="salon"] .profile-chip__name {
+  font-family: var(--font-display);
+  font-weight: 400;
+}
+
+/* ------------------------------------------------- dialogs: framed panels */
+
+[data-theme="salon"] .dialog {
+  border: 10px solid transparent;
+  border-radius: var(--radius-l);
+  background:
+    var(--tex-grain) padding-box,
+    linear-gradient(var(--surface), var(--surface)) padding-box,
+    var(--tex-wood) border-box,
+    linear-gradient(180deg, var(--wood-hi), var(--wood-lo)) border-box;
+  background-blend-mode: soft-light, normal, soft-light, normal;
+  box-shadow:
+    inset 0 0 0 1px var(--brass-line),
+    0 0 0 1px var(--wood-edge),
+    0 24px 60px rgb(10 4 2 / 0.5);
+}
+
+[data-theme="salon"] .dialog::backdrop {
+  background: rgb(14 7 4 / 0.66);
+}
+
+[data-theme="salon"] .dialog__header {
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
+}
+
+[data-theme="salon"] .dialog__header h2 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+[data-theme="salon"] .segment__option[aria-checked="true"] {
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface-raised));
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--border-strong));
+}
+
+[data-theme="salon"] .custom-editor {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border-strong));
+}
+
+/* ------------------------------------------------------------------- toast */
+
+[data-theme="salon"] .toast {
+  background:
+    var(--tex-grain),
+    linear-gradient(180deg, #3a2a1c, #241709);
+  background-blend-mode: soft-light, normal;
+  color: #f2e7d4;
+  border: 1px solid rgb(214 172 94 / 0.45);
+}
