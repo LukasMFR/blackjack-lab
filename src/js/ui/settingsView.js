@@ -8,6 +8,7 @@ import { buildMenuSelect } from './menuSelect.js';
 import {
   MAX_BANKROLL_CENTS, MIN_BANKROLL_CENTS, parseStartingBankroll,
 } from './bankrollSettings.js';
+import { renderInfoPage } from './infoView.js';
 
 /**
  * Settings and help dialogs. Receives a controller object from app.js and
@@ -55,15 +56,57 @@ export function initSettingsView(appController) {
     if (controller.isRoundActive()) return;
     openBankrollDialog();
   });
+  $('btn-open-info').addEventListener('click', () => {
+    controller.audio.uiClick();
+    showInfoPage();
+  });
+  $('btn-info-back').addEventListener('click', () => {
+    controller.audio.uiClick();
+    showMainPage();
+  });
   $('btn-bankroll-cancel').addEventListener('click', () => $('dialog-bankroll').close());
   $('bankroll-amount').addEventListener('input', clearBankrollError);
   $('bankroll-form').addEventListener('submit', submitBankroll);
 }
 
 function openSettings() {
+  // A previous visit may have been closed on the information page.
+  showMainPage({ restore: false });
   renderSettings();
   controller.audio.dialogOpened();
   $('dialog-settings').showModal();
+}
+
+/* ------------------------------------------------------- information page */
+
+/**
+ * The information page replaces the settings content inside the same modal.
+ * The main page's scroll position is kept so the back arrow returns exactly
+ * where the visitor left, with focus back on the entry button.
+ */
+let settingsScrollTop = 0;
+
+function showInfoPage() {
+  $('info-title').textContent = t('info.title');
+  $('btn-info-back').setAttribute('aria-label', t('info.back'));
+  renderInfoPage($('info-body'));
+  settingsScrollTop = $('settings-body').scrollTop;
+  $('settings-page-main').hidden = true;
+  $('settings-page-info').hidden = false;
+  // The dialog is named by whichever page title it currently shows.
+  $('dialog-settings').setAttribute('aria-labelledby', 'info-title');
+  $('info-body').scrollTop = 0;
+  $('info-title').focus();
+}
+
+function showMainPage({ restore = true } = {}) {
+  $('settings-page-info').hidden = true;
+  $('settings-page-main').hidden = false;
+  $('dialog-settings').setAttribute('aria-labelledby', 'settings-title');
+  if (restore) {
+    $('settings-body').scrollTop = settingsScrollTop;
+    $('btn-open-info').focus();
+  }
 }
 
 /** Re-render the whole settings dialog from current state. */
@@ -77,6 +120,7 @@ export function renderSettings() {
   $('set-profile-label').textContent = t('settings.profile');
   $('profile-note').textContent = t('profiles.presetNote');
   $('profile-change-note').textContent = t('settings.profileChangeNote');
+  $('btn-open-info-label').textContent = t('settings.information');
   renderBankrollButton();
 
   buildSegment($('settings-language'), ['en', 'fr'], state.language,

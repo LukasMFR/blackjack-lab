@@ -821,6 +821,82 @@ kbd {
 }
 
 /*
+ * Settings dialog pages: the main settings and the information page swap
+ * inside the same modal. Each page owns its header and scrolling body, so
+ * hiding one preserves the other untouched.
+ */
+.dialog__page {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.dialog__page[hidden] {
+  display: none;
+}
+
+/* Sub-page header: back arrow, title, close. The title takes the middle. */
+.dialog__header--sub h2 {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Focused programmatically when the page opens, never reachable by Tab. */
+.dialog__header--sub h2:focus {
+  outline: none;
+}
+
+.field-group--info {
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-4);
+}
+
+/* The settings entry that leads to the information page. */
+.info-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  text-align: left;
+}
+
+.info-entry__chevron {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+/* Long legal prose: keep a readable measure inside the wide dialog. */
+.info-body > .help-section {
+  max-width: 46rem;
+}
+
+.info-body a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.info-body a:hover {
+  text-decoration-thickness: 2px;
+}
+
+.info-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  font-size: var(--text-s);
+}
+
+.info-body .help-list li {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/*
  * Bankroll dialog: a themed text field, its inline error, and the callout
  * warning that applying restarts the session. All colours come from theme
  * tokens, so every theme and both modes are covered.

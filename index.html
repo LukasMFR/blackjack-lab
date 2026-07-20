@@ -231,11 +231,12 @@
   <div class="toast" id="toast" role="status" hidden></div>
 
   <dialog class="dialog dialog--wide" id="dialog-settings" aria-labelledby="settings-title">
+    <div class="dialog__page" id="settings-page-main">
     <header class="dialog__header">
       <h2 id="settings-title"></h2>
       <button type="button" class="btn btn--ghost dialog__close" data-close-dialog></button>
     </header>
-    <div class="dialog__body">
+    <div class="dialog__body" id="settings-body">
       <fieldset class="field-group">
         <legend id="set-language-label"></legend>
         <div class="segment" id="settings-language" role="radiogroup"></div>
@@ -269,6 +270,28 @@
         <button type="button" id="btn-set-bankroll" class="btn btn--danger"></button>
         <p class="fine-print" id="bankroll-locked-note" hidden></p>
       </div>
+      <div class="field-group field-group--info">
+        <button type="button" id="btn-open-info" class="btn info-entry">
+          <span id="btn-open-info-label"></span>
+          <svg class="info-entry__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m9 6 6 6-6 6"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    </div>
+    <div class="dialog__page" id="settings-page-info" hidden>
+      <header class="dialog__header dialog__header--sub">
+        <button type="button" id="btn-info-back" class="btn btn--ghost btn--icon dialog__back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M19 12H5"/>
+            <path d="m12 19-7-7 7-7"/>
+          </svg>
+        </button>
+        <h2 id="info-title" tabindex="-1"></h2>
+        <button type="button" class="btn btn--ghost dialog__close" data-close-dialog></button>
+      </header>
+      <div class="dialog__body info-body" id="info-body"></div>
     </div>
   </dialog>
 
