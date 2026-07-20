@@ -22,6 +22,7 @@ import {
   HISTORY_LIMIT, isPersistableRoundState, readSession, resetSession, saveSession,
 } from './sessionStore.js';
 import { initLanguageMenu, setLanguageMenuValue } from './languageMenu.js';
+import { bindNavSound } from './navSound.js';
 
 /**
  * Application controller: owns the engine instance, user preferences,
@@ -537,6 +538,7 @@ function wireEvents() {
   audioManager.bindVisibility(document);
 
   $('btn-sound').addEventListener('click', toggleSound);
+  bindNavSound($('btn-multiplayer'), gameAudio);
 
   initLanguageMenu({
     onSelect: (language) => {

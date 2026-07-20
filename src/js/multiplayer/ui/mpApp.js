@@ -3,6 +3,7 @@ import * as storage from '../../ui/storage.js';
 import { formatMoney } from '../../ui/format.js';
 import { initLanguageMenu, setLanguageMenuValue } from '../../ui/languageMenu.js';
 import { buildMenuSelect } from '../../ui/menuSelect.js';
+import { bindNavSound } from '../../ui/navSound.js';
 import { AudioManager } from '../../audio/audioManager.js';
 import { createGameAudio } from '../../audio/gameAudio.js';
 import { AUDIO_SETTINGS_KEY, sanitizeAudioSettings } from '../../audio/audioSettings.js';
@@ -1068,7 +1069,10 @@ function wireEvents() {
     if (!state.clientSession?.joined) resetClientPairing();
   });
 
+  bindNavSound($('btn-solo-link'), gameAudio);
+
   // Menu
+  bindNavSound($('menu-solo'), gameAudio);
   $('menu-host').addEventListener('click', openHostDialog);
   $('menu-join').addEventListener('click', () => openJoinDialog());
 
