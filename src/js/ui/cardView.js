@@ -116,5 +116,13 @@ export function createCardElement(card) {
   }
 
   el.append(body);
+
+  // Reverse side for 3D deal/reveal flips (styled like .card--back).
+  // Invisible whenever the card lies flat; see cards.css and animations.css.
+  const back = document.createElement('span');
+  back.className = 'card__back';
+  back.setAttribute('aria-hidden', 'true');
+  el.append(back);
+
   return el;
 }

@@ -107,6 +107,10 @@ function buildHandElement(hand, index, snapshot, ctx) {
   const el = document.createElement('div');
   el.className = 'hand';
   if (hand.isActive) el.classList.add('hand--active');
+  // State classes for styling and animation hooks; the badges below carry
+  // the same information as text.
+  if (hand.status === HAND_STATUS.BUST) el.classList.add('hand--bust');
+  if (hand.result) el.classList.add(`hand--result-${RESULT_BADGE_CLASS[hand.result]}`);
 
   const label = snapshot.hands.length > 1
     ? t('hand.handN', { n: index + 1 })

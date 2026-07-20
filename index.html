@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="src/styles/cards.css">
   <link rel="stylesheet" href="src/styles/components.css">
   <link rel="stylesheet" href="src/styles/theme-salon.css">
+  <link rel="stylesheet" href="src/styles/animations.css">
 </head>
 <body>
   <a class="skip-link" href="#table" id="skip-link">Skip to the game table</a>
@@ -226,6 +227,7 @@
   </div>
 
   <div class="sr-only" aria-live="polite" id="live-region"></div>
+  <div class="fx-layer" id="fx-layer" aria-hidden="true"></div>
   <div class="toast" id="toast" role="status" hidden></div>
 
   <dialog class="dialog dialog--wide" id="dialog-settings" aria-labelledby="settings-title">
@@ -245,6 +247,12 @@
       <fieldset class="field-group">
         <legend id="set-theme-label"></legend>
         <div class="segment" id="settings-theme" role="radiogroup"></div>
+      </fieldset>
+      <fieldset class="field-group">
+        <legend id="set-animations-label"></legend>
+        <div class="segment" id="settings-animations" role="radiogroup"></div>
+        <p class="fine-print" id="animations-note"></p>
+        <p class="fine-print" id="animations-reduced-note" hidden></p>
       </fieldset>
       <fieldset class="field-group">
         <legend id="set-audio-label"></legend>

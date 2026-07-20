@@ -351,8 +351,10 @@
   box-shadow: 0 3px 10px rgb(20 8 4 / 0.35);
 }
 
-/* Card back: bordeaux with a fine gold lattice and an ivory frame. */
-[data-theme="salon"] .card--back {
+/* Card back: bordeaux with a fine gold lattice and an ivory frame. Shared
+   with .card__back, the flip side used by the enhanced animations. */
+[data-theme="salon"] .card--back,
+[data-theme="salon"] .card__back {
   background:
     repeating-linear-gradient(45deg, rgb(220 185 119 / 0.18) 0 2px, transparent 2px 8px),
     repeating-linear-gradient(-45deg, rgb(220 185 119 / 0.18) 0 2px, transparent 2px 8px),

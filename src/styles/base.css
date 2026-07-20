@@ -100,10 +100,15 @@ dialog {
   color: var(--text-muted);
 }
 
+/*
+ * Reduced motion neutralizes everything by default. data-motion-ok is set
+ * by ui/animations.js only when the user has explicitly chosen an animated
+ * mode in the settings, which overrides the system preference for this app.
+ */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  html:not([data-motion-ok]) *,
+  html:not([data-motion-ok]) *::before,
+  html:not([data-motion-ok]) *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

@@ -21,6 +21,7 @@ let customDraft = null;
 
 const APPEARANCES = ['system', 'light', 'dark'];
 const THEMES = ['classic', 'minimal', 'salon'];
+const ANIMATION_MODES = ['enhanced', 'classic', 'off'];
 const THEME_LABEL_KEYS = {
   classic: 'settings.themeClassic',
   minimal: 'settings.themeMinimal',
@@ -90,6 +91,7 @@ export function renderSettings() {
     (value) => t(THEME_LABEL_KEYS[value]),
     (value) => controller.setTheme(value));
 
+  renderAnimationSection();
   renderAudioSection();
   buildProfileList(state);
   buildCustomEditor(state);
@@ -111,6 +113,20 @@ function buildSegment(container, values, current, labelOf, onSelect) {
     });
     container.append(option);
   }
+}
+
+/* -------------------------------------------------------- animations UI */
+
+function renderAnimationSection() {
+  $('set-animations-label').textContent = t('settings.animations');
+  buildSegment($('settings-animations'), ANIMATION_MODES, controller.getAnimationMode(),
+    (value) => t(`settings.animations${value[0].toUpperCase()}${value.slice(1)}`),
+    (value) => controller.setAnimationMode(value));
+  $('animations-note').textContent = t('settings.animationsNote');
+  // Reduced-motion users see why the default is calmer than Enhanced.
+  const reducedNote = $('animations-reduced-note');
+  reducedNote.textContent = t('settings.animationsReduced');
+  reducedNote.hidden = !controller.isReducedMotionPreferred();
 }
 
 /* ------------------------------------------------------------- audio UI */

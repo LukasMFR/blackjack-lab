@@ -1,0 +1,257 @@
+/*
+ * Animation preference system. ui/animations.js resolves the stored
+ * preference and prefers-reduced-motion onto <html data-anim>:
+ *
+ *   enhanced — the rules in this file: card flights from the shoe, 3D
+ *              flips, chip ghosts, result glows;
+ *   classic  — the original light animations (cards.css, components.css),
+ *              untouched: nothing in this file applies;
+ *   off      — the neutralizer below silences non-essential motion.
+ *
+ * Everything animates transform and opacity only, so the work stays on
+ * the compositor and degrades gracefully on slower devices.
+ */
+
+/* ------------------------------------------------------------------- off */
+
+:root[data-anim="off"] *,
+:root[data-anim="off"] *::before,
+:root[data-anim="off"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* -------------------------------------------------------------- fx layer */
+
+/*
+ * Fixed overlay for transient ghosts (flying chips, cards sliding to the
+ * discard). Purely decorative: hidden from assistive tech, never catches
+ * the pointer, and sits under the toast (later in the DOM at the same
+ * layer), so no control is ever obscured functionally.
+ */
+.fx-layer {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-toast);
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.fx-chip {
+  --chip-color: var(--gold);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: 2px dashed rgb(255 255 255 / 0.85);
+  outline: 2px solid var(--chip-color);
+  outline-offset: -2px;
+  background: var(--chip-color);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.3);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.fx-layer .card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: 0;
+  will-change: transform, opacity;
+}
+
+/* ------------------------------------------------------- enhanced: cards */
+
+:root[data-anim="enhanced"] .cards {
+  perspective: 1000px;
+}
+
+/* Lets the card's back face (.card__back, cards.css) take over past 90°. */
+:root[data-anim="enhanced"] .card {
+  transform-style: preserve-3d;
+}
+
+/*
+ * Newly dealt cards fly in from the shoe corner. The renderer only marks
+ * them (.is-dealt); animations.js measures each card's final slot, writes
+ * the flight vector into custom properties, then releases it with
+ * .card--fly. The bare marker must therefore stay motionless (and must
+ * not run the classic animation), or the measurement would be wrong.
+ */
+:root[data-anim="enhanced"] .card.is-dealt {
+  animation: none;
+}
+
+:root[data-anim="enhanced"] .card.card--fly {
+  animation: card-fly-in 430ms cubic-bezier(0.22, 0.9, 0.28, 1) backwards;
+  animation-delay: var(--deal-delay, 0ms);
+}
+
+/* Face-down cards (the dealer's hole card) fly without turning over. */
+:root[data-anim="enhanced"] .card.card--fly-flat {
+  animation: card-fly-flat 430ms cubic-bezier(0.22, 0.9, 0.28, 1) backwards;
+  animation-delay: var(--deal-delay, 0ms);
+}
+
+@keyframes card-fly-in {
+  0% {
+    opacity: 1;
+    transform: translate3d(var(--deal-x, 0px), var(--deal-y, -3rem), 0)
+      rotate(var(--deal-rot, -6deg)) rotateY(180deg) scale(1.06);
+  }
+  55% {
+    transform: translate3d(calc(var(--deal-x, 0px) * 0.18), calc(var(--deal-y, -3rem) * 0.18), 0)
+      rotate(calc(var(--deal-rot, -6deg) * 0.25)) rotateY(28deg) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotate(0deg) rotateY(0deg) scale(1);
+  }
+}
+
+@keyframes card-fly-flat {
+  0% {
+    opacity: 1;
+    transform: translate3d(var(--deal-x, 0px), var(--deal-y, -3rem), 0)
+      rotate(var(--deal-rot, -6deg)) scale(1.06);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotate(0deg) scale(1);
+  }
+}
+
+/* The dealer's hole card turns over as a real two-sided flip. */
+:root[data-anim="enhanced"] .card.is-revealed {
+  animation: card-flip-open 540ms cubic-bezier(0.3, 0.7, 0.2, 1) backwards;
+  animation-delay: var(--deal-delay, 0ms);
+}
+
+@keyframes card-flip-open {
+  0% {
+    transform: rotateY(180deg);
+  }
+  50% {
+    transform: rotateY(90deg) translateY(-0.3rem) scale(1.05);
+  }
+  100% {
+    transform: rotateY(0deg) translateY(0) scale(1);
+  }
+}
+
+/* ------------------------------------------------------- enhanced: hands */
+
+:root[data-anim="enhanced"] .hand {
+  position: relative;
+}
+
+/* The hand whose turn it is sits a breath above the felt. */
+:root[data-anim="enhanced"] .hand--active {
+  transform: translateY(-0.15rem);
+}
+
+/*
+ * Result glow: a pre-built halo whose opacity pulses once, delayed to land
+ * on the round's result sound (--result-delay is set by animations.js).
+ */
+:root[data-anim="enhanced"] .hand::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: var(--radius-l);
+  pointer-events: none;
+  opacity: 0;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--fx-glow, var(--gold)) 65%, transparent),
+    0 0 30px color-mix(in srgb, var(--fx-glow, var(--gold)) 42%, transparent);
+}
+
+:root[data-anim="enhanced"] .hand--fx-win::after {
+  animation: fx-glow 950ms var(--ease-out) var(--result-delay, 0ms) backwards;
+}
+
+:root[data-anim="enhanced"] .hand--fx-blackjack::after {
+  animation: fx-glow 750ms var(--ease-out) var(--result-delay, 0ms) 2 backwards;
+}
+
+:root[data-anim="enhanced"] .hand--fx-push::after {
+  --fx-glow: var(--on-felt);
+  animation: fx-glow-soft 900ms var(--ease-out) var(--result-delay, 0ms) backwards;
+}
+
+:root[data-anim="enhanced"] .hand--fx-loss::after {
+  --fx-glow: var(--loss);
+  animation: fx-glow-soft 800ms var(--ease-out) var(--result-delay, 0ms) backwards;
+}
+
+@keyframes fx-glow {
+  0% { opacity: 0; }
+  30% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes fx-glow-soft {
+  0% { opacity: 0; }
+  30% { opacity: 0.45; }
+  100% { opacity: 0; }
+}
+
+/* Winning cards get a small congratulatory lift alongside the glow. */
+:root[data-anim="enhanced"] .hand--fx-win .cards,
+:root[data-anim="enhanced"] .hand--fx-blackjack .cards {
+  animation: fx-lift 950ms var(--ease-out) var(--result-delay, 0ms) backwards;
+}
+
+@keyframes fx-lift {
+  0% { transform: none; }
+  30% { transform: translateY(-0.3rem); }
+  100% { transform: none; }
+}
+
+/*
+ * Dead hands rest dimmed. The static rule keeps re-renders flicker-free;
+ * the one-shot .hand--fx-bust settles into the same value, timed to the
+ * bust sound.
+ */
+:root[data-anim="enhanced"] .hand--bust .cards,
+:root[data-anim="enhanced"] .hand--result-loss .cards {
+  opacity: 0.75;
+}
+
+:root[data-anim="enhanced"] .hand--fx-bust .cards {
+  animation: fx-bust 520ms var(--ease-out) var(--result-delay, 0ms) both;
+}
+
+:root[data-anim="enhanced"] .cards--fx-dealer-bust {
+  animation: fx-bust 520ms var(--ease-out) var(--result-delay, 0ms) both;
+}
+
+@keyframes fx-bust {
+  0% {
+    opacity: 1;
+    transform: none;
+  }
+  35% {
+    transform: translateY(0.2rem);
+  }
+  100% {
+    opacity: 0.75;
+    transform: none;
+  }
+}
+
+/* ------------------------------------------------------ enhanced: money */
+
+/* Money displays pulse once when a count-up lands on its final value. */
+:root[data-anim="enhanced"] .stat__value--bump {
+  animation: fx-bump 300ms var(--ease-out);
+}
+
+@keyframes fx-bump {
+  0% { transform: none; }
+  35% { transform: scale(1.07); }
+  100% { transform: none; }
+}

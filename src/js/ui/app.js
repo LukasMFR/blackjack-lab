@@ -15,6 +15,7 @@ import { profileSummaryChips } from './profileSummary.js';
 import {
   announce, renderHistory, renderPanels, renderSession, renderStaticLabels, renderTable, showToast,
 } from './render.js';
+import * as animations from './animations.js';
 import { initSettingsView } from './settingsView.js';
 import { isBankrollInRange, loadStartingBankrollCents } from './bankrollSettings.js';
 import {
@@ -213,20 +214,23 @@ function betState() {
 }
 
 function renderAll() {
+  animations.beforeRender();
   document.documentElement.lang = state.language;
   setLanguageMenuValue(state.language);
   renderStaticLabels();
   updateSoundButton();
   renderHeaderProfile();
   const snapshot = state.game.getSnapshot();
+  const bets = betState();
   renderTable(snapshot, renderCtx);
-  renderPanels(snapshot, betState());
+  renderPanels(snapshot, bets);
   renderHistory(state.history.map((entry) => ({
     ...entry,
     labels: entry.results.map((r) => t(`results.${r}`))
       .concat(entry.insurance ? [t('history.insurance')] : []),
   })));
   renderSession({ rounds: state.roundCounter, netCents: state.sessionNetCents });
+  animations.afterRender(snapshot, bets);
 }
 
 function renderHeaderProfile() {
@@ -364,6 +368,7 @@ function deal() {
   }
   const after = state.game.getSnapshot();
   gameAudio.roundStarted();
+  animations.dealStarted();
   gameAudio.dealConfirmed(after.shoe.justShuffled);
   gameAudio.roundTransition(before, after, { baseDelay: 0.25 });
   if (after.shoe.justShuffled) showToast(t('round.shuffled'));
@@ -378,6 +383,7 @@ function deal() {
 }
 
 function nextRound() {
+  animations.roundClearing();
   gameAudio.roundCleared();
   mutate(() => {
     state.game.nextRound();
@@ -414,6 +420,11 @@ const controller = {
     storage.setChoice('theme', theme);
     applyTheme();
   },
+  getAnimationMode: () => animations.getAnimationMode(),
+  setAnimationMode(mode) {
+    animations.setAnimationMode(mode);
+  },
+  isReducedMotionPreferred: () => animations.isReducedMotionPreferred(),
   setProfile(profileId) {
     if (isRoundActive() || profileId === state.profileId) return;
     try {
@@ -525,18 +536,25 @@ function wireEvents() {
     if (!chip || chip.disabled) return;
     state.betCents += unitsToCents(Number(chip.dataset.value));
     gameAudio.chipAdded();
+    animations.chipAdded(chip);
     renderAll();
   });
 
   $('btn-clear').addEventListener('click', () => {
-    if (state.betCents > 0) gameAudio.betCleared();
+    if (state.betCents > 0) {
+      gameAudio.betCleared();
+      animations.betCleared();
+    }
     state.betCents = 0;
     renderAll();
   });
 
   $('btn-rebet').addEventListener('click', () => {
     state.betCents = clampBet(state.game.lastBetCents);
-    if (state.betCents > 0) gameAudio.rebet();
+    if (state.betCents > 0) {
+      gameAudio.rebet();
+      animations.rebet($('btn-rebet'));
+    }
     renderAll();
   });
 
@@ -609,6 +627,7 @@ function boot() {
   loadPreferences();
   applyAppearance();
   applyTheme();
+  animations.initAnimations();
   try {
     createGame();
   } catch (error) {
