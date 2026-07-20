@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="salon" data-mode="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Blackjack Lab local multiplayer: host or join a fictional-money blackjack table over your own local network.">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f4ecdb">
+  <title>Blackjack Lab — Local multiplayer</title>
+  <link rel="icon" type="image/svg+xml" href="src/assets/logo/favicon.svg">
+  <link rel="stylesheet" href="src/styles/tokens.css">
+  <link rel="stylesheet" href="src/styles/base.css">
+  <link rel="stylesheet" href="src/styles/layout.css">
+  <link rel="stylesheet" href="src/styles/cards.css">
+  <link rel="stylesheet" href="src/styles/components.css">
+  <link rel="stylesheet" href="src/styles/theme-salon.css">
+  <link rel="stylesheet" href="src/styles/animations.css">
+  <link rel="stylesheet" href="src/styles/multiplayer.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <svg class="brand__logo" viewBox="0 0 96 96" aria-hidden="true" focusable="false">
+        <defs>
+          <clipPath id="brand-mark-left"><rect width="48" height="96"/></clipPath>
+          <clipPath id="brand-mark-right"><rect x="48" width="48" height="96"/></clipPath>
+        </defs>
+        <g clip-path="url(#brand-mark-left)">
+          <path class="brand__logo-ink" d="M48 6C41 19 22 31 15 46C10 57 15 68 24 71.5C31.5 74.5 39.5 72 43.5 65.5C43.8 73 41 82 33.5 88.5L62.5 88.5C55 82 52.2 73 52.5 65.5C56.5 72 64.5 74.5 72 71.5C81 68 86 57 81 46C74 31 55 19 48 6Z"/>
+        </g>
+        <g clip-path="url(#brand-mark-right)" class="brand__logo-line" fill="none" stroke-width="2.4">
+          <path d="M48 6C41 19 22 31 15 46C10 57 15 68 24 71.5C31.5 74.5 39.5 72 43.5 65.5C43.8 73 41 82 33.5 88.5L62.5 88.5C55 82 52.2 73 52.5 65.5C56.5 72 64.5 74.5 72 71.5C81 68 86 57 81 46C74 31 55 19 48 6Z"/>
+        </g>
+        <path class="brand__logo-line" d="M48 1L48 93" fill="none" stroke-width="1.3"/>
+      </svg>
+      <h1 class="brand__name">Blackjack Lab</h1>
+      <span class="badge badge--fictional" id="fictional-badge"></span>
+      <span class="badge badge--experimental" id="experimental-badge"></span>
+    </div>
+    <div class="header-actions">
+      <div class="menu-select select--compact" id="language-menu">
+        <span class="sr-only" id="language-label"></span>
+        <button type="button" class="menu-select__button" id="language-button" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-controls="language-listbox" aria-labelledby="language-label language-value">
+          <svg class="menu-select__globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M3 12h18"/>
+            <path d="M12 3a14.5 14.5 0 0 0 0 18 14.5 14.5 0 0 0 0-18"/>
+          </svg>
+          <span class="menu-select__code" id="language-code" aria-hidden="true"></span>
+          <span class="menu-select__value sr-only" id="language-value"></span>
+          <svg class="menu-select__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m6 9 6 6 6-6"/>
+          </svg>
+        </button>
+        <ul class="menu-select__list" id="language-listbox" role="listbox" aria-labelledby="language-label" hidden>
+          <li class="menu-select__option" id="language-option-en" role="option" data-value="en" aria-selected="false">
+            <span>English</span>
+            <svg class="menu-select__check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m5 12.5 4.5 4.5L19 7.5"/>
+            </svg>
+          </li>
+          <li class="menu-select__option" id="language-option-fr" role="option" data-value="fr" aria-selected="false">
+            <span>Français</span>
+            <svg class="menu-select__check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m5 12.5 4.5 4.5L19 7.5"/>
+            </svg>
+          </li>
+        </ul>
+      </div>
+      <button type="button" id="btn-sound" class="btn btn--ghost btn--icon" aria-pressed="false">
+        <svg class="icon-sound-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M11 5 6.5 8.5H3.5v7h3L11 19z"/>
+          <path d="M15 9.5a3.6 3.6 0 0 1 0 5"/>
+          <path d="M17.7 7a7.2 7.2 0 0 1 0 10"/>
+        </svg>
+        <svg class="icon-sound-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden>
+          <path d="M11 5 6.5 8.5H3.5v7h3L11 19z"/>
+          <path d="m15.5 9.5 5 5M20.5 9.5l-5 5"/>
+        </svg>
+      </button>
+      <a href="index.html" id="btn-solo-link" class="btn btn--ghost"></a>
+    </div>
+  </header>
+
+  <main class="mp-main">
+
+    <!-- Mode menu -->
+    <section class="mp-screen" id="screen-menu" hidden>
+      <h2 class="mp-title" id="menu-title"></h2>
+      <p class="mp-tagline" id="menu-tagline"></p>
+      <div class="mp-menu">
+        <a class="mp-menu-card" href="index.html" id="menu-solo">
+          <strong class="mp-menu-card__name" id="menu-solo-name"></strong>
+          <span class="mp-menu-card__desc" id="menu-solo-desc"></span>
+        </a>
+        <button type="button" class="mp-menu-card" id="menu-host">
+          <strong class="mp-menu-card__name" id="menu-host-name"></strong>
+          <span class="mp-menu-card__desc" id="menu-host-desc"></span>
+        </button>
+        <button type="button" class="mp-menu-card" id="menu-join">
+          <strong class="mp-menu-card__name" id="menu-join-name"></strong>
+          <span class="mp-menu-card__desc" id="menu-join-desc"></span>
+        </button>
+        <button type="button" class="mp-menu-card mp-menu-card--restore" id="menu-restore" hidden>
+          <strong class="mp-menu-card__name" id="menu-restore-name"></strong>
+          <span class="mp-menu-card__desc" id="menu-restore-desc"></span>
+        </button>
+      </div>
+      <section class="side-card mp-how" aria-labelledby="how-title">
+        <h3 class="side-title" id="how-title"></h3>
+        <p class="fine-print" id="how-body-1"></p>
+        <p class="fine-print" id="how-body-2"></p>
+        <p class="fine-print" id="how-body-3"></p>
+        <p class="fine-print" id="how-body-4"></p>
+      </section>
+      <p class="callout callout--warning" id="webrtc-unsupported" hidden></p>
+    </section>
+
+    <!-- Host: room setup -->
+    <section class="mp-screen" id="screen-host-setup" hidden>
+      <h2 class="mp-title" id="host-setup-title"></h2>
+      <form class="mp-form side-card" id="host-setup-form" novalidate>
+        <div class="field">
+          <label for="host-room-name" id="host-room-name-label"></label>
+          <input class="text-input" type="text" id="host-room-name" maxlength="24" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="host-name" id="host-name-label"></label>
+          <input class="text-input" type="text" id="host-name" maxlength="24" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="host-max-players" id="host-max-players-label"></label>
+          <select class="text-input" id="host-max-players">
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4" selected>4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+          </select>
+        </div>
+        <div class="field field--inline">
+          <input type="checkbox" id="host-plays" checked>
+          <label for="host-plays" id="host-plays-label"></label>
+        </div>
+        <div class="field">
+          <label for="host-profile" id="host-profile-label"></label>
+          <select class="text-input" id="host-profile"></select>
+        </div>
+        <div class="field">
+          <label for="host-bankroll" id="host-bankroll-label"></label>
+          <input class="text-input" type="text" inputmode="numeric" id="host-bankroll" value="1000">
+        </div>
+        <div class="mp-form-row">
+          <div class="field">
+            <label for="host-min-bet" id="host-min-bet-label"></label>
+            <input class="text-input" type="text" inputmode="numeric" id="host-min-bet" value="5">
+          </div>
+          <div class="field">
+            <label for="host-max-bet" id="host-max-bet-label"></label>
+            <input class="text-input" type="text" inputmode="numeric" id="host-max-bet" value="1000">
+          </div>
+        </div>
+        <p class="field__error" id="host-setup-error" role="alert" hidden></p>
+        <div class="button-row">
+          <button type="button" class="btn" id="host-setup-back"></button>
+          <button type="submit" class="btn btn--primary" id="host-setup-create"></button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Join: pairing wizard -->
+    <section class="mp-screen" id="screen-join" hidden>
+      <h2 class="mp-title" id="join-title"></h2>
+      <div class="side-card mp-form" id="join-step-name">
+        <div class="field">
+          <label for="join-name" id="join-name-label"></label>
+          <input class="text-input" type="text" id="join-name" maxlength="24" autocomplete="off">
+        </div>
+        <p class="callout" id="join-resume-note" hidden></p>
+        <h3 class="side-title" id="join-step1-title"></h3>
+        <p class="fine-print" id="join-step1-body"></p>
+        <div class="field">
+          <textarea class="text-input mp-code-input" id="join-offer-input" rows="4" spellcheck="false" autocomplete="off"></textarea>
+        </div>
+        <div class="button-row">
+          <button type="button" class="btn" id="join-back"></button>
+          <button type="button" class="btn" id="join-scan"></button>
+          <button type="button" class="btn btn--primary" id="join-continue"></button>
+        </div>
+        <div class="mp-scanner" id="join-scanner" hidden>
+          <video id="join-video" playsinline muted></video>
+          <button type="button" class="btn" id="join-scan-stop"></button>
+        </div>
+        <p class="field__error" id="join-error" role="alert" hidden></p>
+      </div>
+      <div class="side-card mp-form" id="join-step-answer" hidden>
+        <h3 class="side-title" id="join-step2-title"></h3>
+        <p class="fine-print" id="join-step2-body"></p>
+        <div class="mp-qr" id="join-answer-qr" role="img"></div>
+        <div class="field">
+          <textarea class="text-input mp-code-input" id="join-answer-output" rows="4" readonly spellcheck="false"></textarea>
+        </div>
+        <div class="button-row">
+          <button type="button" class="btn" id="join-answer-copy"></button>
+          <button type="button" class="btn" id="join-answer-share" hidden></button>
+        </div>
+        <p class="mp-waiting" id="join-waiting"></p>
+      </div>
+    </section>
+
+    <!-- Lobby + game table -->
+    <section class="mp-screen mp-screen--table" id="screen-room" hidden>
+      <div class="mp-room-header">
+        <h2 class="mp-title" id="room-title"></h2>
+        <span class="badge" id="room-phase-badge"></span>
+      </div>
+      <p class="callout callout--warning" id="room-banner" hidden></p>
+
+      <div class="mp-room-layout">
+        <div class="mp-room-main">
+          <section class="table mp-table" id="mp-table" hidden>
+            <section class="hand-area hand-area--dealer" aria-labelledby="mp-dealer-label">
+              <header class="hand-header">
+                <h3 class="hand-name" id="mp-dealer-label"></h3>
+                <span class="hand-total" id="mp-dealer-total" hidden></span>
+              </header>
+              <div class="cards" id="mp-dealer-cards"></div>
+            </section>
+            <p class="table-message" id="mp-table-message"></p>
+            <div class="mp-seats" id="mp-seats"></div>
+          </section>
+
+          <section class="controls" id="mp-controls" hidden>
+            <div class="status-strip">
+              <div class="stat">
+                <span class="stat__label" id="mp-bankroll-label"></span>
+                <strong class="stat__value" id="mp-bankroll-value"></strong>
+              </div>
+              <div class="stat stat--bet">
+                <span class="stat__label" id="mp-bet-label"></span>
+                <strong class="stat__value" id="mp-bet-value"></strong>
+              </div>
+              <span class="shoe-count" id="mp-shoe-count"></span>
+            </div>
+
+            <div id="mp-panel-bet" class="panel" hidden>
+              <p class="panel__prompt" id="mp-bet-prompt"></p>
+              <div class="chip-row" id="mp-chip-row" role="group"></div>
+              <div class="button-row">
+                <button type="button" id="mp-btn-clear" class="btn"></button>
+                <button type="button" id="mp-btn-bet" class="btn btn--primary"></button>
+                <button type="button" id="mp-btn-ready" class="btn btn--primary" aria-pressed="false"></button>
+              </div>
+              <p class="fine-print" id="mp-table-range"></p>
+            </div>
+
+            <div id="mp-panel-actions" class="panel" hidden>
+              <div class="button-row button-row--actions" role="group">
+                <button type="button" data-action="HIT" class="btn btn--action btn--action-primary"><span class="btn__label"></span></button>
+                <button type="button" data-action="STAND" class="btn btn--action btn--action-primary"><span class="btn__label"></span></button>
+                <button type="button" data-action="DOUBLE" class="btn btn--action btn--action-secondary"><span class="btn__label"></span></button>
+                <button type="button" data-action="SPLIT" class="btn btn--action btn--action-secondary"><span class="btn__label"></span></button>
+                <button type="button" data-action="SURRENDER" class="btn btn--action"></button>
+              </div>
+            </div>
+
+            <div id="mp-panel-decision" class="panel" hidden>
+              <p class="panel__prompt" id="mp-decision-question"></p>
+              <div class="button-row">
+                <button type="button" id="mp-btn-decision-no" class="btn"></button>
+                <button type="button" id="mp-btn-decision-yes" class="btn btn--primary"></button>
+              </div>
+            </div>
+
+            <div id="mp-panel-wait" class="panel" hidden>
+              <p class="panel__prompt" id="mp-wait-message"></p>
+            </div>
+          </section>
+
+          <p class="fictional-note" id="fictional-note"></p>
+        </div>
+
+        <aside class="mp-room-side">
+          <section class="side-card" aria-labelledby="mp-players-title">
+            <h3 class="side-title" id="mp-players-title"></h3>
+            <ul class="mp-player-list" id="mp-player-list"></ul>
+            <div class="button-row mp-side-actions">
+              <button type="button" class="btn" id="btn-invite" hidden></button>
+            </div>
+          </section>
+
+          <section class="side-card" id="mp-host-controls" hidden aria-labelledby="mp-host-controls-title">
+            <h3 class="side-title" id="mp-host-controls-title"></h3>
+            <div class="mp-host-buttons">
+              <button type="button" class="btn btn--primary" id="btn-start-game" hidden></button>
+              <button type="button" class="btn btn--primary" id="btn-start-round" hidden></button>
+              <button type="button" class="btn btn--primary" id="btn-next-round" hidden></button>
+              <button type="button" class="btn" id="btn-pause" hidden aria-pressed="false"></button>
+              <button type="button" class="btn btn--danger" id="btn-end-room"></button>
+            </div>
+            <p class="fine-print" id="mp-host-note"></p>
+          </section>
+
+          <section class="side-card" id="mp-leave-card" hidden>
+            <button type="button" class="btn" id="btn-leave-room"></button>
+          </section>
+
+          <section class="side-card history" aria-labelledby="mp-history-title">
+            <h3 class="side-title" id="mp-history-title"></h3>
+            <ol class="history__list" id="mp-history-list"></ol>
+            <p class="history__empty fine-print" id="mp-history-empty"></p>
+          </section>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <div class="sr-only" aria-live="polite" id="live-region"></div>
+  <div class="toast" id="toast" role="status" hidden></div>
+
+  <!-- Host pairing wizard -->
+  <dialog class="dialog dialog--wide" id="dialog-invite" aria-labelledby="invite-title">
+    <header class="dialog__header">
+      <h2 id="invite-title"></h2>
+      <button type="button" class="btn btn--ghost dialog__close" id="invite-close"></button>
+    </header>
+    <div class="dialog__body">
+      <section class="mp-invite-step">
+        <h3 class="side-title" id="invite-step1-title"></h3>
+        <p class="fine-print" id="invite-step1-body"></p>
+        <p class="mp-waiting" id="invite-generating"></p>
+        <div class="mp-qr" id="invite-offer-qr" role="img"></div>
+        <div class="field">
+          <textarea class="text-input mp-code-input" id="invite-offer-output" rows="4" readonly spellcheck="false"></textarea>
+        </div>
+        <div class="button-row">
+          <button type="button" class="btn" id="invite-copy"></button>
+          <button type="button" class="btn" id="invite-share" hidden></button>
+        </div>
+      </section>
+      <section class="mp-invite-step">
+        <h3 class="side-title" id="invite-step2-title"></h3>
+        <p class="fine-print" id="invite-step2-body"></p>
+        <div class="field">
+          <textarea class="text-input mp-code-input" id="invite-answer-input" rows="4" spellcheck="false" autocomplete="off"></textarea>
+        </div>
+        <div class="button-row">
+          <button type="button" class="btn" id="invite-scan"></button>
+          <button type="button" class="btn btn--primary" id="invite-connect"></button>
+        </div>
+        <div class="mp-scanner" id="invite-scanner" hidden>
+          <video id="invite-video" playsinline muted></video>
+          <button type="button" class="btn" id="invite-scan-stop"></button>
+        </div>
+        <p class="field__error" id="invite-error" role="alert" hidden></p>
+      </section>
+    </div>
+  </dialog>
+
+  <!-- Generic confirmation -->
+  <dialog class="dialog dialog--confirm" id="dialog-confirm" aria-labelledby="confirm-title">
+    <header class="dialog__header">
+      <h2 id="confirm-title"></h2>
+    </header>
+    <div class="dialog__body">
+      <p id="confirm-body"></p>
+      <div class="button-row">
+        <button type="button" class="btn" id="confirm-cancel"></button>
+        <button type="button" class="btn btn--danger" id="confirm-accept"></button>
+      </div>
+    </div>
+  </dialog>
+
+  <script type="module" src="src/js/multiplayer/ui/mpApp.js"></script>
+</body>
+</html>

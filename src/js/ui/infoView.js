@@ -104,6 +104,12 @@ export function renderInfoPage(container) {
   paragraph(data, t('info.dataBody1'));
   paragraph(data, t('info.dataBody2'));
 
+  const multiplayer = section('info.mpTitle');
+  paragraph(multiplayer, t('info.mpBody1'));
+  paragraph(multiplayer, t('info.mpBody2'));
+  paragraph(multiplayer, t('info.mpBody3'));
+  paragraph(multiplayer, t('info.mpBody4'));
+
   const credits = section('info.creditsTitle');
   paragraph(credits, t('info.creditsIntro'));
   const creditList = document.createElement('ul');

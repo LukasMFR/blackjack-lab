@@ -28,6 +28,7 @@ export function renderStaticLabels() {
   // First half of the button's name ("Language, French") and the listbox's,
   // both via aria-labelledby.
   $('language-label').textContent = t('a11y.chooseLanguage');
+  $('btn-multiplayer').textContent = t('nav.multiplayer');
   $('btn-help').textContent = t('nav.help');
   $('btn-settings').textContent = t('nav.settings');
   $('btn-help').setAttribute('aria-label', t('a11y.openHelp'));

@@ -3,6 +3,10 @@ import './engine.test.js';
 import './audio.test.js';
 import './bankroll.test.js';
 import './session.test.js';
+import './qr.test.js';
+import './multiplayerTable.test.js';
+import './protocol.test.js';
+import './multiplayerSession.test.js';
 import { runAll } from './runner.js';
 
 await runAll();

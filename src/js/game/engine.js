@@ -2,34 +2,31 @@ import {
   ACTIONS,
   DEAL_MODES,
   DEALER_BJ_LOSS_MODES,
-  DOUBLE_RESTRICTIONS,
   HAND_STATUS,
   RESULTS,
   ROUND_STATES,
   SURRENDER_MODES,
 } from './constants.js';
 import { isAce, isTenValue } from './card.js';
-import { evaluateCards, isSplittablePair } from './handEval.js';
+import { evaluateCards } from './handEval.js';
 import { assertAmount, exactHalf, exactProfit, unitsToCents } from './money.js';
 import { compareHands, payoutForResult } from './settlement.js';
+import {
+  allUnavailable,
+  availabilityForHand,
+  dealerBlackjackRefundCents,
+  surrenderUpcardAllowed,
+  UNAVAILABLE_REASONS,
+} from './actionRules.js';
+import {
+  applyDouble, applyHit, applySplit, applyStand, applySurrender, drawDealerHand,
+} from './handPlay.js';
 import { Shoe } from './shoe.js';
 import { validateProfile } from '../config/profiles.js';
 
-/** Reasons an action can be unavailable (translated by the UI). */
-export const UNAVAILABLE_REASONS = Object.freeze({
-  NOT_PLAYER_TURN: 'NOT_PLAYER_TURN',
-  NOT_TWO_CARDS: 'NOT_TWO_CARDS',
-  INSUFFICIENT_FUNDS: 'INSUFFICIENT_FUNDS',
-  RULE_FORBIDS: 'RULE_FORBIDS',
-  NOT_A_PAIR: 'NOT_A_PAIR',
-  MAX_SPLITS_REACHED: 'MAX_SPLITS_REACHED',
-  SPLIT_ACES_NO_HIT: 'SPLIT_ACES_NO_HIT',
-  NOT_ORIGINAL_HAND: 'NOT_ORIGINAL_HAND',
-  SURRENDER_VS_ACE: 'SURRENDER_VS_ACE',
-  DOUBLE_TOTAL_RESTRICTED: 'DOUBLE_TOTAL_RESTRICTED',
-  NO_DOUBLE_AFTER_SPLIT: 'NO_DOUBLE_AFTER_SPLIT',
-  SURRENDER_WINDOW_CLOSED: 'SURRENDER_WINDOW_CLOSED',
-});
+// Re-exported for the UI and tests; the authoritative definition lives in
+// actionRules.js, shared with the multiplayer table engine.
+export { UNAVAILABLE_REASONS };
 
 /** Pending player decisions that block normal actions. */
 export const PENDING_DECISIONS = Object.freeze({
@@ -291,88 +288,20 @@ export class BlackjackGame {
    * @returns {Record<string, {legal: boolean, reason: string|null}>}
    */
   actionAvailability() {
-    const out = {};
-    for (const action of Object.values(ACTIONS)) {
-      out[action] = { legal: false, reason: UNAVAILABLE_REASONS.NOT_PLAYER_TURN };
-    }
     if (this.roundState !== ROUND_STATES.PLAYER_TURN || this.pendingDecision !== null) {
-      return out;
+      return allUnavailable();
     }
     const hand = this.hands[this.activeHandIndex];
-    if (!hand || hand.status !== HAND_STATUS.ACTIVE) return out;
-
-    const { profile } = this;
-    const twoCards = hand.cards.length === 2;
-    const set = (action, legal, reason = null) => {
-      out[action] = { legal, reason: legal ? null : reason };
-    };
-
-    // Split Aces locked to one card: the hand can only stay active while a
-    // re-split is possible, so hit and double stay unavailable.
-    const lockedAces = hand.splitAces && profile.splitAcesOneCardOnly;
-    if (lockedAces) {
-      set(ACTIONS.HIT, false, UNAVAILABLE_REASONS.SPLIT_ACES_NO_HIT);
-    } else {
-      set(ACTIONS.HIT, true);
-    }
-    set(ACTIONS.STAND, true);
-
-    // Double
-    if (lockedAces) {
-      set(ACTIONS.DOUBLE, false, UNAVAILABLE_REASONS.SPLIT_ACES_NO_HIT);
-    } else if (!twoCards) {
-      set(ACTIONS.DOUBLE, false, UNAVAILABLE_REASONS.NOT_TWO_CARDS);
-    } else if (hand.fromSplit && !profile.doubleAfterSplit) {
-      set(ACTIONS.DOUBLE, false, UNAVAILABLE_REASONS.NO_DOUBLE_AFTER_SPLIT);
-    } else if (!this.#doubleTotalAllowed(hand)) {
-      set(ACTIONS.DOUBLE, false, UNAVAILABLE_REASONS.DOUBLE_TOTAL_RESTRICTED);
-    } else if (this.bankrollCents < hand.betCents) {
-      set(ACTIONS.DOUBLE, false, UNAVAILABLE_REASONS.INSUFFICIENT_FUNDS);
-    } else {
-      set(ACTIONS.DOUBLE, true);
-    }
-
-    // Split
-    if (!twoCards) {
-      set(ACTIONS.SPLIT, false, UNAVAILABLE_REASONS.NOT_TWO_CARDS);
-    } else if (!isSplittablePair(hand.cards, profile.splitPairing)) {
-      set(ACTIONS.SPLIT, false, UNAVAILABLE_REASONS.NOT_A_PAIR);
-    } else if (this.hands.length >= profile.maxSplitHands) {
-      set(ACTIONS.SPLIT, false, UNAVAILABLE_REASONS.MAX_SPLITS_REACHED);
-    } else if (hand.splitAces && !profile.resplitAces) {
-      set(ACTIONS.SPLIT, false, UNAVAILABLE_REASONS.RULE_FORBIDS);
-    } else if (this.bankrollCents < hand.betCents) {
-      set(ACTIONS.SPLIT, false, UNAVAILABLE_REASONS.INSUFFICIENT_FUNDS);
-    } else {
-      set(ACTIONS.SPLIT, true);
-    }
-
-    // Surrender (in-turn late/early forms; the early pre-peek prompt is
-    // handled separately as a pending decision)
-    if (profile.surrender === SURRENDER_MODES.NONE) {
-      set(ACTIONS.SURRENDER, false, UNAVAILABLE_REASONS.RULE_FORBIDS);
-    } else if (hand.fromSplit || this.hands.length > 1) {
-      set(ACTIONS.SURRENDER, false, UNAVAILABLE_REASONS.NOT_ORIGINAL_HAND);
-    } else if (!twoCards) {
-      set(ACTIONS.SURRENDER, false, UNAVAILABLE_REASONS.SURRENDER_WINDOW_CLOSED);
-    } else if (!this.#surrenderUpcardAllowed()) {
-      set(ACTIONS.SURRENDER, false, UNAVAILABLE_REASONS.SURRENDER_VS_ACE);
-    } else if (
-      profile.surrender === SURRENDER_MODES.EARLY_SURRENDER
-      && this.earlySurrenderDeclined
-    ) {
-      set(ACTIONS.SURRENDER, false, UNAVAILABLE_REASONS.SURRENDER_WINDOW_CLOSED);
-    } else if (
-      profile.surrender === SURRENDER_MODES.LATE_SURRENDER
-      && this.dealerBlackjackKnown !== false
-    ) {
-      // Late surrender only exists once dealer blackjack is ruled out.
-      set(ACTIONS.SURRENDER, false, UNAVAILABLE_REASONS.SURRENDER_WINDOW_CLOSED);
-    } else {
-      set(ACTIONS.SURRENDER, true);
-    }
-
-    return out;
+    if (!hand || hand.status !== HAND_STATUS.ACTIVE) return allUnavailable();
+    return availabilityForHand({
+      profile: this.profile,
+      hand,
+      handCount: this.hands.length,
+      bankrollCents: this.bankrollCents,
+      upcard: this.#upcard,
+      dealerBlackjackKnown: this.dealerBlackjackKnown,
+      earlySurrenderDeclined: this.earlySurrenderDeclined,
+    });
   }
 
   /** @returns {string[]} legal actions for the active hand */
@@ -381,19 +310,8 @@ export class BlackjackGame {
     return Object.keys(availability).filter((a) => availability[a].legal);
   }
 
-  #doubleTotalAllowed(hand) {
-    const { doubleRestriction } = this.profile;
-    if (doubleRestriction === DOUBLE_RESTRICTIONS.ANY_TWO) return true;
-    const { total, isSoft } = evaluateCards(hand.cards);
-    if (isSoft) return false;
-    if (doubleRestriction === DOUBLE_RESTRICTIONS.NINE_TO_ELEVEN) return total >= 9 && total <= 11;
-    if (doubleRestriction === DOUBLE_RESTRICTIONS.TEN_ELEVEN) return total === 10 || total === 11;
-    return false;
-  }
-
   #surrenderUpcardAllowed() {
-    if (this.profile.surrenderVsAce) return true;
-    return !isAce(this.#upcard);
+    return surrenderUpcardAllowed(this.#upcard, this.profile);
   }
 
   // ---------------------------------------------------------- player actions
@@ -423,83 +341,36 @@ export class BlackjackGame {
     }
   }
 
+  get #playCtx() {
+    return {
+      draw: () => this.shoe.draw(),
+      debit: (cents) => this.#debit(cents),
+      bankroll: () => this.bankrollCents,
+      settle: (hand, result) => this.#settleHand(hand, result),
+      hands: this.hands,
+      profile: this.profile,
+      createHand,
+    };
+  }
+
   #hit(hand) {
-    hand.cards.push(this.shoe.draw());
-    const evaluation = evaluateCards(hand.cards);
-    if (evaluation.isBust) {
-      hand.status = HAND_STATUS.BUST;
-      this.#settleHand(hand, RESULTS.LOSS);
-    } else if (evaluation.total === 21) {
-      // Nothing further can improve a 21; the hand stands automatically.
-      hand.status = HAND_STATUS.STOOD;
-    }
+    applyHit(hand, this.#playCtx);
     this.#advanceTurn();
   }
 
   #stand(hand) {
-    hand.status = HAND_STATUS.STOOD;
+    applyStand(hand);
     this.#advanceTurn();
   }
 
   #double(hand) {
-    this.#debit(hand.betCents);
-    hand.betCents += hand.originalBetCents;
-    hand.doubled = true;
-    hand.cards.push(this.shoe.draw());
-    const evaluation = evaluateCards(hand.cards);
-    if (evaluation.isBust) {
-      hand.status = HAND_STATUS.BUST;
-      this.#settleHand(hand, RESULTS.LOSS);
-    } else {
-      hand.status = HAND_STATUS.STOOD;
-    }
+    applyDouble(hand, this.#playCtx);
     this.#advanceTurn();
   }
 
   #split(hand) {
-    const splittingAces = hand.cards.every(isAce);
-    this.#debit(hand.originalBetCents);
-
-    const second = createHand(hand.originalBetCents, {
-      fromSplit: true,
-      splitAces: splittingAces,
-    });
-    second.cards.push(hand.cards.pop());
-    hand.fromSplit = true;
-    hand.splitAces = splittingAces;
-
-    this.hands.splice(this.activeHandIndex + 1, 0, second);
-
-    // One card to each new hand, in play order.
-    hand.cards.push(this.shoe.draw());
-    second.cards.push(this.shoe.draw());
-
-    for (const h of [hand, second]) {
-      const evaluation = evaluateCards(h.cards);
-      if (h.splitAces && this.profile.splitAcesOneCardOnly && !this.#canResplit(h)) {
-        // Split Aces receive exactly one card and are then locked.
-        h.status = HAND_STATUS.STOOD;
-      } else if (evaluation.total === 21) {
-        h.status = this.#isSplitBlackjack(h, evaluation)
-          ? HAND_STATUS.BLACKJACK
-          : HAND_STATUS.STOOD;
-      }
-    }
+    applySplit(hand, this.#playCtx);
     this.#advanceTurn();
-  }
-
-  #canResplit(hand) {
-    return (
-      hand.splitAces
-      && this.profile.resplitAces
-      && this.hands.length < this.profile.maxSplitHands
-      && isSplittablePair(hand.cards, this.profile.splitPairing)
-      && this.bankrollCents >= hand.betCents
-    );
-  }
-
-  #isSplitBlackjack(hand, evaluation) {
-    return this.profile.splitTwentyOneIsBlackjack && evaluation.isNaturalCandidate;
   }
 
   #surrenderAction(hand) {
@@ -508,8 +379,7 @@ export class BlackjackGame {
   }
 
   #surrenderHand(hand) {
-    hand.status = HAND_STATUS.SURRENDERED;
-    this.#settleHand(hand, RESULTS.SURRENDER);
+    applySurrender(hand, this.#playCtx);
   }
 
   // ------------------------------------------------------------- turn order
@@ -562,20 +432,13 @@ export class BlackjackGame {
     // Draw only while a live non-blackjack hand contests the outcome.
     const liveHands = this.hands.some((h) => !h.settled && h.status === HAND_STATUS.STOOD);
     if (liveHands) {
-      let evaluation = evaluateCards(this.dealerCards);
-      while (this.#dealerMustDraw(evaluation)) {
-        this.dealerCards.push(this.shoe.draw());
-        evaluation = evaluateCards(this.dealerCards);
-      }
+      drawDealerHand(this.dealerCards, {
+        draw: () => this.shoe.draw(),
+        profile: this.profile,
+      });
     }
     this.#settleRemainingHands();
     this.#finishRound();
-  }
-
-  #dealerMustDraw(evaluation) {
-    if (evaluation.total < 17) return true;
-    if (evaluation.total === 17 && evaluation.isSoft && this.profile.dealerHitsSoft17) return true;
-    return false;
   }
 
   // ------------------------------------------------------------- settlement
@@ -592,10 +455,9 @@ export class BlackjackGame {
   /** Settle a hand for a dealer blackjack under ORIGINAL_BETS_ONLY. */
   #settleOriginalBetOnly(hand) {
     if (hand.settled) throw new Error(`Hand ${hand.id} already settled`);
-    const doubleAddition = hand.betCents - hand.originalBetCents;
     // Additional wagers (split hands, double additions) are returned;
     // only the round's original bet is lost.
-    const refund = doubleAddition + (hand.isAdditionalWager ? hand.originalBetCents : 0);
+    const refund = dealerBlackjackRefundCents(hand);
     hand.settled = true;
     hand.result = RESULTS.LOSS;
     hand.payoutCents = refund;

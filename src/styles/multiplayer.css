@@ -1,0 +1,306 @@
+/*
+ * Local multiplayer screens: mode menu, host setup, pairing wizard,
+ * lobby and the multi-seat table. Everything is built from the shared
+ * design tokens, so all three themes and both modes apply unchanged.
+ */
+
+.mp-main {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: var(--space-5) max(var(--space-4), var(--safe-left))
+    calc(var(--space-7) + var(--safe-bottom)) max(var(--space-4), var(--safe-right));
+}
+
+.mp-screen[hidden] {
+  display: none;
+}
+
+.mp-title {
+  font-size: var(--text-xl);
+  margin: 0 0 var(--space-2);
+}
+
+.mp-tagline {
+  color: var(--text-muted);
+  margin: 0 0 var(--space-5);
+}
+
+/* ------------------------------------------------------------ mode menu */
+
+.mp-menu {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.mp-menu-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-l);
+  background: var(--surface-raised);
+  color: var(--text);
+  text-align: left;
+  text-decoration: none;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color var(--dur-fast), transform var(--dur-fast);
+}
+
+.mp-menu-card:hover,
+.mp-menu-card:focus-visible {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+
+.mp-menu-card__name {
+  font-size: var(--text-l);
+}
+
+.mp-menu-card__desc {
+  color: var(--text-muted);
+  font-size: var(--text-s);
+}
+
+.mp-how {
+  margin-bottom: var(--space-4);
+}
+
+.badge--experimental {
+  border: 1px solid var(--border-strong);
+  color: var(--text-muted);
+}
+
+/* ------------------------------------------------------------- forms */
+
+.mp-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 34rem;
+}
+
+.mp-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.field--inline {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.mp-code-input {
+  width: 100%;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--text-xs);
+  word-break: break-all;
+  resize: vertical;
+}
+
+/* -------------------------------------------------------- pairing wizard */
+
+.mp-qr {
+  width: min(17rem, 70vw);
+  margin: var(--space-3) auto;
+  padding: var(--space-3);
+  background: #ffffff;
+  border-radius: var(--radius-m);
+  color: #111111; /* QR modules render with currentColor */
+}
+
+.mp-qr:empty {
+  display: none;
+}
+
+.mp-qr svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.mp-scanner video {
+  width: 100%;
+  max-height: 40vh;
+  border-radius: var(--radius-m);
+  background: #000;
+  margin-bottom: var(--space-2);
+}
+
+.mp-waiting {
+  color: var(--text-muted);
+  font-size: var(--text-s);
+}
+
+.mp-waiting:empty {
+  display: none;
+}
+
+.mp-invite-step {
+  margin-bottom: var(--space-5);
+}
+
+/* ------------------------------------------------------------ room layout */
+
+.mp-room-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.mp-room-header .mp-title {
+  margin: 0;
+}
+
+.mp-room-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(14rem, 19rem);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+@media (max-width: 56rem) {
+  .mp-room-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mp-room-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.mp-side-actions:empty {
+  display: none;
+}
+
+.mp-host-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* ------------------------------------------------------------ player list */
+
+.mp-player-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.mp-player {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-s);
+}
+
+.mp-player__dot {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--loss, #b3262e);
+  flex: none;
+}
+
+.mp-player__dot--connected {
+  background: var(--win, #2d6a4b);
+}
+
+.mp-player__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mp-player__tag {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-s);
+  padding: 0 var(--space-1);
+  flex: none;
+}
+
+/* ----------------------------------------------------------------- seats */
+
+.mp-seats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr));
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.mp-seat {
+  border: 1px solid var(--felt-line);
+  border-radius: var(--radius-m);
+  padding: var(--space-3);
+  color: var(--on-felt);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.mp-seat--active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.mp-seat--me {
+  background: rgb(255 255 255 / 0.05);
+}
+
+.mp-seat--disconnected {
+  opacity: 0.65;
+}
+
+.mp-seat__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.mp-seat__name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 12rem;
+}
+
+.mp-seat__meta {
+  font-size: var(--text-xs);
+  color: var(--on-felt-muted);
+}
+
+.mp-seat__status {
+  font-size: var(--text-xs);
+  color: var(--on-felt-muted);
+}
+
+.mp-seat .hand {
+  margin: 0;
+}
+
+.mp-seat .cards {
+  --card-w: clamp(3.1rem, 6vw + 1rem, 5rem);
+}
+
+.mp-seat__hands {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
