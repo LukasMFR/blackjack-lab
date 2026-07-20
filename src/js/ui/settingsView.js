@@ -32,6 +32,8 @@ export function initSettingsView(appController) {
     dialog.addEventListener('click', (event) => {
       if (event.target === dialog) dialog.close();
     });
+    // One close sound per dialog, whatever closed it (button, Esc, backdrop).
+    dialog.addEventListener('close', () => controller.audio.dialogClosed());
   }
   for (const button of document.querySelectorAll('[data-close-dialog]')) {
     button.addEventListener('click', () => button.closest('dialog').close());
@@ -41,10 +43,12 @@ export function initSettingsView(appController) {
   $('btn-profile').addEventListener('click', () => openSettings());
   $('btn-help').addEventListener('click', () => {
     renderHelp();
+    controller.audio.dialogOpened();
     $('dialog-help').showModal();
   });
   $('btn-reset-bankroll').addEventListener('click', () => {
     renderResetDialog();
+    controller.audio.dialogOpened();
     $('dialog-reset').showModal();
   });
   $('btn-reset-cancel').addEventListener('click', () => $('dialog-reset').close());
@@ -57,6 +61,7 @@ export function initSettingsView(appController) {
 
 function openSettings() {
   renderSettings();
+  controller.audio.dialogOpened();
   $('dialog-settings').showModal();
 }
 
@@ -85,6 +90,7 @@ export function renderSettings() {
     (value) => t(THEME_LABEL_KEYS[value]),
     (value) => controller.setTheme(value));
 
+  renderAudioSection();
   buildProfileList(state);
   buildCustomEditor(state);
 }
@@ -99,11 +105,141 @@ function buildSegment(container, values, current, labelOf, onSelect) {
     option.setAttribute('aria-checked', String(value === current));
     option.textContent = labelOf(value);
     option.addEventListener('click', () => {
+      if (value !== current) controller.audio.settingChanged();
       onSelect(value);
       renderSettings();
     });
     container.append(option);
   }
+}
+
+/* ------------------------------------------------------------- audio UI */
+
+function renderAudioSection() {
+  const container = $('audio-controls');
+  container.textContent = '';
+  $('set-audio-label').textContent = t('settings.audio');
+
+  if (!controller.audioSupported()) {
+    const note = document.createElement('p');
+    note.className = 'fine-print';
+    note.textContent = t('settings.audioUnsupported');
+    container.append(note);
+    return;
+  }
+
+  const s = controller.getAudioSettings();
+
+  const patch = (change) => {
+    controller.setAudioSettings(change);
+    controller.audio.settingChanged();
+    renderAudioSection();
+  };
+
+  container.append(
+    switchRow('audio-enabled', t('settings.audioEnable'), s.enabled, false,
+      (value) => patch({ enabled: value })),
+    switchRow('audio-muted', t('settings.audioMute'), s.muted, !s.enabled,
+      (value) => patch({ muted: value })),
+    sliderRow('audio-master', t('settings.audioMaster'), s.masterVolume, !s.enabled,
+      (value) => controller.setAudioSettings({ masterVolume: value })),
+    switchRow('audio-music', t('settings.audioMusic'), s.musicEnabled, !s.enabled,
+      (value) => patch({ musicEnabled: value })),
+    sliderRow('audio-music-volume', t('settings.audioMusicVolume'), s.musicVolume,
+      !s.enabled || !s.musicEnabled,
+      (value) => controller.setAudioSettings({ musicVolume: value })),
+    switchRow('audio-ambience', t('settings.audioAmbience'), s.ambienceEnabled, !s.enabled,
+      (value) => patch({ ambienceEnabled: value })),
+    sliderRow('audio-ambience-volume', t('settings.audioAmbienceVolume'), s.ambienceVolume,
+      !s.enabled || !s.ambienceEnabled,
+      (value) => controller.setAudioSettings({ ambienceVolume: value })),
+    switchRow('audio-effects', t('settings.audioEffects'), s.effectsEnabled, !s.enabled,
+      (value) => patch({ effectsEnabled: value })),
+    sliderRow('audio-effects-volume', t('settings.audioEffectsVolume'), s.effectsVolume,
+      !s.enabled || !s.effectsEnabled,
+      (value) => controller.setAudioSettings({ effectsVolume: value })),
+    switchRow('audio-ui', t('settings.audioUi'), s.uiSoundsEnabled,
+      !s.enabled || !s.effectsEnabled,
+      (value) => patch({ uiSoundsEnabled: value })),
+  );
+
+  const actions = document.createElement('div');
+  actions.className = 'audio-actions';
+  const testButton = document.createElement('button');
+  testButton.type = 'button';
+  testButton.className = 'btn';
+  testButton.textContent = t('settings.audioTest');
+  testButton.disabled = !s.enabled;
+  testButton.addEventListener('click', () => controller.playTestSound());
+  const defaultsButton = document.createElement('button');
+  defaultsButton.type = 'button';
+  defaultsButton.className = 'btn';
+  defaultsButton.textContent = t('settings.audioDefaults');
+  defaultsButton.addEventListener('click', () => {
+    controller.restoreAudioDefaults();
+    controller.audio.settingChanged();
+    renderAudioSection();
+  });
+  actions.append(testButton, defaultsButton);
+  container.append(actions);
+}
+
+function switchRow(id, label, checked, disabled, onChange) {
+  const row = document.createElement('div');
+  row.className = 'audio-row';
+  const labelEl = document.createElement('label');
+  labelEl.id = `${id}-label`;
+  labelEl.className = 'audio-row__label';
+  labelEl.textContent = label;
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.id = id;
+  toggle.className = 'switch';
+  toggle.setAttribute('role', 'switch');
+  toggle.setAttribute('aria-checked', String(checked));
+  toggle.setAttribute('aria-labelledby', `${id}-label`);
+  toggle.disabled = disabled;
+  const knob = document.createElement('span');
+  knob.className = 'switch__knob';
+  toggle.append(knob);
+  toggle.addEventListener('click', () => onChange(!checked));
+  labelEl.addEventListener('click', () => {
+    if (!toggle.disabled) toggle.click();
+  });
+  row.append(labelEl, toggle);
+  return row;
+}
+
+function sliderRow(id, label, value, disabled, onInput) {
+  const row = document.createElement('div');
+  row.className = 'audio-row audio-row--slider';
+  const labelEl = document.createElement('label');
+  labelEl.setAttribute('for', id);
+  labelEl.className = 'audio-row__label';
+  labelEl.textContent = label;
+  const slider = document.createElement('input');
+  slider.type = 'range';
+  slider.id = id;
+  slider.min = '0';
+  slider.max = '100';
+  slider.step = '5';
+  slider.value = String(Math.round(value * 100));
+  slider.disabled = disabled;
+  const output = document.createElement('output');
+  output.className = 'audio-row__value';
+  output.setAttribute('for', id);
+  output.textContent = `${Math.round(value * 100)}%`;
+  // "input" adjusts the live gain smoothly on every tick without
+  // re-rendering (a re-render would interrupt the drag).
+  slider.addEventListener('input', () => {
+    const v = Number(slider.value);
+    output.textContent = `${v}%`;
+    onInput(v / 100);
+  });
+  // "change" (drag released) gives one audible confirmation tick.
+  slider.addEventListener('change', () => controller.audio.settingChanged());
+  row.append(labelEl, slider, output);
+  return row;
 }
 
 function buildProfileList(state) {
@@ -141,6 +277,7 @@ function buildProfileList(state) {
 
     option.addEventListener('click', () => {
       if (option.disabled) return;
+      if (id !== state.profileId) controller.audio.settingChanged();
       controller.setProfile(id);
       renderSettings();
     });
@@ -291,6 +428,7 @@ function buildCustomEditor(state) {
     }
     select.addEventListener('change', () => {
       customDraft[field.name] = select.value;
+      controller.audio.settingChanged();
       // Deal mode and surrender changes alter which fields make sense.
       if (field.name === 'dealMode' || field.name === 'surrender') {
         renderSettings();

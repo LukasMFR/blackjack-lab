@@ -20,6 +20,90 @@ CDN is used at runtime.
 - Size: ~23 KB total (two woff2 subsets: latin + latin-ext, covering
   English and French including œ/Œ).
 
+## Audio
+
+All audio lives under `audio/` and is loaded only by
+`src/js/audio/audioManager.js`. Every file was re-encoded locally with
+ffmpeg (44.1 kHz MP3; effects are mono, peak-normalized to −3 dBFS with
+leading silence trimmed; the music track is stereo, loudness-normalized
+with `loudnorm I=-17`).
+
+### Music
+
+#### "Lobby Time" — Kevin MacLeod
+
+- File: `audio/music/lobby-time.mp3`
+- Original title: Lobby Time
+- Creator: Kevin MacLeod (incompetech.com)
+- Source / original URL:
+  https://incompetech.com/music/royalty-free/mp3-royaltyfree/Lobby%20Time.mp3
+  (downloaded 2026-07-20)
+- License: Creative Commons Attribution 4.0 International (CC BY 4.0),
+  https://creativecommons.org/licenses/by/4.0/ — free for commercial
+  use and redistribution with attribution.
+- Attribution: "Lobby Time" Kevin MacLeod (incompetech.com),
+  Licensed under Creative Commons: By Attribution 4.0.
+- Modifications: re-encoded from 256 kbps to VBR ~130 kbps,
+  loudness-normalized. No musical edits.
+- Usage: background music, crossfade-looped at runtime.
+
+### Card and chip sound effects — Kenney "Casino Audio" pack
+
+- Files: `audio/cards/deal-1..4.mp3` (from `card-slide-1/2/3/5.ogg`),
+  `audio/cards/reveal-1..2.mp3` (from `card-place-1/2.ogg`),
+  `audio/cards/shove-1..2.mp3` (from `card-shove-1/2.ogg`),
+  `audio/cards/shuffle.mp3` (from `card-shuffle.ogg`),
+  `audio/chips/add-1..3.mp3` (from `chip-lay-1/2/3.ogg`),
+  `audio/chips/stack-1..2.mp3` (from `chips-stack-2/4.ogg`),
+  `audio/chips/collide-1..2.mp3` (from `chips-collide-1/2.ogg`),
+  `audio/chips/handle-1..2.mp3` (from `chips-handle-1/2.ogg`)
+- Original title: Casino Audio (version 1.1)
+- Creator: Kenney Vleugels (Kenney.nl)
+- Source / original URL: https://kenney.nl/assets/casino-audio
+  (downloaded 2026-07-20)
+- License: Creative Commons Zero (CC0),
+  http://creativecommons.org/publicdomain/zero/1.0/
+- Modifications: converted OGG → mono MP3, peak-normalized, leading
+  silence trimmed, files renamed.
+
+### Interface sound effects — Kenney "Interface Sounds" pack
+
+- Files: `audio/ui/click-1..3.mp3` (from `click_002/003/004.ogg`),
+  `audio/ui/toggle-1..2.mp3` (from `switch_004/005.ogg`),
+  `audio/ui/open.mp3` (from `select_005.ogg`),
+  `audio/ui/close.mp3` (from `close_002.ogg`)
+- Original title: Interface Sounds
+- Creator: Kenney Vleugels (Kenney.nl)
+- Source / original URL: https://kenney.nl/assets/interface-sounds
+  (downloaded 2026-07-20)
+- License: Creative Commons Zero (CC0),
+  http://creativecommons.org/publicdomain/zero/1.0/
+- Modifications: converted OGG → mono MP3, peak-normalized, leading
+  silence trimmed, files renamed.
+
+### Synthesized result and feedback sounds (original works)
+
+- Files: `audio/results/win.mp3`, `audio/results/blackjack.mp3`,
+  `audio/results/push.mp3`, `audio/results/loss.mp3`,
+  `audio/results/bust-1..2.mp3`, `audio/results/knock.mp3`,
+  `audio/ui/invalid.mp3`
+- Creator: generated locally for this project (procedural synthesis:
+  felt-mallet/celesta partials, band-limited noise bursts; NumPy script,
+  rendered to WAV, encoded to MP3 with ffmpeg).
+- Source: original to this repository; no third-party recording used.
+- License: same terms as the project; no external license applies.
+- Design intent: an elegant, restrained result hierarchy (blackjack >
+  win > push > loss), deliberately avoiding slot-machine or arcade
+  celebration.
+
+### Casino-room ambience
+
+The ambience layer is fully procedural at runtime
+(`src/js/audio/ambience.js`): a synthesized low-passed noise "room
+presence" bed plus sparse, heavily filtered distant one-shots reusing
+the CC0 chip/card recordings above. No dedicated ambience recording is
+shipped, so no additional license is involved.
+
 ## Textures
 
 All felt, wood grain, leather, and paper textures used by the

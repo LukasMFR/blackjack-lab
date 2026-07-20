@@ -6,6 +6,9 @@ import {
   detectLanguage, getLanguage, setLanguage as setI18nLanguage, t,
 } from '../i18n/index.js';
 import * as storage from './storage.js';
+import { AudioManager } from '../audio/audioManager.js';
+import { createGameAudio } from '../audio/gameAudio.js';
+import { AUDIO_SETTINGS_KEY, sanitizeAudioSettings } from '../audio/audioSettings.js';
 import { formatMoney } from './format.js';
 import { cardLabel } from './cardView.js';
 import { profileSummaryChips } from './profileSummary.js';
@@ -42,6 +45,37 @@ const state = {
 
 const renderCtx = { seenCardIds: new Set(), prevHoleHidden: false };
 const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+/* ---------------------------------------------------------------- audio */
+
+const audioManager = new AudioManager({
+  settings: sanitizeAudioSettings(storage.getObject(AUDIO_SETTINGS_KEY)),
+  persist: (settings) => storage.setObject(AUDIO_SETTINGS_KEY, settings),
+});
+const gameAudio = createGameAudio(audioManager);
+
+/** Header speaker button: reflect enabled/muted state and localized labels. */
+function updateSoundButton() {
+  const button = $('btn-sound');
+  const settings = audioManager.settings;
+  const silent = !settings.enabled || settings.muted;
+  // toggleAttribute: SVG elements have no HTMLElement `hidden` property.
+  button.querySelector('.icon-sound-on').toggleAttribute('hidden', silent);
+  button.querySelector('.icon-sound-off').toggleAttribute('hidden', !silent);
+  const label = silent ? t('a11y.unmute') : t('a11y.mute');
+  const stateText = silent ? t('settings.audioOff') : t('settings.audioOn');
+  button.setAttribute('aria-label', label);
+  button.setAttribute('aria-pressed', String(silent));
+  button.title = stateText;
+}
+
+function toggleSound() {
+  audioManager.toggleMuted();
+  updateSoundButton();
+  const silent = audioManager.effectivelySilent;
+  announce(silent ? t('settings.audioOff') : t('settings.audioOn'));
+  if (!silent) gameAudio.uiClick();
+}
 
 /* ------------------------------------------------------------ preferences */
 
@@ -151,6 +185,7 @@ function renderAll() {
   document.documentElement.lang = state.language;
   $('language-select').value = state.language;
   renderStaticLabels();
+  updateSoundButton();
   renderHeaderProfile();
   const snapshot = state.game.getSnapshot();
   renderTable(snapshot, renderCtx);
@@ -246,9 +281,11 @@ function mutate(fn, { announceDiff = true } = {}) {
   } catch (error) {
     console.error(error);
     showToast(t('errors.generic'));
+    gameAudio.actionRejected();
     return;
   }
   const after = state.game.getSnapshot();
+  gameAudio.roundTransition(before, after);
   if (after.roundState === ROUND_STATES.ROUND_COMPLETE && !state.roundRecorded) {
     state.roundRecorded = true;
     state.roundCounter += 1;
@@ -283,9 +320,13 @@ function deal() {
   } catch (error) {
     console.error(error);
     showToast(t('errors.generic'));
+    gameAudio.actionRejected();
     return;
   }
   const after = state.game.getSnapshot();
+  gameAudio.roundStarted();
+  gameAudio.dealConfirmed(after.shoe.justShuffled);
+  gameAudio.roundTransition(before, after, { baseDelay: 0.25 });
   if (after.shoe.justShuffled) showToast(t('round.shuffled'));
   if (after.roundState === ROUND_STATES.ROUND_COMPLETE && !state.roundRecorded) {
     // Instant resolution (e.g. peeked dealer blackjack, immediate natural).
@@ -307,12 +348,19 @@ function deal() {
 }
 
 function nextRound() {
+  gameAudio.roundCleared();
   mutate(() => {
     state.game.nextRound();
     state.betCents = clampBet(state.game.lastBetCents);
     persistBankroll();
   }, { announceDiff: false });
   announce(t('bet.placeYourBet'));
+}
+
+/** Shared path for action buttons and keyboard shortcuts. */
+function performAction(action) {
+  gameAudio.actionAccepted(action);
+  mutate(() => state.game.act(action));
 }
 
 /* ------------------------------------------------------------- controller */
@@ -376,30 +424,63 @@ const controller = {
     createGame();
     persistBankroll();
     renderAll();
+    gameAudio.bankrollReset();
   },
+
+  /* ------------------------------------------------------------- audio */
+
+  audio: gameAudio,
+  audioSupported: () => audioManager.supported,
+  getAudioSettings: () => audioManager.settings,
+  setAudioSettings(patch) {
+    audioManager.updateSettings(patch);
+    updateSoundButton();
+  },
+  toggleAudioMuted() {
+    toggleSound();
+  },
+  restoreAudioDefaults() {
+    audioManager.restoreDefaults();
+    updateSoundButton();
+  },
+  playTestSound: () => audioManager.playTestSound(),
 };
 
 /* ----------------------------------------------------------------- events */
 
 function wireEvents() {
+  // Browsers only allow audio after a genuine gesture: the first pointer
+  // press or key press unlocks the audio context (idempotent).
+  const unlockAudio = () => audioManager.unlock();
+  document.addEventListener('pointerdown', unlockAudio, { capture: true });
+  document.addEventListener('keydown', unlockAudio, { capture: true });
+  document.addEventListener('click', unlockAudio, { capture: true });
+  audioManager.bindVisibility(document);
+
+  $('btn-sound').addEventListener('click', toggleSound);
+
   $('language-select').addEventListener('change', (event) => {
     controller.setLanguage(event.target.value);
+    gameAudio.settingChanged();
   });
 
   $('chip-row').addEventListener('click', (event) => {
     const chip = event.target.closest('.chip');
     if (!chip || chip.disabled) return;
     state.betCents += unitsToCents(Number(chip.dataset.value));
+    gameAudio.chipAdded();
     renderAll();
   });
 
   $('btn-clear').addEventListener('click', () => {
+    if (state.betCents > 0) gameAudio.betCleared();
     state.betCents = 0;
     renderAll();
   });
 
   $('btn-rebet').addEventListener('click', () => {
     state.betCents = clampBet(state.game.lastBetCents);
+    if (state.betCents > 0) gameAudio.rebet();
     renderAll();
   });
 
@@ -408,8 +489,11 @@ function wireEvents() {
 
   for (const button of document.querySelectorAll('[data-action]')) {
     button.addEventListener('click', () => {
-      if (button.getAttribute('aria-disabled') === 'true') return;
-      mutate(() => state.game.act(button.dataset.action));
+      if (button.getAttribute('aria-disabled') === 'true') {
+        gameAudio.actionRejected();
+        return;
+      }
+      performAction(button.dataset.action);
     });
   }
 
@@ -422,8 +506,10 @@ function wireEvents() {
 function decide(accept) {
   const snapshot = state.game.getSnapshot();
   if (snapshot.pendingDecision === 'INSURANCE') {
+    gameAudio.insuranceDecided(accept);
     mutate(() => state.game.decideInsurance(accept));
   } else if (snapshot.pendingDecision === 'EARLY_SURRENDER') {
+    gameAudio.earlySurrenderDecided(accept);
     mutate(() => state.game.decideEarlySurrender(accept));
   }
 }
@@ -454,8 +540,11 @@ function handleShortcut(event) {
   const action = SHORTCUTS[key];
   if (!action) return;
   if (snapshot.roundState !== ROUND_STATES.PLAYER_TURN || snapshot.pendingDecision) return;
-  if (!snapshot.actionAvailability[action]?.legal) return;
-  mutate(() => state.game.act(action));
+  if (!snapshot.actionAvailability[action]?.legal) {
+    gameAudio.actionRejected();
+    return;
+  }
+  performAction(action);
 }
 
 /* ------------------------------------------------------------------- boot */

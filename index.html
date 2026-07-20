@@ -27,6 +27,17 @@
         <option value="en">English</option>
         <option value="fr">Français</option>
       </select>
+      <button type="button" id="btn-sound" class="btn btn--ghost btn--icon" aria-pressed="false">
+        <svg class="icon-sound-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M11 5 6.5 8.5H3.5v7h3L11 19z"/>
+          <path d="M15 9.5a3.6 3.6 0 0 1 0 5"/>
+          <path d="M17.7 7a7.2 7.2 0 0 1 0 10"/>
+        </svg>
+        <svg class="icon-sound-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden>
+          <path d="M11 5 6.5 8.5H3.5v7h3L11 19z"/>
+          <path d="m15.5 9.5 5 5M20.5 9.5l-5 5"/>
+        </svg>
+      </button>
       <button type="button" id="btn-help" class="btn btn--ghost" aria-haspopup="dialog"></button>
       <button type="button" id="btn-settings" class="btn btn--ghost" aria-haspopup="dialog"></button>
     </div>
@@ -194,6 +205,10 @@
       <fieldset class="field-group">
         <legend id="set-theme-label"></legend>
         <div class="segment" id="settings-theme" role="radiogroup"></div>
+      </fieldset>
+      <fieldset class="field-group">
+        <legend id="set-audio-label"></legend>
+        <div class="audio-controls" id="audio-controls"></div>
       </fieldset>
       <fieldset class="field-group">
         <legend id="set-profile-label"></legend>
