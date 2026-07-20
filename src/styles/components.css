@@ -1093,6 +1093,10 @@ kbd {
   padding: var(--space-4);
   border-radius: var(--radius-m);
   border: 1px dashed var(--border-strong);
+  /* Lets the fields react to the editor's own width rather than the viewport:
+   * the column count comes from auto-fit, so only a container query knows
+   * whether we are actually showing one column or several. */
+  container-type: inline-size;
 }
 
 .custom-editor .field {
@@ -1105,6 +1109,22 @@ kbd {
   font-size: var(--text-xs);
   font-weight: 600;
   color: var(--text-muted);
+  line-height: 1.5;
+}
+
+/* Keeps the grid steady when labels wrap unevenly (a long translation next to
+ * a short one). The label area reserves two lines everywhere, and the control
+ * is pushed to the bottom of its stretched cell, so every control in a row
+ * shares a baseline even if some label needs a third line. The submit row then
+ * always starts at the same offset. */
+@container (min-width: 27rem) {
+  .custom-editor .field:not(.field--submit) label {
+    min-height: 3em;
+  }
+
+  .custom-editor .field:not(.field--submit) > :last-child {
+    margin-top: auto;
+  }
 }
 
 .custom-editor .field--submit {
