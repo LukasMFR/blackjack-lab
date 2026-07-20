@@ -197,7 +197,7 @@ kbd {
 }
 
 /*
- * Custom dropdown (see ui/languageMenu.js). A native select renders its
+ * Custom dropdown (see ui/menuSelect.js). A native select renders its
  * popup with OS chrome that no stylesheet reaches, so the menu is rebuilt
  * from a button and a listbox and reads theme tokens like every other
  * control. The closed button deliberately mirrors .btn--ghost.
@@ -246,6 +246,7 @@ kbd {
 }
 
 .menu-select__arrow {
+  flex-shrink: 0;
   width: 0.9rem;
   height: 0.9rem;
   opacity: 0.75;
@@ -256,15 +257,44 @@ kbd {
   transform: rotate(180deg);
 }
 
-/* The list sits inside the header, which sets its own ink in some themes,
-   so surface and text colors are restated rather than inherited. */
+/* Full-width variant for form rows (the custom-rules editor), where the
+   control fills its grid column instead of hugging its label. */
+.menu-select--block {
+  display: flex;
+}
+
+.menu-select--block .menu-select__button {
+  width: 100%;
+  justify-content: space-between;
+}
+
+/* Rule names run long in some languages, and the column will not grow, so
+   the value truncates and the caret keeps its place. The full text stays
+   reachable through the accessible name and the tooltip. */
+.menu-select--block .menu-select__value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/*
+ * The list sits inside the header, which sets its own ink in some themes, so
+ * surface and text colors are restated rather than inherited.
+ *
+ * Fixed, not absolute: the custom-rules editor sits in the settings dialog's
+ * scrolling body, which would clip an absolutely positioned panel. Top and
+ * left come from menuSelect.js, which also re-runs on scroll and resize.
+ */
 .menu-select__list {
-  position: absolute;
-  top: calc(100% + var(--space-2));
-  left: 0;
+  position: fixed;
   z-index: var(--z-menu);
   /* Wider than the icon trigger it hangs from, so the panel reads as a menu. */
-  min-width: max(100%, 10rem);
+  min-width: 10rem;
+  /* Long rule names wrap inside the panel instead of widening it off-screen. */
+  max-width: min(22rem, calc(100vw - 2rem));
+  max-height: 18rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   margin: 0;
   padding: var(--space-1);
   list-style: none;
@@ -288,7 +318,6 @@ kbd {
   border-radius: var(--radius-s);
   color: var(--text-muted);
   font-weight: 600;
-  white-space: nowrap;
   cursor: pointer;
 }
 

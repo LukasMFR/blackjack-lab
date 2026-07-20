@@ -4,6 +4,7 @@ import { profileSummaryChips } from './profileSummary.js';
 import { PROFILE_IDS, PROFILES } from '../config/profiles.js';
 import { DEAL_MODES } from '../game/constants.js';
 import { unitsToCents } from '../game/money.js';
+import { buildMenuSelect } from './menuSelect.js';
 
 /**
  * Settings and help dialogs. Receives a controller object from app.js and
@@ -412,32 +413,40 @@ function buildCustomEditor(state) {
   for (const field of editorFields(customDraft)) {
     const wrap = document.createElement('div');
     wrap.className = 'field';
+    const id = `custom-${field.name}`;
+    const labelId = `${id}-label`;
+    // No `for`: the control is a button, which a label cannot target. The
+    // button names itself from this element through aria-labelledby.
     const label = document.createElement('label');
-    label.setAttribute('for', `custom-${field.name}`);
+    label.id = labelId;
     label.textContent = t(field.labelKey);
-    const select = document.createElement('select');
-    select.className = 'select';
-    select.id = `custom-${field.name}`;
-    for (const option of field.options) {
-      const optionEl = document.createElement('option');
-      optionEl.value = option.value;
-      optionEl.textContent = option.key ? t(option.key) : option.label;
-      select.append(optionEl);
+
+    const options = field.options.map((option) => ({
+      value: option.value,
+      label: option.key ? t(option.key) : option.label,
+    }));
+    if (!options.some((o) => o.value === customDraft[field.name])) {
+      customDraft[field.name] = options[0].value;
     }
-    if ([...select.options].some((o) => o.value === customDraft[field.name])) {
-      select.value = customDraft[field.name];
-    } else {
-      customDraft[field.name] = select.options[0].value;
-    }
-    select.addEventListener('change', () => {
-      customDraft[field.name] = select.value;
-      controller.audio.settingChanged();
-      // Deal mode and surrender changes alter which fields make sense.
-      if (field.name === 'dealMode' || field.name === 'surrender') {
-        renderSettings();
-      }
+
+    const menu = buildMenuSelect({
+      id,
+      labelledBy: labelId,
+      options,
+      value: customDraft[field.name],
+      onSelect: (value) => {
+        customDraft[field.name] = value;
+        controller.audio.settingChanged();
+        // Deal mode and surrender changes alter which fields make sense.
+        if (field.name === 'dealMode' || field.name === 'surrender') {
+          renderSettings();
+        }
+      },
     });
-    wrap.append(label, select);
+    // Restores the click-the-label-to-reach-the-control habit `for` gave us.
+    label.addEventListener('click', () => menu.root.querySelector('button').focus());
+
+    wrap.append(label, menu.root);
     form.append(wrap);
   }
 
