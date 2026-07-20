@@ -18,6 +18,24 @@
   min-width: 0;
 }
 
+/* The dissected-spade mark: solid half in header ink, construction half
+   and seam in the theme's gold. Inline SVG so it follows data-theme and
+   data-mode instead of the OS color scheme. */
+.brand__logo {
+  height: 1.9rem;
+  width: auto;
+  flex-shrink: 0;
+  display: block;
+}
+
+.brand__logo-ink {
+  fill: currentColor;
+}
+
+.brand__logo-line {
+  stroke: var(--gold);
+}
+
 .brand__name {
   font-size: var(--text-xl);
   font-weight: 700;
@@ -381,6 +399,10 @@
 
   .brand__name {
     font-size: var(--text-l);
+  }
+
+  .brand__logo {
+    height: 1.6rem;
   }
 
   /* Language lives in the settings panel on small screens. */

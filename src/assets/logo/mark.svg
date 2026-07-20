@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-label="Blackjack Lab">
+  <!-- Blackjack Lab mark: the dissected spade. Original work for this
+       project (see src/assets/ASSETS.md). -->
+  <style>
+    .ink { fill: #2b2115; }
+    .ink-stroke { stroke: #c9a35c; }
+    @media (prefers-color-scheme: dark) {
+      .ink { fill: #eee3cd; }
+    }
+  </style>
+  <defs>
+    <clipPath id="m-l"><rect x="0" y="0" width="48" height="96"/></clipPath>
+    <clipPath id="m-r"><rect x="48" y="0" width="48" height="96"/></clipPath>
+  </defs>
+  <g clip-path="url(#m-l)">
+    <path class="ink" d="M48 6C41 19 22 31 15 46C10 57 15 68 24 71.5C31.5 74.5 39.5 72 43.5 65.5C43.8 73 41 82 33.5 88.5L62.5 88.5C55 82 52.2 73 52.5 65.5C56.5 72 64.5 74.5 72 71.5C81 68 86 57 81 46C74 31 55 19 48 6Z"/>
+  </g>
+  <g clip-path="url(#m-r)" fill="none" stroke="#c9a35c" stroke-width="2.4">
+    <path d="M48 6C41 19 22 31 15 46C10 57 15 68 24 71.5C31.5 74.5 39.5 72 43.5 65.5C43.8 73 41 82 33.5 88.5L62.5 88.5C55 82 52.2 73 52.5 65.5C56.5 72 64.5 74.5 72 71.5C81 68 86 57 81 46C74 31 55 19 48 6Z"/>
+  </g>
+  <path d="M48 1L48 93" fill="none" stroke="#c9a35c" stroke-width="1.3"/>
+</svg>

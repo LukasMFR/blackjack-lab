@@ -20,6 +20,29 @@ CDN is used at runtime.
 - Size: ~23 KB total (two woff2 subsets: latin + latin-ext, covering
   English and French including œ/Œ).
 
+## Logo
+
+The Blackjack Lab identity lives in `logo/` and is an original work created
+for this project (same terms as the project; no third-party artwork used):
+
+- `logo/mark.svg` — the compact mark: the "dissected spade", one half solid
+  ink, the other half a fine gold construction outline split by a hairline
+  seam (the casino and the lab reading the same card). Adapts to the OS
+  color scheme via `prefers-color-scheme`; intended for standalone use
+  (documentation, about screens).
+- `logo/logo-full.svg` — the primary horizontal lockup: mark plus the
+  "BLACKJACK LAB" wordmark. The wordmark letterforms were outlined to
+  vector paths from the locally bundled Marcellus font (SIL Open Font
+  License 1.1, see Fonts above; the OFL permits embedding and conversion),
+  so the file is fully self-contained and needs no font at render time.
+- `logo/favicon.svg` — the app icon: solid ivory spade with the gold seam
+  on a bordeaux plate with a fine brass keyline, legible at 16 px in both
+  light and dark tab strips.
+
+The header in `index.html` embeds the mark inline (rather than as an
+`<img>`) so it colors itself from the active theme tokens (`currentColor`
+and `--gold`) instead of the OS color scheme.
+
 ## Audio
 
 All audio lives under `audio/` and is loaded only by

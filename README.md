@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="src/assets/logo/logo-full.svg" alt="Blackjack Lab" width="440">
+</p>
+
 # Blackjack Lab
 
 A browser-based blackjack simulator with authentic international rule

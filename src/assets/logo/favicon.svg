@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96">
+  <!-- Blackjack Lab app icon (see src/assets/ASSETS.md). -->
+  <rect width="96" height="96" rx="22" fill="#4e1826"/>
+  <rect x="3.5" y="3.5" width="89" height="89" rx="19" fill="none" stroke="#d6ac5e" stroke-opacity="0.5" stroke-width="1.5"/>
+  <g transform="translate(48 49) scale(0.72) translate(-48 -47)">
+    <path fill="#f2e6d2" d="M48 6C41 19 22 31 15 46C10 57 15 68 24 71.5C31.5 74.5 39.5 72 43.5 65.5C43.8 73 41 82 33.5 88.5L62.5 88.5C55 82 52.2 73 52.5 65.5C56.5 72 64.5 74.5 72 71.5C81 68 86 57 81 46C74 31 55 19 48 6Z"/>
+    <path d="M48 1L48 93" fill="none" stroke="#d6ac5e" stroke-width="2"/>
+  </g>
+</svg>
