@@ -78,7 +78,12 @@
           <path d="m15.5 9.5 5 5M20.5 9.5l-5 5"/>
         </svg>
       </button>
-      <a href="index.html" id="btn-solo-link" class="btn btn--ghost"></a>
+      <a href="index.html" id="btn-solo-link" class="btn btn--ghost btn--icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="8" r="3.8"/>
+          <path d="M5.2 20.5a6.8 6.8 0 0 1 13.6 0"/>
+        </svg>
+      </a>
     </div>
   </header>
 
@@ -114,99 +119,6 @@
         <p class="fine-print" id="how-body-4"></p>
       </section>
       <p class="callout callout--warning" id="webrtc-unsupported" hidden></p>
-    </section>
-
-    <!-- Host: room setup -->
-    <section class="mp-screen" id="screen-host-setup" hidden>
-      <h2 class="mp-title" id="host-setup-title"></h2>
-      <form class="mp-form side-card" id="host-setup-form" novalidate>
-        <div class="field">
-          <label for="host-room-name" id="host-room-name-label"></label>
-          <input class="text-input" type="text" id="host-room-name" maxlength="24" autocomplete="off">
-        </div>
-        <div class="field">
-          <label for="host-name" id="host-name-label"></label>
-          <input class="text-input" type="text" id="host-name" maxlength="24" autocomplete="off">
-        </div>
-        <div class="field">
-          <label for="host-max-players" id="host-max-players-label"></label>
-          <select class="text-input" id="host-max-players">
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4" selected>4</option>
-            <option value="5">5</option>
-            <option value="6">6</option>
-            <option value="7">7</option>
-          </select>
-        </div>
-        <div class="field field--inline">
-          <input type="checkbox" id="host-plays" checked>
-          <label for="host-plays" id="host-plays-label"></label>
-        </div>
-        <div class="field">
-          <label for="host-profile" id="host-profile-label"></label>
-          <select class="text-input" id="host-profile"></select>
-        </div>
-        <div class="field">
-          <label for="host-bankroll" id="host-bankroll-label"></label>
-          <input class="text-input" type="text" inputmode="numeric" id="host-bankroll" value="1000">
-        </div>
-        <div class="mp-form-row">
-          <div class="field">
-            <label for="host-min-bet" id="host-min-bet-label"></label>
-            <input class="text-input" type="text" inputmode="numeric" id="host-min-bet" value="5">
-          </div>
-          <div class="field">
-            <label for="host-max-bet" id="host-max-bet-label"></label>
-            <input class="text-input" type="text" inputmode="numeric" id="host-max-bet" value="1000">
-          </div>
-        </div>
-        <p class="field__error" id="host-setup-error" role="alert" hidden></p>
-        <div class="button-row">
-          <button type="button" class="btn" id="host-setup-back"></button>
-          <button type="submit" class="btn btn--primary" id="host-setup-create"></button>
-        </div>
-      </form>
-    </section>
-
-    <!-- Join: pairing wizard -->
-    <section class="mp-screen" id="screen-join" hidden>
-      <h2 class="mp-title" id="join-title"></h2>
-      <div class="side-card mp-form" id="join-step-name">
-        <div class="field">
-          <label for="join-name" id="join-name-label"></label>
-          <input class="text-input" type="text" id="join-name" maxlength="24" autocomplete="off">
-        </div>
-        <p class="callout" id="join-resume-note" hidden></p>
-        <h3 class="side-title" id="join-step1-title"></h3>
-        <p class="fine-print" id="join-step1-body"></p>
-        <div class="field">
-          <textarea class="text-input mp-code-input" id="join-offer-input" rows="4" spellcheck="false" autocomplete="off"></textarea>
-        </div>
-        <div class="button-row">
-          <button type="button" class="btn" id="join-back"></button>
-          <button type="button" class="btn" id="join-scan"></button>
-          <button type="button" class="btn btn--primary" id="join-continue"></button>
-        </div>
-        <div class="mp-scanner" id="join-scanner" hidden>
-          <video id="join-video" playsinline muted></video>
-          <button type="button" class="btn" id="join-scan-stop"></button>
-        </div>
-        <p class="field__error" id="join-error" role="alert" hidden></p>
-      </div>
-      <div class="side-card mp-form" id="join-step-answer" hidden>
-        <h3 class="side-title" id="join-step2-title"></h3>
-        <p class="fine-print" id="join-step2-body"></p>
-        <div class="mp-qr" id="join-answer-qr" role="img"></div>
-        <div class="field">
-          <textarea class="text-input mp-code-input" id="join-answer-output" rows="4" readonly spellcheck="false"></textarea>
-        </div>
-        <div class="button-row">
-          <button type="button" class="btn" id="join-answer-copy"></button>
-          <button type="button" class="btn" id="join-answer-share" hidden></button>
-        </div>
-        <p class="mp-waiting" id="join-waiting"></p>
-      </div>
     </section>
 
     <!-- Lobby + game table -->
@@ -319,13 +231,120 @@
   <div class="sr-only" aria-live="polite" id="live-region"></div>
   <div class="toast" id="toast" role="status" hidden></div>
 
+  <!-- Host a local game -->
+  <dialog class="dialog dialog--form" id="dialog-host" aria-labelledby="host-setup-title">
+    <header class="dialog__header">
+      <h2 id="host-setup-title"></h2>
+      <button type="button" class="btn btn--ghost dialog__close" data-close-dialog></button>
+    </header>
+    <form class="dialog__body mp-form" id="host-setup-form" novalidate>
+      <div class="field">
+        <label for="host-room-name" id="host-room-name-label"></label>
+        <input class="text-input" type="text" id="host-room-name" maxlength="24" autocomplete="off">
+      </div>
+      <div class="field">
+        <label for="host-name" id="host-name-label"></label>
+        <input class="text-input" type="text" id="host-name" maxlength="24" autocomplete="off">
+      </div>
+      <div class="field">
+        <label id="host-max-players-label"></label>
+        <div id="host-max-players-mount"></div>
+      </div>
+      <div class="switch-row">
+        <label class="switch-row__label" id="host-plays-label"></label>
+        <button type="button" id="host-plays" class="switch" role="switch" aria-checked="true" aria-labelledby="host-plays-label">
+          <span class="switch__knob"></span>
+        </button>
+      </div>
+      <div class="field">
+        <label id="host-profile-label"></label>
+        <div id="host-profile-mount"></div>
+      </div>
+      <div class="field">
+        <label for="host-bankroll" id="host-bankroll-label"></label>
+        <input class="text-input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" id="host-bankroll" value="1000">
+      </div>
+      <div class="mp-form-row">
+        <div class="field">
+          <label for="host-min-bet" id="host-min-bet-label"></label>
+          <input class="text-input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" id="host-min-bet" value="5">
+        </div>
+        <div class="field">
+          <label for="host-max-bet" id="host-max-bet-label"></label>
+          <input class="text-input" type="text" inputmode="numeric" autocomplete="off" spellcheck="false" id="host-max-bet" value="1000">
+        </div>
+      </div>
+      <p class="field__error" id="host-setup-error" role="alert" hidden></p>
+      <div class="button-row">
+        <button type="submit" class="btn btn--primary" id="host-setup-create"></button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Join a local game -->
+  <dialog class="dialog dialog--form" id="dialog-join" aria-labelledby="join-title">
+    <div class="dialog__page" id="join-page-start">
+      <header class="dialog__header">
+        <h2 id="join-title"></h2>
+        <button type="button" class="btn btn--ghost dialog__close" data-close-dialog></button>
+      </header>
+      <div class="dialog__body mp-form">
+        <div class="field">
+          <label for="join-name" id="join-name-label"></label>
+          <input class="text-input" type="text" id="join-name" maxlength="24" autocomplete="off">
+        </div>
+        <p class="callout" id="join-resume-note" hidden></p>
+        <fieldset class="field-group">
+          <legend id="join-step1-title"></legend>
+          <p class="fine-print" id="join-step1-body"></p>
+          <div class="field">
+            <textarea class="text-input mp-code-input" id="join-offer-input" rows="4" spellcheck="false" autocomplete="off"></textarea>
+          </div>
+          <div class="mp-scanner" id="join-scanner" hidden>
+            <video id="join-video" playsinline muted></video>
+            <button type="button" class="btn" id="join-scan-stop"></button>
+          </div>
+          <p class="field__error" id="join-error" role="alert" hidden></p>
+          <div class="button-row">
+            <button type="button" class="btn" id="join-scan"></button>
+            <button type="button" class="btn btn--primary" id="join-continue"></button>
+          </div>
+        </fieldset>
+      </div>
+    </div>
+    <div class="dialog__page" id="join-page-answer" hidden>
+      <header class="dialog__header dialog__header--sub">
+        <button type="button" id="join-answer-back" class="btn btn--ghost btn--icon dialog__back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M19 12H5"/>
+            <path d="m12 19-7-7 7-7"/>
+          </svg>
+        </button>
+        <h2 id="join-step2-title" tabindex="-1"></h2>
+        <button type="button" class="btn btn--ghost dialog__close" data-close-dialog></button>
+      </header>
+      <div class="dialog__body mp-form">
+        <p class="fine-print" id="join-step2-body"></p>
+        <div class="mp-qr" id="join-answer-qr" role="img"></div>
+        <div class="field">
+          <textarea class="text-input mp-code-input" id="join-answer-output" rows="4" readonly spellcheck="false"></textarea>
+        </div>
+        <div class="button-row">
+          <button type="button" class="btn" id="join-answer-copy"></button>
+          <button type="button" class="btn" id="join-answer-share" hidden></button>
+        </div>
+        <p class="mp-waiting" id="join-waiting"></p>
+      </div>
+    </div>
+  </dialog>
+
   <!-- Host pairing wizard -->
   <dialog class="dialog dialog--wide" id="dialog-invite" aria-labelledby="invite-title">
     <header class="dialog__header">
       <h2 id="invite-title"></h2>
       <button type="button" class="btn btn--ghost dialog__close" id="invite-close"></button>
     </header>
-    <div class="dialog__body">
+    <div class="dialog__body mp-invite-grid">
       <section class="mp-invite-step">
         <h3 class="side-title" id="invite-step1-title"></h3>
         <p class="fine-print" id="invite-step1-body"></p>

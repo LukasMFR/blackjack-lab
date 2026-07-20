@@ -2,7 +2,9 @@ import { detectLanguage, setLanguage as setI18nLanguage, t } from '../../i18n/in
 import * as storage from '../../ui/storage.js';
 import { formatMoney } from '../../ui/format.js';
 import { initLanguageMenu, setLanguageMenuValue } from '../../ui/languageMenu.js';
+import { buildMenuSelect } from '../../ui/menuSelect.js';
 import { AudioManager } from '../../audio/audioManager.js';
+import { createGameAudio } from '../../audio/gameAudio.js';
 import { AUDIO_SETTINGS_KEY, sanitizeAudioSettings } from '../../audio/audioSettings.js';
 import { unitsToCents } from '../../game/money.js';
 import { ACTIONS, SURRENDER_MODES } from '../../game/constants.js';
@@ -23,9 +25,9 @@ import {
 } from './mpViews.js';
 
 /**
- * Local multiplayer controller: screens, pairing wizard, and the render
- * loop over confirmed host snapshots. The blackjack rules live in the
- * table engine on the host; the network protocol lives in
+ * Local multiplayer controller: screens, dialogs, pairing wizard, and the
+ * render loop over confirmed host snapshots. The blackjack rules live in
+ * the table engine on the host; the network protocol lives in
  * multiplayer/*.js. This file only orchestrates the interface.
  */
 
@@ -34,6 +36,7 @@ const $ = (id) => document.getElementById(id);
 const CHIP_VALUES = [5, 10, 25, 50, 100, 500];
 const NAME_KEY = 'mp.playerName';
 const RESUME_PREFIX = 'mp.resume.';
+const MAX_PLAYER_CHOICES = ['2', '3', '4', '5', '6', '7'];
 
 const state = {
   language: 'en',
@@ -45,12 +48,18 @@ const state = {
   invitePeerId: null,
   scanner: null,
   betCents: 0,
-  lastPayload: null,
   seenCardIds: new Set(),
   prevHoleHidden: { value: false },
   audioSeenCards: new Set(),
   lastAnnouncedTurn: null,
   lastResultRound: 0,
+};
+
+/* Host-setup draft for the custom dropdown and switch controls. */
+const hostDraft = {
+  maxPlayers: '4',
+  profileId: 'FRENCH_STANDARD',
+  hostPlays: true,
 };
 
 /* --------------------------------------------------------------- audio */
@@ -59,6 +68,7 @@ const audioManager = new AudioManager({
   settings: sanitizeAudioSettings(storage.getObject(AUDIO_SETTINGS_KEY)),
   persist: (settings) => storage.setObject(AUDIO_SETTINGS_KEY, settings),
 });
+const gameAudio = createGameAudio(audioManager);
 
 function updateSoundButton() {
   const button = $('btn-sound');
@@ -68,8 +78,10 @@ function updateSoundButton() {
   button.querySelector('.icon-sound-off').toggleAttribute('hidden', !silent);
   button.setAttribute('aria-label', silent ? t('a11y.unmute') : t('a11y.mute'));
   button.setAttribute('aria-pressed', String(silent));
+  button.title = silent ? t('settings.audioOff') : t('settings.audioOn');
 }
 
+/** Table sounds (cards, chips, results) address the manifest directly. */
 function sound(key, options) {
   audioManager.playSound(key, options);
 }
@@ -102,7 +114,7 @@ function applyPreferences() {
 
 /* -------------------------------------------------------------- screens */
 
-const SCREENS = ['screen-menu', 'screen-host-setup', 'screen-join', 'screen-room'];
+const SCREENS = ['screen-menu', 'screen-room'];
 
 function showScreen(id) {
   for (const screen of SCREENS) $(screen).hidden = screen !== id;
@@ -116,7 +128,8 @@ function renderStaticLabels() {
   $('fictional-badge').textContent = t('app.fictionalBadge');
   $('experimental-badge').textContent = t('mp.badgeExperimental');
   $('language-label').textContent = t('a11y.chooseLanguage');
-  $('btn-solo-link').textContent = t('mp.menu.solo');
+  $('btn-solo-link').setAttribute('aria-label', t('mp.menu.solo'));
+  $('btn-solo-link').title = t('mp.menu.solo');
   $('fictional-note').textContent = t('app.fictionalNote');
 
   $('menu-title').textContent = t('mp.menu.title');
@@ -143,7 +156,6 @@ function renderStaticLabels() {
   $('host-bankroll-label').textContent = t('mp.hostSetup.startingBankroll');
   $('host-min-bet-label').textContent = t('mp.hostSetup.minBet');
   $('host-max-bet-label').textContent = t('mp.hostSetup.maxBet');
-  $('host-setup-back').textContent = t('mp.back');
   $('host-setup-create').textContent = t('mp.hostSetup.create');
 
   $('join-title').textContent = t('mp.join.title');
@@ -151,15 +163,14 @@ function renderStaticLabels() {
   $('join-step1-title').textContent = t('mp.join.step1Title');
   $('join-step1-body').textContent = t('mp.join.step1Body');
   $('join-offer-input').placeholder = t('mp.pasteCode');
-  $('join-back').textContent = t('mp.back');
   $('join-scan').textContent = t('mp.scan');
   $('join-scan-stop').textContent = t('mp.scanStop');
   $('join-continue').textContent = t('mp.join.continue');
   $('join-step2-title').textContent = t('mp.join.step2Title');
   $('join-step2-body').textContent = t('mp.join.step2Body');
+  $('join-answer-back').setAttribute('aria-label', t('mp.back'));
   $('join-answer-copy').textContent = t('mp.copy');
   $('join-answer-share').textContent = t('mp.share');
-  $('join-waiting').textContent = '';
 
   $('mp-players-title').textContent = t('mp.room.players');
   $('btn-invite').textContent = t('mp.invite.open');
@@ -180,7 +191,6 @@ function renderStaticLabels() {
   $('mp-btn-ready').textContent = t('mp.table.ready');
 
   $('invite-title').textContent = t('mp.invite.title');
-  $('invite-close').textContent = t('settings.close');
   $('invite-step1-title').textContent = t('mp.invite.step1Title');
   $('invite-step1-body').textContent = t('mp.invite.step1Body');
   $('invite-step2-title').textContent = t('mp.invite.step2Title');
@@ -194,12 +204,66 @@ function renderStaticLabels() {
 
   $('confirm-cancel').textContent = t('settings.bankrollCancel');
 
+  for (const button of document.querySelectorAll('[data-close-dialog]')) {
+    button.textContent = t('settings.close');
+    button.setAttribute('aria-label', t('a11y.closeDialog'));
+  }
+  $('invite-close').textContent = t('settings.close');
+  $('invite-close').setAttribute('aria-label', t('a11y.closeDialog'));
+
   for (const button of document.querySelectorAll('#mp-panel-actions [data-action]')) {
     const label = button.querySelector('.btn__label');
     (label ?? button).textContent = t(`actions.${button.dataset.action}`);
   }
   updateSoundButton();
+  buildHostFormControls();
   renderRoom();
+}
+
+/* ------------------------------------------------- host setup controls */
+
+/**
+ * The themed dropdowns and switch of the host form. Rebuilt on language
+ * change; the draft object carries the values between rebuilds.
+ */
+function buildHostFormControls() {
+  const playersMount = $('host-max-players-mount');
+  playersMount.textContent = '';
+  playersMount.append(buildMenuSelect({
+    id: 'host-max-players',
+    labelledBy: 'host-max-players-label',
+    options: MAX_PLAYER_CHOICES.map((value) => ({ value, label: value })),
+    value: hostDraft.maxPlayers,
+    onSelect: (value) => {
+      hostDraft.maxPlayers = value;
+      gameAudio.settingChanged();
+    },
+  }).root);
+
+  const profileMount = $('host-profile-mount');
+  profileMount.textContent = '';
+  const profileOptions = PROFILE_IDS
+    .filter((id) => id !== 'CUSTOM' || storage.getObject('customProfile'))
+    .map((id) => ({ value: id, label: t(`profiles.${id}.name`) }));
+  if (!profileOptions.some((o) => o.value === hostDraft.profileId)) {
+    hostDraft.profileId = profileOptions[0].value;
+  }
+  profileMount.append(buildMenuSelect({
+    id: 'host-profile',
+    labelledBy: 'host-profile-label',
+    options: profileOptions,
+    value: hostDraft.profileId,
+    onSelect: (value) => {
+      hostDraft.profileId = value;
+      gameAudio.settingChanged();
+    },
+  }).root);
+
+  applyHostPlaysSwitch();
+}
+
+function applyHostPlaysSwitch() {
+  $('host-plays').setAttribute('aria-checked', String(hostDraft.hostPlays));
 }
 
 /* ---------------------------------------------------------- error text */
@@ -241,7 +305,7 @@ function sendCommand(type, payload) {
     }
   } catch (error) {
     console.error(error);
-    sound('uiInvalid');
+    gameAudio.actionRejected();
     showToast(t('mp.errors.generic'));
   }
 }
@@ -309,7 +373,6 @@ function renderRoom() {
   renderTableMessage(table, localId);
   renderPanels(table, localId);
   playSnapshotAudio(payload, table, localId);
-  state.lastPayload = payload;
 }
 
 function renderTableMessage(table, localId) {
@@ -511,50 +574,52 @@ function playSnapshotAudio(payload, table, localId) {
 
 /* ------------------------------------------------------------ host flow */
 
-function populateProfileSelect() {
-  const select = $('host-profile');
-  select.textContent = '';
-  for (const id of PROFILE_IDS) {
-    if (id === 'CUSTOM' && !storage.getObject('customProfile')) continue;
-    const option = document.createElement('option');
-    option.value = id;
-    option.textContent = t(`profiles.${id}.name`);
-    select.append(option);
-  }
-}
-
 function readPositiveInt(input) {
   const value = Number(input.value.trim());
   return Number.isSafeInteger(value) && value > 0 ? value : null;
 }
 
+function showHostSetupError(text) {
+  const errorEl = $('host-setup-error');
+  errorEl.textContent = text;
+  errorEl.hidden = false;
+  gameAudio.actionRejected();
+}
+
+function openHostDialog() {
+  $('host-setup-error').hidden = true;
+  $('host-name').value = readStoredName();
+  buildHostFormControls();
+  gameAudio.dialogOpened();
+  $('dialog-host').showModal();
+}
+
 function createHostRoom(event) {
   event.preventDefault();
-  const errorEl = $('host-setup-error');
-  errorEl.hidden = true;
+  $('host-setup-error').hidden = true;
   const bankroll = readPositiveInt($('host-bankroll'));
   const minBet = readPositiveInt($('host-min-bet'));
   const maxBet = readPositiveInt($('host-max-bet'));
   const hostName = $('host-name').value.trim() || t('mp.status.host');
   if (!bankroll || !minBet || !maxBet || minBet > maxBet || maxBet > bankroll) {
-    errorEl.textContent = t('mp.hostSetup.invalid');
-    errorEl.hidden = false;
+    showHostSetupError(t('mp.hostSetup.invalid'));
     return;
   }
   let profile;
   try {
-    profile = getProfile($('host-profile').value, storage.getObject('customProfile'));
+    profile = getProfile(hostDraft.profileId, storage.getObject('customProfile'));
   } catch {
-    errorEl.textContent = t('mp.hostSetup.invalid');
-    errorEl.hidden = false;
+    showHostSetupError(t('mp.hostSetup.invalid'));
     return;
   }
   storage.setChoice(NAME_KEY, hostName);
+  $('dialog-host').close();
+  sound('chipStack');
   startHostSession({
     config: {
       roomName: $('host-room-name').value.trim() || t('mp.menu.title'),
-      maxPlayers: Number($('host-max-players').value),
-      hostPlays: $('host-plays').checked,
+      maxPlayers: Number(hostDraft.maxPlayers),
+      hostPlays: hostDraft.hostPlays,
       hostName,
       profile,
       startingBankrollUnits: bankroll,
@@ -578,6 +643,9 @@ function startHostSession({ config, restore = null }) {
   session.events.on('playerReconnected', () => {
     sound('uiOpen');
     closeInviteDialog();
+  });
+  session.events.on('playerLeft', () => {
+    sound('uiClose');
   });
   session.events.on('ended', () => {
     showScreen('screen-menu');
@@ -609,6 +677,7 @@ function refreshRestoreCard() {
       card.hidden = true;
       return;
     }
+    gameAudio.uiClick();
     startHostSession({
       config: {
         roomName: record.roomName,
@@ -639,8 +708,8 @@ async function openInviteDialog() {
   $('invite-offer-output').value = '';
   $('invite-answer-input').value = '';
   $('invite-generating').textContent = t('mp.invite.generating');
+  gameAudio.dialogOpened();
   dialog.showModal();
-  sound('uiOpen');
   try {
     const { link, description } = await createHostLink({
       onClose: () => {},
@@ -683,7 +752,7 @@ function showInviteError(text) {
   const el = $('invite-error');
   el.textContent = text;
   el.hidden = false;
-  sound('uiInvalid');
+  gameAudio.actionRejected();
 }
 
 async function connectInviteAnswer() {
@@ -718,6 +787,10 @@ async function connectInviteAnswer() {
 function closeInviteDialog() {
   const dialog = $('dialog-invite');
   if (dialog.open) dialog.close();
+}
+
+/** Runs on every invite-dialog close, whatever caused it (button, Esc). */
+function cleanUpInviteDialog() {
   stopScanner();
   if (state.inviteLink) {
     state.inviteLink.close();
@@ -731,20 +804,50 @@ function resumeRecordFor(sessionId) {
   return storage.getObject(RESUME_PREFIX + sessionId);
 }
 
-async function continueJoin() {
+function openJoinDialog({ hint = null } = {}) {
+  showJoinPage('start');
+  $('join-error').hidden = true;
+  $('join-name').value = readStoredName();
+  $('join-waiting').textContent = '';
+  const note = $('join-resume-note');
+  if (hint) {
+    note.textContent = hint;
+    note.hidden = false;
+  } else {
+    note.hidden = true;
+  }
+  gameAudio.dialogOpened();
+  $('dialog-join').showModal();
+}
+
+function showJoinPage(page) {
+  $('join-page-start').hidden = page !== 'start';
+  $('join-page-answer').hidden = page !== 'answer';
+  $('dialog-join').setAttribute(
+    'aria-labelledby',
+    page === 'start' ? 'join-title' : 'join-step2-title',
+  );
+  if (page === 'answer') $('join-step2-title').focus();
+}
+
+function showJoinError(text) {
   const errorEl = $('join-error');
-  errorEl.hidden = true;
+  errorEl.textContent = text;
+  errorEl.hidden = false;
+  gameAudio.actionRejected();
+}
+
+async function continueJoin() {
+  $('join-error').hidden = true;
   const name = $('join-name').value.trim();
   if (!name) {
-    errorEl.textContent = errorText('BAD_NAME');
-    errorEl.hidden = false;
+    showJoinError(errorText('BAD_NAME'));
     return;
   }
   const raw = $('join-offer-input').value.trim();
   const decoded = await decodeSignal(raw, { expectKind: SIGNAL_KINDS.OFFER });
   if (!decoded.ok) {
-    errorEl.textContent = signalErrorText(decoded.code);
-    errorEl.hidden = false;
+    showJoinError(signalErrorText(decoded.code));
     return;
   }
   storage.setChoice(NAME_KEY, name);
@@ -768,16 +871,15 @@ async function continueJoin() {
       description,
       name,
     });
-    $('join-step-name').hidden = true;
-    $('join-step-answer').hidden = false;
+    gameAudio.uiClick();
+    showJoinPage('answer');
     $('join-answer-output').value = answerCode;
     renderQrInto($('join-answer-qr'), answerCode);
     $('join-answer-share').hidden = !navigator.share;
     $('join-waiting').textContent = t('mp.join.waitingHost');
   } catch (error) {
     console.error(error);
-    errorEl.textContent = t('mp.errors.connectFailed');
-    errorEl.hidden = false;
+    showJoinError(t('mp.errors.connectFailed'));
   }
 }
 
@@ -796,45 +898,59 @@ function wireClientSession(client) {
       savedAt: Date.now(),
     });
     sound('uiOpen');
+    if ($('dialog-join').open) $('dialog-join').close();
     showScreen('screen-room');
     renderRoom();
   });
   client.on('rejected', (payload) => {
+    gameAudio.actionRejected();
     showToast(errorText(payload.code));
-    sound('uiInvalid');
-    resetToJoinScreen();
+    resetToJoinStart();
   });
   client.on('state', () => renderRoom());
   client.on('error', (payload) => {
-    sound('uiInvalid');
+    gameAudio.actionRejected();
     showToast(errorText(payload.code));
   });
   client.on('ended', () => {
-    sound('uiClose');
     showToast(t('mp.room.sessionEnded'));
-    leaveToMenu();
+    leaveToMenu({ sound: 'close' });
   });
   client.on('closed', () => {
-    sound('uiInvalid');
+    gameAudio.actionRejected();
     showToast(t('mp.errors.connectionLost'));
-    resetToJoinScreen({ keepOffer: false });
+    resetToJoinStart({ hint: t('mp.errors.connectionLostHint') });
   });
 }
 
-function resetToJoinScreen({ keepOffer = false } = {}) {
+/** Tear down the pairing attempt (not an accepted session). */
+function resetClientPairing() {
   state.clientSession = null;
   if (state.clientLink) {
     state.clientLink.close();
     state.clientLink = null;
   }
-  $('join-step-name').hidden = false;
-  $('join-step-answer').hidden = true;
-  if (!keepOffer) $('join-offer-input').value = '';
-  $('join-waiting').textContent = '';
-  showScreen('screen-join');
-  const hint = $('join-resume-note');
-  hint.textContent = t('mp.errors.connectionLostHint');
-  hint.hidden = false;
+}
+
+/**
+ * Return to step 1 of the join wizard after a rejection or a lost
+ * connection, reopening the dialog when it is not on screen.
+ */
+function resetToJoinStart({ hint = null } = {}) {
+  resetClientPairing();
+  state.role = null;
+  showScreen('screen-menu');
+  if ($('dialog-join').open) {
+    showJoinPage('start');
+    $('join-waiting').textContent = '';
+    if (hint) {
+      const note = $('join-resume-note');
+      note.textContent = hint;
+      note.hidden = false;
+    }
+  } else {
+    openJoinDialog({ hint });
+  }
 }
 
 /* --------------------------------------------------------------- scanner */
@@ -847,6 +963,7 @@ async function beginScan(videoId, scannerId, onCode) {
   }
   const container = $(scannerId);
   container.hidden = false;
+  gameAudio.settingChanged();
   try {
     state.scanner = await startQrScanner($(videoId), (text) => {
       if (!text.startsWith('BJL')) return;
@@ -856,6 +973,7 @@ async function beginScan(videoId, scannerId, onCode) {
   } catch (error) {
     console.error(error);
     container.hidden = true;
+    gameAudio.actionRejected();
     showToast(t('mp.cameraDenied'));
   }
 }
@@ -869,17 +987,15 @@ function stopScanner() {
 
 /* ------------------------------------------------------------ navigation */
 
-function leaveToMenu() {
+function leaveToMenu({ sound: soundKind = null } = {}) {
   stopScanner();
   closeInviteDialog();
+  if ($('dialog-join').open) $('dialog-join').close();
   if (state.clientSession && !state.clientSession.ended) state.clientSession.leave();
-  state.clientSession = null;
-  if (state.clientLink) {
-    state.clientLink.close();
-    state.clientLink = null;
-  }
+  resetClientPairing();
   state.role = null;
   state.hostSession = null;
+  if (soundKind === 'close') sound('uiClose');
   refreshRestoreCard();
   showScreen('screen-menu');
 }
@@ -898,6 +1014,7 @@ function confirmDialog({ title, body, confirmLabel, onConfirm }) {
   $('confirm-body').textContent = body;
   $('confirm-accept').textContent = confirmLabel;
   const dialog = $('dialog-confirm');
+  gameAudio.dialogOpened();
   dialog.showModal();
   $('confirm-accept').onclick = () => {
     dialog.close();
@@ -916,6 +1033,7 @@ function wireEvents() {
   $('btn-sound').addEventListener('click', () => {
     audioManager.toggleMuted();
     updateSoundButton();
+    if (!audioManager.effectivelySilent) gameAudio.uiClick();
   });
 
   initLanguageMenu({
@@ -925,24 +1043,43 @@ function wireEvents() {
       storage.setChoice('language', language);
       document.documentElement.lang = language;
       setLanguageMenuValue(language);
+      gameAudio.settingChanged();
       renderStaticLabels();
-      populateProfileSelect();
+      refreshRestoreCard();
     },
   });
 
+  // Dialogs: backdrop click closes; every close plays one sound and runs
+  // the dialog's cleanup, whether it came from a button, Esc or code.
+  for (const dialog of document.querySelectorAll('dialog')) {
+    dialog.addEventListener('click', (event) => {
+      if (event.target === dialog) dialog.close();
+    });
+    dialog.addEventListener('close', () => gameAudio.dialogClosed());
+  }
+  for (const button of document.querySelectorAll('[data-close-dialog]')) {
+    button.addEventListener('click', () => button.closest('dialog').close());
+  }
+  $('dialog-invite').addEventListener('close', cleanUpInviteDialog);
+  $('dialog-join').addEventListener('close', () => {
+    stopScanner();
+    // Abandoning the wizard before being accepted drops the attempt; an
+    // accepted session lives on (the room screen is already showing).
+    if (!state.clientSession?.joined) resetClientPairing();
+  });
+
   // Menu
-  $('menu-host').addEventListener('click', () => {
-    $('host-name').value = readStoredName();
-    showScreen('screen-host-setup');
-  });
-  $('menu-join').addEventListener('click', () => {
-    $('join-name').value = readStoredName();
-    showScreen('screen-join');
-  });
+  $('menu-host').addEventListener('click', openHostDialog);
+  $('menu-join').addEventListener('click', () => openJoinDialog());
 
   // Host setup
   $('host-setup-form').addEventListener('submit', createHostRoom);
-  $('host-setup-back').addEventListener('click', () => showScreen('screen-menu'));
+  $('host-plays').addEventListener('click', () => {
+    hostDraft.hostPlays = !hostDraft.hostPlays;
+    applyHostPlaysSwitch();
+    gameAudio.settingChanged();
+  });
+  $('host-plays-label').addEventListener('click', () => $('host-plays').click());
 
   // Invite wizard
   $('btn-invite').addEventListener('click', openInviteDialog);
@@ -954,18 +1091,29 @@ function wireEvents() {
     $('invite-answer-input').value = text;
     connectInviteAnswer();
   }));
-  $('invite-scan-stop').addEventListener('click', stopScanner);
+  $('invite-scan-stop').addEventListener('click', () => {
+    stopScanner();
+    gameAudio.uiClick();
+  });
 
   // Join wizard
-  $('join-back').addEventListener('click', () => {
-    stopScanner();
-    leaveToMenu();
-  });
   $('join-continue').addEventListener('click', continueJoin);
+  $('join-answer-back').addEventListener('click', () => {
+    // Going back abandons the generated answer; a fresh Continue builds a
+    // new link and a new code.
+    gameAudio.uiClick();
+    resetClientPairing();
+    state.role = null;
+    showJoinPage('start');
+    $('join-waiting').textContent = '';
+  });
   $('join-scan').addEventListener('click', () => beginScan('join-video', 'join-scanner', (text) => {
     $('join-offer-input').value = text;
   }));
-  $('join-scan-stop').addEventListener('click', stopScanner);
+  $('join-scan-stop').addEventListener('click', () => {
+    stopScanner();
+    gameAudio.uiClick();
+  });
   $('join-answer-copy').addEventListener('click', () => copyText($('join-answer-output').value));
   $('join-answer-share').addEventListener('click', () => shareText($('join-answer-output').value));
 
@@ -976,6 +1124,7 @@ function wireEvents() {
       sound('chipStack');
     } catch (error) {
       console.error(error);
+      gameAudio.actionRejected();
       showToast(t('mp.errors.generic'));
     }
   });
@@ -986,6 +1135,7 @@ function wireEvents() {
       sound('cardDeal');
     } catch (error) {
       console.error(error);
+      gameAudio.actionRejected();
       showToast(t('mp.errors.generic'));
     }
   });
@@ -996,12 +1146,13 @@ function wireEvents() {
       sound('cardShove');
     } catch (error) {
       console.error(error);
+      gameAudio.actionRejected();
       showToast(t('mp.errors.generic'));
     }
   });
   $('btn-pause').addEventListener('click', () => {
     state.hostSession.setPaused(!state.hostSession.paused);
-    sound('uiToggle');
+    gameAudio.settingChanged();
   });
   $('btn-end-room').addEventListener('click', () => confirmDialog({
     title: t('mp.confirm.endTitle'),
@@ -1009,18 +1160,14 @@ function wireEvents() {
     confirmLabel: t('mp.room.endRoom'),
     onConfirm: () => {
       state.hostSession.endSession('HOST_ENDED');
-      sound('uiClose');
-      leaveToMenu();
+      leaveToMenu({ sound: 'close' });
     },
   }));
   $('btn-leave-room').addEventListener('click', () => confirmDialog({
     title: t('mp.confirm.leaveTitle'),
     body: t('mp.confirm.leaveBody'),
     confirmLabel: t('mp.room.leaveRoom'),
-    onConfirm: () => {
-      sound('uiClose');
-      leaveToMenu();
-    },
+    onConfirm: () => leaveToMenu({ sound: 'close' }),
   }));
 
   // Betting
@@ -1028,12 +1175,12 @@ function wireEvents() {
     const chip = event.target.closest('.chip');
     if (!chip || chip.disabled) return;
     state.betCents += unitsToCents(Number(chip.dataset.value));
-    sound('chipAdd');
+    gameAudio.chipAdded();
     renderRoom();
   });
   $('mp-btn-clear').addEventListener('click', () => {
     state.betCents = 0;
-    sound('chipCollide');
+    gameAudio.betCleared();
     sendCommand(MESSAGE_TYPES.CLEAR_BET, {});
     renderRoom();
   });
@@ -1045,7 +1192,7 @@ function wireEvents() {
   });
   $('mp-btn-ready').addEventListener('click', () => {
     const seat = currentPayload()?.table?.seats.find((s) => s.playerId === myPlayerId());
-    sound('uiToggle');
+    gameAudio.settingChanged();
     sendCommand(MESSAGE_TYPES.PLAYER_READY, { ready: !seat?.ready });
   });
 
@@ -1053,14 +1200,11 @@ function wireEvents() {
   for (const button of document.querySelectorAll('#mp-panel-actions [data-action]')) {
     button.addEventListener('click', () => {
       if (button.getAttribute('aria-disabled') === 'true') {
-        sound('uiInvalid');
+        gameAudio.actionRejected();
         return;
       }
       const action = button.dataset.action;
-      if (action === ACTIONS.STAND) sound('knock');
-      if (action === ACTIONS.DOUBLE) sound('chipStack');
-      if (action === ACTIONS.SPLIT) sound('chipCollide');
-      if (action === ACTIONS.SURRENDER) sound('cardShove');
+      gameAudio.actionAccepted(action);
       sendCommand(MESSAGE_TYPES.GAME_ACTION, { action });
     });
   }
@@ -1082,7 +1226,11 @@ function wireEvents() {
 function sendDecision(accept) {
   const seat = currentPayload()?.table?.seats.find((s) => s.playerId === myPlayerId());
   if (!seat?.pendingDecision) return;
-  sound(accept ? 'chipAdd' : 'uiClick');
+  if (seat.pendingDecision === SEAT_DECISIONS.INSURANCE) {
+    gameAudio.insuranceDecided(accept);
+  } else {
+    gameAudio.earlySurrenderDecided(accept);
+  }
   sendCommand(MESSAGE_TYPES.DECISION, {
     decision: seat.pendingDecision === SEAT_DECISIONS.INSURANCE
       ? SEAT_DECISIONS.INSURANCE
@@ -1103,15 +1251,17 @@ async function copyText(text) {
   if (!text) return;
   try {
     await navigator.clipboard.writeText(text);
+    gameAudio.uiClick();
     showToast(t('mp.copied'));
-    sound('uiClick');
   } catch {
+    gameAudio.actionRejected();
     showToast(t('mp.copyFailed'));
   }
 }
 
 async function shareText(text) {
   if (!text || !navigator.share) return;
+  gameAudio.uiClick();
   try {
     await navigator.share({ text });
   } catch { /* user dismissed the share sheet */ }
@@ -1123,7 +1273,6 @@ function boot() {
   applyPreferences();
   wireEvents();
   setLanguageMenuValue(state.language);
-  populateProfileSelect();
   renderStaticLabels();
   refreshRestoreCard();
   if (!isWebRtcSupported()) {
@@ -1131,15 +1280,12 @@ function boot() {
     $('menu-host').disabled = true;
     $('menu-join').disabled = true;
   }
+  showScreen('screen-menu');
   const hash = window.location.hash;
   if (hash === '#host' && isWebRtcSupported()) {
-    $('host-name').value = readStoredName();
-    showScreen('screen-host-setup');
+    openHostDialog();
   } else if (hash === '#join' && isWebRtcSupported()) {
-    $('join-name').value = readStoredName();
-    showScreen('screen-join');
-  } else {
-    showScreen('screen-menu');
+    openJoinDialog();
   }
 }
 
