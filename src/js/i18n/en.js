@@ -112,7 +112,7 @@ export default {
     bankrollWarning: 'Applying a new amount starts a fresh session: your current fictional bankroll, round history and session total are all reset.',
     bankrollLabel: 'Starting bankroll',
     bankrollHint: 'A whole amount between {min} and {max}, kept for this rule profile.',
-    bankrollApply: 'Apply and restart session',
+    bankrollApply: 'Apply',
     bankrollCancel: 'Cancel',
     bankrollLocked: 'Finish the current round before changing the starting bankroll.',
     bankrollApplied: 'Starting bankroll set to {amount}.',

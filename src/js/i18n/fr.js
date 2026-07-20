@@ -112,7 +112,7 @@ export default {
     bankrollWarning: 'Appliquer un nouveau montant démarre une nouvelle session : votre capital fictif actuel, l’historique des manches et le total de session sont réinitialisés.',
     bankrollLabel: 'Capital de départ',
     bankrollHint: 'Un montant entier compris entre {min} et {max}, conservé pour ce profil de règles.',
-    bankrollApply: 'Appliquer et redémarrer la session',
+    bankrollApply: 'Appliquer',
     bankrollCancel: 'Annuler',
     bankrollLocked: 'Terminez la manche en cours avant de modifier le capital de départ.',
     bankrollApplied: 'Capital de départ défini à {amount}.',

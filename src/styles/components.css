@@ -865,9 +865,15 @@ kbd {
   padding: var(--space-3);
   font-size: var(--text-s);
   border: 1px solid var(--border-strong);
-  border-left: 3px solid var(--loss);
   border-radius: var(--radius-m);
   background: var(--surface-raised);
+}
+
+/* Equal halves, so the confirm pair never wraps onto two rows. */
+.dialog--confirm .button-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
 }
 
 /* Segmented choices (language, appearance, theme) */
