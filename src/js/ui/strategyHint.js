@@ -18,10 +18,12 @@ const $ = (id) => document.getElementById(id);
 /**
  * Update a hint line only when its text actually changes, so the polite
  * live region announces new recommendations without repeating itself on
- * every re-render.
+ * every re-render. Only the text span is written: the decorative bulb
+ * icon lives in the static markup and must survive every update.
  */
 function setHintLine(el, text, { muted = false } = {}) {
-  if (el.textContent !== text) el.textContent = text;
+  const textEl = el.querySelector('.strategy-hint__text');
+  if (textEl.textContent !== text) textEl.textContent = text;
   el.classList.toggle('strategy-hint--muted', muted);
   el.hidden = text === '';
 }

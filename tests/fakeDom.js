@@ -137,6 +137,12 @@ export class FakeElement {
       add: (...names) => names.forEach((name) => this.classes.add(name)),
       remove: (...names) => names.forEach((name) => this.classes.delete(name)),
       contains: (name) => this.classes.has(name),
+      toggle: (name, force) => {
+        const next = force === undefined ? !this.classes.has(name) : Boolean(force);
+        if (next) this.classes.add(name);
+        else this.classes.delete(name);
+        return next;
+      },
     };
   }
 
@@ -194,6 +200,10 @@ class FakeDocument extends FakeElement {
 
   createElement(tagName) {
     return new FakeElement(tagName);
+  }
+
+  getElementById(id) {
+    return this.querySelector(`#${id}`);
   }
 }
 
