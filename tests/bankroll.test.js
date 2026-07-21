@@ -11,8 +11,11 @@ import {
 } from '../src/js/ui/bankrollSettings.js';
 import { readSession } from '../src/js/ui/sessionStore.js';
 import { BlackjackGame } from '../src/js/game/engine.js';
+import { Shoe } from '../src/js/game/shoe.js';
 import { PROFILES } from '../src/js/config/profiles.js';
 import { unitsToCents } from '../src/js/game/money.js';
+
+const C = (rank, suit = 'SPADES') => ({ rank, suit });
 
 // ------------------------------------------------------------- validation
 
@@ -161,6 +164,10 @@ test('a chosen starting bankroll actually funds a new session', () => {
   const game = new BlackjackGame({
     profile: PROFILES.FRENCH_STANDARD,
     bankrollCents: chosen.cents,
+    // A fixed shoe keeps the stake committed: off a random shoe a natural
+    // blackjack settles the round inside placeBet and pays out, so the
+    // bankroll below would no longer be the post-debit amount.
+    shoe: Shoe.fromSequence([C('9'), C('6', 'HEARTS'), C('7', 'CLUBS')]),
   });
   assertEqual(game.bankrollCents, 250000);
   // And it is spendable exactly, with no rounding drift.

@@ -14,11 +14,14 @@ import {
 } from '../src/js/ui/sessionStore.js';
 import { loadStartingBankrollCents, saveStartingBankrollCents } from '../src/js/ui/bankrollSettings.js';
 import { BlackjackGame } from '../src/js/game/engine.js';
+import { Shoe } from '../src/js/game/shoe.js';
 import { PROFILES, PROFILE_IDS } from '../src/js/config/profiles.js';
 import { RESULTS, ROUND_STATES } from '../src/js/game/constants.js';
 import { unitsToCents } from '../src/js/game/money.js';
 
 const STORAGE_KEY = PREFIX + SESSIONS_KEY;
+
+const C = (rank, suit = 'SPADES') => ({ rank, suit });
 
 /** The raw JSON currently in storage, as the next page load would find it. */
 function storedBlob(data) {
@@ -470,10 +473,20 @@ test('a bankroll is only persistable once the round is settled', () => {
 
 test('a round interrupted by a reload returns the committed stake', () => {
   useFakeStorage();
-  const game = new BlackjackGame({ profile: PROFILES.FRENCH_STANDARD, bankrollCents: 100000 });
+  // A fixed shoe: the deal must leave the round genuinely mid-play. Off a
+  // random shoe a natural blackjack settles it immediately, and ROUND_COMPLETE
+  // is persistable, so the assertion below would flake. Player 9 + 7 against a
+  // dealer 6 draws no blackjack and offers no insurance.
+  const game = new BlackjackGame({
+    profile: PROFILES.FRENCH_STANDARD,
+    bankrollCents: 100000,
+    shoe: Shoe.fromSequence([C('9'), C('6', 'HEARTS'), C('7', 'CLUBS')]),
+  });
   saveSession('FRENCH_STANDARD', { bankrollCents: game.bankrollCents });
 
   game.placeBet(unitsToCents(50));
+  assertEqual(game.roundState, ROUND_STATES.PLAYER_TURN, 'the deal left the player to act');
+  assertEqual(game.pendingDecision, null, 'no decision blocks the round');
   assert(!isPersistableRoundState(game.roundState), 'the round is in progress');
   assert(game.bankrollCents < 100000, 'the stake is committed and out of the bankroll');
 
