@@ -274,7 +274,7 @@
    cannot remain behind it. Only its actual action buttons show a focus ring. */
 #panel-decision:focus,
 #panel-decision:focus-visible {
-  outline: none !important;
+  outline: none;
 }
 
 .panel__prompt {

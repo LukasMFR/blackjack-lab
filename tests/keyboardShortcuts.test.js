@@ -1,4 +1,5 @@
 import { ACTIONS, ROUND_STATES } from '../src/js/game/constants.js';
+import { PENDING_DECISIONS } from '../src/js/game/engine.js';
 import {
   handleGameplayShortcut, isEditableShortcutTarget, SHORTCUT_KEYS,
 } from '../src/js/ui/keyboardShortcuts.js';
@@ -43,7 +44,7 @@ function createHarness(snapshotPatch = {}) {
   const decline = focusButton('decline');
   const accept = focusButton('accept');
   const snapshot = {
-    pendingDecision: 'INSURANCE',
+    pendingDecision: PENDING_DECISIONS.INSURANCE,
     roundState: ROUND_STATES.PLAYER_TURN,
     actionAvailability: Object.fromEntries(
       Object.values(ACTIONS).map((action) => [action, { legal: true }]),
@@ -148,6 +149,47 @@ test('keyboard: Enter and Space activate the focused Insurance button once', () 
   context.activeElement = decline;
   handleGameplayShortcut(keyEvent('Enter', { repeat: true }), context);
   assertEqual(decline.clickCount, 1, 'key repeat must not add another click');
+});
+
+test('keyboard: early surrender gets the same focus trap as Insurance', () => {
+  const { accept, context, decline } = createHarness({
+    pendingDecision: PENDING_DECISIONS.EARLY_SURRENDER,
+  });
+  const forward = keyEvent('Tab');
+  handleGameplayShortcut(forward, context);
+  assert(forward.defaultPrevented, 'Tab is trapped during early surrender too');
+  assertEqual(accept.focusCount, 1, 'Tab from Decline focuses Accept');
+
+  const escape = keyEvent('Escape');
+  handleGameplayShortcut(escape, context);
+  assert(escape.defaultPrevented, 'Escape cannot dismiss early surrender');
+  assert(escape.propagationStopped, 'Escape does not reach another dismiss handler');
+
+  context.activeElement = decline;
+  handleGameplayShortcut(keyEvent('Enter'), context);
+  assertEqual(decline.clickCount, 1, 'Enter activates the focused choice');
+});
+
+test('keyboard: A and C do not answer early surrender', () => {
+  const { calls, context } = createHarness({
+    pendingDecision: PENDING_DECISIONS.EARLY_SURRENDER,
+  });
+  handleGameplayShortcut(keyEvent('a'), context);
+  handleGameplayShortcut(keyEvent('c'), context);
+  assertEqual(calls.decisions.length, 0, 'no letter key forfeits half the bet');
+  assertEqual(calls.actions.length, 0);
+});
+
+test('keyboard: gameplay shortcuts cannot fire behind early surrender', () => {
+  const { calls, context } = createHarness({
+    pendingDecision: PENDING_DECISIONS.EARLY_SURRENDER,
+  });
+  for (const key of ['h', 's', 'd', 'p', 'r', 'n']) {
+    handleGameplayShortcut(keyEvent(key), context);
+  }
+  assertEqual(calls.actions.length, 0);
+  assertEqual(calls.deals, 0);
+  assertEqual(calls.nextRounds, 0);
 });
 
 test('keyboard: shortcuts are ignored in native and editable controls', () => {

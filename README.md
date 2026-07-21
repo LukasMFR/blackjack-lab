@@ -153,6 +153,11 @@ external or remote artwork is used anywhere in the project.
   Insurance, A accepts (Accept/Accepter) and C continues without it
   (Continue/Continuer); those decision-only keys never conflict with normal
   gameplay. Shortcuts never fire inside editable controls or open dialogs.
+- A pending decision is a real modal: the panel takes focus when it opens,
+  traps Tab, and ignores Escape, so no table action can fire behind it. This
+  applies to early surrender as well as Insurance — early surrender has no
+  letter shortcut, since forfeiting half the bet should take a deliberate
+  press on a focused button.
 
 ## Persistence
 

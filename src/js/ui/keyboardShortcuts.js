@@ -1,4 +1,5 @@
 import { ACTIONS, ROUND_STATES } from '../game/constants.js';
+import { PENDING_DECISIONS } from '../game/engine.js';
 
 /**
  * One source of truth for gameplay keys and the help panel that documents
@@ -49,7 +50,7 @@ function stopMandatoryDecisionDismissal(event) {
   event.stopPropagation();
 }
 
-function cycleInsuranceFocus(event, decisionButtons, activeElement) {
+function cycleDecisionFocus(event, decisionButtons, activeElement) {
   const decline = decisionButtons?.decline;
   const accept = decisionButtons?.accept;
   if (!decline || !accept) return;
@@ -62,8 +63,8 @@ function cycleInsuranceFocus(event, decisionButtons, activeElement) {
 }
 
 /**
- * Central keyboard dispatcher for the table. Insurance Enter/Space presses
- * are forwarded to the focused button's existing click path.
+ * Central keyboard dispatcher for the table. Enter/Space presses inside a
+ * pending decision are forwarded to the focused button's existing click path.
  *
  * @param {KeyboardEvent} event
  * @param {object} context
@@ -84,11 +85,12 @@ export function handleGameplayShortcut(event, context) {
   const key = String(event.key ?? '').toLowerCase();
   const { snapshot } = context;
 
-  // Insurance is a mandatory two-choice interaction. It owns keyboard input
+  // Insurance and early surrender are both mandatory two-choice interactions
+  // rendered in the same modal panel. Whichever is pending owns keyboard input
   // until answered, so no table action can fire behind it.
-  if (snapshot.pendingDecision === 'INSURANCE') {
+  if (snapshot.pendingDecision !== null) {
     if (key === 'tab') {
-      cycleInsuranceFocus(event, context.decisionButtons, context.activeElement);
+      cycleDecisionFocus(event, context.decisionButtons, context.activeElement);
       return;
     }
     if (key === 'escape') {
@@ -107,6 +109,9 @@ export function handleGameplayShortcut(event, context) {
       }
       return;
     }
+    // A/C are documented for insurance only; early surrender is answered with
+    // the trapped buttons so no letter key silently forfeits half the bet.
+    if (snapshot.pendingDecision !== PENDING_DECISIONS.INSURANCE) return;
     if (key === SHORTCUT_KEYS.INSURANCE_ACCEPT) {
       event.preventDefault();
       context.decideInsurance(true);
@@ -117,8 +122,7 @@ export function handleGameplayShortcut(event, context) {
     return;
   }
 
-  // Other pending choices retain exclusive control of the table too.
-  if (snapshot.pendingDecision || event.repeat) return;
+  if (event.repeat) return;
 
   if (key === SHORTCUT_KEYS.DEAL) {
     if (snapshot.roundState === ROUND_STATES.WAITING_FOR_BET) context.deal();

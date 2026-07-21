@@ -1,4 +1,4 @@
-import { BlackjackGame } from '../game/engine.js';
+import { BlackjackGame, PENDING_DECISIONS } from '../game/engine.js';
 import { ACTIONS, RESULTS, ROUND_STATES } from '../game/constants.js';
 import { unitsToCents } from '../game/money.js';
 import { buildCustomProfile, DEFAULT_PROFILE_ID, PROFILE_IDS, PROFILES } from '../config/profiles.js';
@@ -239,7 +239,7 @@ function renderAll() {
   const bets = betState();
   renderTable(snapshot, renderCtx);
   renderPanels(snapshot, bets);
-  focusInsuranceDecision(snapshot);
+  focusPendingDecision(snapshot);
   renderHistory(state.history.map((entry) => ({
     ...entry,
     labels: entry.results.map((r) => t(`results.${r}`))
@@ -249,9 +249,13 @@ function renderAll() {
   animations.afterRender(snapshot, bets);
 }
 
-/** Enter the Insurance focus boundary without visually selecting either choice. */
-function focusInsuranceDecision(snapshot) {
-  if (snapshot.pendingDecision !== 'INSURANCE') return;
+/**
+ * Enter the decision panel's focus boundary without visually selecting either
+ * choice. The panel declares aria-modal, so focus must never stay behind it —
+ * that holds for early surrender exactly as much as for insurance.
+ */
+function focusPendingDecision(snapshot) {
+  if (snapshot.pendingDecision === null) return;
   const panel = $('panel-decision');
   if (document.querySelector('dialog[open]') || panel.contains(document.activeElement)) return;
   panel.focus({ preventScroll: true });
@@ -603,10 +607,10 @@ function wireEvents() {
 
 function decide(accept) {
   const snapshot = state.game.getSnapshot();
-  if (snapshot.pendingDecision === 'INSURANCE') {
+  if (snapshot.pendingDecision === PENDING_DECISIONS.INSURANCE) {
     gameAudio.insuranceDecided(accept);
     mutate(() => state.game.decideInsurance(accept));
-  } else if (snapshot.pendingDecision === 'EARLY_SURRENDER') {
+  } else if (snapshot.pendingDecision === PENDING_DECISIONS.EARLY_SURRENDER) {
     gameAudio.earlySurrenderDecided(accept);
     mutate(() => state.game.decideEarlySurrender(accept));
   }
