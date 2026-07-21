@@ -5,8 +5,8 @@ import {
 } from '../src/js/ui/keyboardShortcuts.js';
 import { setLanguage, t } from '../src/js/i18n/index.js';
 import {
-  formatShortcutLabel, loadShortcutLabelsPreference, saveShortcutLabelsPreference,
-  SHORTCUT_LABELS_DESKTOP_QUERY, shouldShowShortcutLabels,
+  loadShortcutLabelsPreference, saveShortcutLabelsPreference,
+  SHORTCUT_LABELS_DESKTOP_QUERY, shortcutSuffix, shouldShowShortcutLabels,
 } from '../src/js/ui/shortcutLabels.js';
 import { assert, assertEqual, test } from './runner.js';
 import { useFakeStorage, withoutStorage } from './fakeStorage.js';
@@ -289,28 +289,34 @@ test('shortcut labels: every action button has a bound key', () => {
   }
 });
 
-test('shortcut labels: an unbound action keeps its plain translated label', () => {
-  assertEqual(formatShortcutLabel('Even money', undefined, true), 'Even money');
-  assertEqual(formatShortcutLabel('Even money', '', true), 'Even money');
+test('shortcut labels: an unbound action produces no suffix', () => {
+  assertEqual(shortcutSuffix(undefined, true), '');
+  assertEqual(shortcutSuffix('', true), '');
 });
 
-test('shortcut labels: translated labels use centralized keys as uppercase suffixes', () => {
+test('shortcut labels: the suffix is separate from the translated label', () => {
+  // The label is the accessible name; the suffix is rendered aria-hidden
+  // beside it, so the two must stay independently addressable.
   setLanguage('en');
-  assertEqual(formatShortcutLabel(t('actions.HIT'), SHORTCUT_KEYS.HIT, true), 'Hit (H)');
+  assertEqual(t('actions.HIT'), 'Hit', 'the label carries no key');
+  assertEqual(shortcutSuffix(SHORTCUT_KEYS.HIT, true), ' (H)');
   assertEqual(
-    formatShortcutLabel(t('insurance.yes'), SHORTCUT_KEYS.INSURANCE_ACCEPT, true),
-    'Take insurance (A)',
+    t('actions.HIT') + shortcutSuffix(SHORTCUT_KEYS.HIT, true),
+    'Hit (H)',
+    'together they read as before',
   );
+  assertEqual(shortcutSuffix(SHORTCUT_KEYS.INSURANCE_ACCEPT, true), ' (A)');
+
   setLanguage('fr');
-  assertEqual(formatShortcutLabel(t('actions.HIT'), SHORTCUT_KEYS.HIT, true), 'Tirer (H)');
+  assertEqual(t('actions.HIT'), 'Tirer');
   assertEqual(
-    formatShortcutLabel(t('insurance.no'), SHORTCUT_KEYS.INSURANCE_DECLINE, true),
+    t('insurance.no') + shortcutSuffix(SHORTCUT_KEYS.INSURANCE_DECLINE, true),
     'Sans assurance (C)',
   );
   assertEqual(
-    formatShortcutLabel(t('actions.STAND'), SHORTCUT_KEYS.STAND, false),
-    'Rester',
-    'disabled preference preserves the translated label',
+    shortcutSuffix(SHORTCUT_KEYS.STAND, false),
+    '',
+    'a disabled preference adds nothing to the label',
   );
   setLanguage('en');
 });

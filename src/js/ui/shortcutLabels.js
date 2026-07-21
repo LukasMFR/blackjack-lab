@@ -29,12 +29,15 @@ export function shouldShowShortcutLabels(enabled, desktopLayoutMatches) {
 }
 
 /**
- * Append a visible key without changing the translated base label.
- * @param {string} label
+ * The visible suffix for a shortcut key, or '' when none should appear.
+ * Kept apart from the translated label so callers can render it as decorative
+ * text: assistive technology already announces the key from aria-keyshortcuts,
+ * and folding it into the accessible name would say it twice.
  * @param {string} shortcutKey
  * @param {boolean} visible
+ * @returns {string}
  */
-export function formatShortcutLabel(label, shortcutKey, visible) {
-  if (!visible || !shortcutKey) return label;
-  return `${label} (${shortcutKey.toUpperCase()})`;
+export function shortcutSuffix(shortcutKey, visible) {
+  if (!visible || !shortcutKey) return '';
+  return ` (${shortcutKey.toUpperCase()})`;
 }

@@ -5,7 +5,7 @@ import { ACTIONS, HAND_STATUS, RESULTS, ROUND_STATES, SURRENDER_MODES } from '..
 import { PENDING_DECISIONS } from '../game/engine.js';
 import { exactHalf } from '../game/money.js';
 import { SHORTCUT_KEYS } from './keyboardShortcuts.js';
-import { formatShortcutLabel } from './shortcutLabels.js';
+import { shortcutSuffix } from './shortcutLabels.js';
 
 /**
  * Pure DOM rendering from engine snapshots. All game decisions live in
@@ -21,6 +21,27 @@ const RESULT_BADGE_CLASS = {
   [RESULTS.PUSH]: 'push',
   [RESULTS.SURRENDER]: 'push',
 };
+
+/**
+ * Write a translated label, appending the shortcut key as decorative text.
+ * The suffix is aria-hidden so it stays visible without entering the
+ * accessible name: aria-keyshortcuts already carries the key for assistive
+ * technology, and having both announces it twice.
+ * @param {HTMLElement} element
+ * @param {string} label
+ * @param {string} shortcutKey
+ * @param {boolean} visible
+ */
+function setShortcutLabel(element, label, shortcutKey, visible) {
+  // Assigning textContent first also clears any suffix left by a prior render.
+  element.textContent = label;
+  const suffix = shortcutSuffix(shortcutKey, visible);
+  if (!suffix) return;
+  const span = document.createElement('span');
+  span.setAttribute('aria-hidden', 'true');
+  span.textContent = suffix;
+  element.append(span);
+}
 
 /** Render every static label (called on load and on language change). */
 export function renderStaticLabels({ showShortcutLabels = false } = {}) {
@@ -46,12 +67,8 @@ export function renderStaticLabels({ showShortcutLabels = false } = {}) {
   $('bet-prompt').textContent = t('bet.placeYourBet');
   $('btn-clear').textContent = t('bet.clear');
   $('btn-rebet').textContent = t('bet.rebet');
-  $('btn-deal').textContent = formatShortcutLabel(
-    t('bet.deal'), SHORTCUT_KEYS.DEAL, showShortcutLabels,
-  );
-  $('btn-next').textContent = formatShortcutLabel(
-    t('round.newRound'), SHORTCUT_KEYS.DEAL, showShortcutLabels,
-  );
+  setShortcutLabel($('btn-deal'), t('bet.deal'), SHORTCUT_KEYS.DEAL, showShortcutLabels);
+  setShortcutLabel($('btn-next'), t('round.newRound'), SHORTCUT_KEYS.DEAL, showShortcutLabels);
   $('btn-deal').setAttribute('aria-keyshortcuts', SHORTCUT_KEYS.DEAL.toUpperCase());
   $('btn-next').setAttribute('aria-keyshortcuts', SHORTCUT_KEYS.DEAL.toUpperCase());
   $('profile-title').textContent = t('nav.profile');
@@ -67,7 +84,8 @@ export function renderStaticLabels({ showShortcutLabels = false } = {}) {
     // An action without a bound key still renders: a missing shortcut must
     // cost that one button its suffix, never every label on the page.
     const shortcutKey = SHORTCUT_KEYS[button.dataset.action] ?? '';
-    (label ?? button).textContent = formatShortcutLabel(
+    setShortcutLabel(
+      label ?? button,
       t(`actions.${button.dataset.action}`),
       shortcutKey,
       showShortcutLabels,
@@ -277,11 +295,13 @@ function renderDecisionPanel(snapshot, showShortcutLabels) {
   const half = formatMoney(exactHalf(snapshot.hands[0].betCents));
   if (snapshot.pendingDecision === PENDING_DECISIONS.INSURANCE) {
     $('decision-question').textContent = t('insurance.question', { cost: half });
-    $('btn-decision-yes').textContent = formatShortcutLabel(
-      t('insurance.yes'), SHORTCUT_KEYS.INSURANCE_ACCEPT, showShortcutLabels,
+    setShortcutLabel(
+      $('btn-decision-yes'), t('insurance.yes'),
+      SHORTCUT_KEYS.INSURANCE_ACCEPT, showShortcutLabels,
     );
-    $('btn-decision-no').textContent = formatShortcutLabel(
-      t('insurance.no'), SHORTCUT_KEYS.INSURANCE_DECLINE, showShortcutLabels,
+    setShortcutLabel(
+      $('btn-decision-no'), t('insurance.no'),
+      SHORTCUT_KEYS.INSURANCE_DECLINE, showShortcutLabels,
     );
     $('btn-decision-yes').setAttribute(
       'aria-keyshortcuts', SHORTCUT_KEYS.INSURANCE_ACCEPT.toUpperCase(),
