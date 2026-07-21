@@ -196,6 +196,29 @@ kbd {
   opacity: 0.55;
 }
 
+/* ------------------------------------------------------ strategy hints */
+
+/* Optional basic-strategy hint: one quiet line near the buttons plus a
+   soft ring on the recommended button. The translated text always names
+   the action, so the ring never carries the meaning alone, and nothing
+   here reads as pressed or pre-selected. */
+.strategy-hint {
+  margin: 0;
+  font-size: var(--text-s);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.strategy-hint--muted {
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.btn.is-hinted:not(.is-disabled) {
+  box-shadow: 0 0 0 2px
+    color-mix(in srgb, var(--act, var(--accent)) 55%, transparent);
+}
+
 /*
  * Custom dropdown (see ui/menuSelect.js). A native select renders its
  * popup with OS chrome that no stylesheet reaches, so the menu is rebuilt

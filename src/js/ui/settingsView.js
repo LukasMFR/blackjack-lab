@@ -164,6 +164,7 @@ export function renderSettings() {
 
   renderAnimationSection();
   renderShortcutLabelsSection();
+  renderStrategyHintsSection();
   renderAudioSection();
   buildProfileList(state);
   buildCustomEditor(state);
@@ -266,6 +267,26 @@ function renderShortcutLabelsSection() {
     },
   ));
   $('shortcut-labels-note').textContent = t('settings.shortcutLabelsNote');
+}
+
+/* ------------------------------------------------ basic strategy hints UI */
+
+function renderStrategyHintsSection() {
+  $('set-strategy-hints-label').textContent = t('settings.strategyHints');
+  const container = $('strategy-hint-controls');
+  container.textContent = '';
+  container.append(switchRow(
+    'strategy-hints-enabled',
+    t('settings.strategyHintsShow'),
+    controller.getStrategyHintsPreference(),
+    false,
+    (value) => {
+      controller.setStrategyHintsPreference(value);
+      controller.audio.settingChanged();
+      renderStrategyHintsSection();
+    },
+  ));
+  $('strategy-hints-note').textContent = t('settings.strategyHintsNote');
 }
 
 /* ------------------------------------------------------------- audio UI */

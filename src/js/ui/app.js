@@ -27,6 +27,10 @@ import {
   loadShortcutLabelsPreference, saveShortcutLabelsPreference,
   SHORTCUT_LABELS_DESKTOP_QUERY, shouldShowShortcutLabels,
 } from './shortcutLabels.js';
+import {
+  loadStrategyHintsPreference, saveStrategyHintsPreference,
+} from './strategyHintSettings.js';
+import { renderStrategyHint } from './strategyHint.js';
 
 /**
  * Application controller: owns the engine instance, user preferences,
@@ -43,6 +47,7 @@ const state = {
   appearance: 'system', // 'system' | 'light' | 'dark'
   theme: 'salon', // 'classic' | 'minimal' | 'salon'
   showShortcutLabels: false,
+  strategyHints: false,
   profileId: DEFAULT_PROFILE_ID,
   customSettings: null,
   customProfile: null,
@@ -100,6 +105,7 @@ function loadPreferences() {
   state.appearance = storage.getChoice('appearance', ['system', 'light', 'dark'], 'system');
   state.theme = storage.getChoice('theme', ['classic', 'minimal', 'salon'], 'salon');
   state.showShortcutLabels = loadShortcutLabelsPreference();
+  state.strategyHints = loadStrategyHintsPreference();
   state.profileId = storage.getChoice('profile', PROFILE_IDS, DEFAULT_PROFILE_ID);
   state.customSettings = storage.getObject('customProfile');
 
@@ -252,6 +258,7 @@ function renderAll() {
   const bets = betState();
   renderTable(snapshot, renderCtx);
   renderPanels(snapshot, bets, { showShortcutLabels });
+  renderStrategyHint(snapshot, state.activeProfile, state.strategyHints);
   focusPendingDecision(snapshot);
   renderHistory(state.history.map((entry) => ({
     ...entry,
@@ -465,6 +472,12 @@ const controller = {
   setShortcutLabelsPreference(enabled) {
     state.showShortcutLabels = enabled === true;
     saveShortcutLabelsPreference(state.showShortcutLabels);
+    renderAll();
+  },
+  getStrategyHintsPreference: () => state.strategyHints,
+  setStrategyHintsPreference(enabled) {
+    state.strategyHints = enabled === true;
+    saveStrategyHintsPreference(state.strategyHints);
     renderAll();
   },
   getAnimationMode: () => animations.getAnimationMode(),

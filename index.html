@@ -153,6 +153,7 @@
         </div>
 
         <div id="panel-actions" class="panel" hidden>
+          <p class="strategy-hint" id="strategy-hint" role="status" hidden></p>
           <div class="button-row button-row--actions" role="group" aria-labelledby="controls-label">
             <button type="button" data-action="HIT" class="btn btn--action btn--action-primary">
               <span class="btn__icon" aria-hidden="true">
@@ -202,6 +203,7 @@
         <div id="panel-decision" class="panel" role="dialog" aria-modal="true" tabindex="-1"
           aria-labelledby="decision-question" hidden>
           <p class="panel__prompt" id="decision-question"></p>
+          <p class="strategy-hint" id="decision-hint" role="status" hidden></p>
           <div class="button-row">
             <button type="button" id="btn-decision-no" class="btn"></button>
             <button type="button" id="btn-decision-yes" class="btn btn--primary"></button>
@@ -283,6 +285,11 @@
         <legend id="set-shortcut-labels-label"></legend>
         <div class="audio-controls" id="shortcut-label-controls"></div>
         <p class="fine-print" id="shortcut-labels-note"></p>
+      </fieldset>
+      <fieldset class="field-group">
+        <legend id="set-strategy-hints-label"></legend>
+        <div class="audio-controls" id="strategy-hint-controls"></div>
+        <p class="fine-print" id="strategy-hints-note"></p>
       </fieldset>
       <fieldset class="field-group">
         <legend id="set-audio-label"></legend>
