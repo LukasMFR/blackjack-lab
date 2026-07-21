@@ -40,7 +40,7 @@ No single blackjack chart is universally correct. The hint system must match the
 
 ## 2. Accuracy boundary
 
-The tables below are exact transcriptions of the cited total-dependent basic-strategy charts for their stated rule families.
+The tables below are normalized, decision-equivalent transcriptions of the cited total-dependent basic-strategy charts for their stated rule families.
 
 A static total-dependent chart cannot be described as mathematically optimal for every exact card composition, especially in single-deck play. The interface should therefore say **Basic strategy** / **Stratégie de base**, not **Guaranteed best move** or **Perfect move**.
 
