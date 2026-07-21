@@ -23,6 +23,10 @@ import {
 } from './sessionStore.js';
 import { initLanguageMenu, setLanguageMenuValue } from './languageMenu.js';
 import { handleGameplayShortcut } from './keyboardShortcuts.js';
+import {
+  loadShortcutLabelsPreference, saveShortcutLabelsPreference,
+  SHORTCUT_LABELS_DESKTOP_QUERY, shouldShowShortcutLabels,
+} from './shortcutLabels.js';
 
 /**
  * Application controller: owns the engine instance, user preferences,
@@ -38,6 +42,7 @@ const state = {
   language: 'en',
   appearance: 'system', // 'system' | 'light' | 'dark'
   theme: 'salon', // 'classic' | 'minimal' | 'salon'
+  showShortcutLabels: false,
   profileId: DEFAULT_PROFILE_ID,
   customSettings: null,
   customProfile: null,
@@ -52,6 +57,7 @@ const state = {
 
 const renderCtx = { seenCardIds: new Set(), prevHoleHidden: false };
 const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+const desktopShortcutQuery = window.matchMedia(SHORTCUT_LABELS_DESKTOP_QUERY);
 
 /* ---------------------------------------------------------------- audio */
 
@@ -93,6 +99,7 @@ function loadPreferences() {
 
   state.appearance = storage.getChoice('appearance', ['system', 'light', 'dark'], 'system');
   state.theme = storage.getChoice('theme', ['classic', 'minimal', 'salon'], 'salon');
+  state.showShortcutLabels = loadShortcutLabelsPreference();
   state.profileId = storage.getChoice('profile', PROFILE_IDS, DEFAULT_PROFILE_ID);
   state.customSettings = storage.getObject('customProfile');
 
@@ -142,6 +149,8 @@ function updateThemeColor() {
 darkQuery.addEventListener('change', () => {
   if (state.appearance === 'system') applyAppearance();
 });
+
+desktopShortcutQuery.addEventListener('change', () => renderAll());
 
 /* ------------------------------------------------------------------ game */
 
@@ -232,13 +241,17 @@ function renderAll() {
   animations.beforeRender();
   document.documentElement.lang = state.language;
   setLanguageMenuValue(state.language);
-  renderStaticLabels();
+  const showShortcutLabels = shouldShowShortcutLabels(
+    state.showShortcutLabels,
+    desktopShortcutQuery.matches,
+  );
+  renderStaticLabels({ showShortcutLabels });
   updateSoundButton();
   renderHeaderProfile();
   const snapshot = state.game.getSnapshot();
   const bets = betState();
   renderTable(snapshot, renderCtx);
-  renderPanels(snapshot, bets);
+  renderPanels(snapshot, bets, { showShortcutLabels });
   focusPendingDecision(snapshot);
   renderHistory(state.history.map((entry) => ({
     ...entry,
@@ -447,6 +460,12 @@ const controller = {
     state.theme = theme;
     storage.setChoice('theme', theme);
     applyTheme();
+  },
+  getShortcutLabelsPreference: () => state.showShortcutLabels,
+  setShortcutLabelsPreference(enabled) {
+    state.showShortcutLabels = enabled === true;
+    saveShortcutLabelsPreference(state.showShortcutLabels);
+    renderAll();
   },
   getAnimationMode: () => animations.getAnimationMode(),
   setAnimationMode(mode) {

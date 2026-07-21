@@ -4,6 +4,8 @@ import { createCardElement } from './cardView.js';
 import { ACTIONS, HAND_STATUS, RESULTS, ROUND_STATES, SURRENDER_MODES } from '../game/constants.js';
 import { PENDING_DECISIONS } from '../game/engine.js';
 import { exactHalf } from '../game/money.js';
+import { SHORTCUT_KEYS } from './keyboardShortcuts.js';
+import { formatShortcutLabel } from './shortcutLabels.js';
 
 /**
  * Pure DOM rendering from engine snapshots. All game decisions live in
@@ -21,7 +23,7 @@ const RESULT_BADGE_CLASS = {
 };
 
 /** Render every static label (called on load and on language change). */
-export function renderStaticLabels() {
+export function renderStaticLabels({ showShortcutLabels = false } = {}) {
   $('skip-link').textContent = t('a11y.skipToTable');
   $('fictional-badge').textContent = t('app.fictionalBadge');
   $('fictional-note').textContent = t('app.fictionalNote');
@@ -44,8 +46,14 @@ export function renderStaticLabels() {
   $('bet-prompt').textContent = t('bet.placeYourBet');
   $('btn-clear').textContent = t('bet.clear');
   $('btn-rebet').textContent = t('bet.rebet');
-  $('btn-deal').textContent = t('bet.deal');
-  $('btn-next').textContent = t('round.newRound');
+  $('btn-deal').textContent = formatShortcutLabel(
+    t('bet.deal'), SHORTCUT_KEYS.DEAL, showShortcutLabels,
+  );
+  $('btn-next').textContent = formatShortcutLabel(
+    t('round.newRound'), SHORTCUT_KEYS.DEAL, showShortcutLabels,
+  );
+  $('btn-deal').setAttribute('aria-keyshortcuts', SHORTCUT_KEYS.DEAL.toUpperCase());
+  $('btn-next').setAttribute('aria-keyshortcuts', SHORTCUT_KEYS.DEAL.toUpperCase());
   $('profile-title').textContent = t('nav.profile');
   $('session-title').textContent = t('session.title');
   $('session-rounds-label').textContent = t('session.rounds');
@@ -56,7 +64,15 @@ export function renderStaticLabels() {
   for (const button of document.querySelectorAll('[data-action]')) {
     // Icon-bearing buttons keep their SVG: only the label span is rewritten.
     const label = button.querySelector('.btn__label');
-    (label ?? button).textContent = t(`actions.${button.dataset.action}`);
+    (label ?? button).textContent = formatShortcutLabel(
+      t(`actions.${button.dataset.action}`),
+      SHORTCUT_KEYS[button.dataset.action],
+      showShortcutLabels,
+    );
+    button.setAttribute(
+      'aria-keyshortcuts',
+      SHORTCUT_KEYS[button.dataset.action].toUpperCase(),
+    );
   }
   for (const button of document.querySelectorAll('[data-close-dialog]')) {
     button.textContent = t('settings.close');
@@ -197,7 +213,7 @@ function buildHandStatus(hand) {
  * @param {{betCents: number, canRebet: boolean, chipValues: number[],
  *   minBetCents: number, maxBetCents: number}} betState
  */
-export function renderPanels(snapshot, betState) {
+export function renderPanels(snapshot, betState, { showShortcutLabels = false } = {}) {
   const isBetting = snapshot.roundState === ROUND_STATES.WAITING_FOR_BET;
   const isDeciding = snapshot.pendingDecision !== null;
   const isActing = snapshot.roundState === ROUND_STATES.PLAYER_TURN && !isDeciding;
@@ -210,7 +226,7 @@ export function renderPanels(snapshot, betState) {
 
   renderStatusStrip(snapshot, betState);
   if (isBetting) renderBetPanel(snapshot, betState);
-  if (isDeciding) renderDecisionPanel(snapshot);
+  if (isDeciding) renderDecisionPanel(snapshot, showShortcutLabels);
   if (isActing) renderActionPanel(snapshot);
   if (isComplete) renderCompletePanel(snapshot);
   renderMessage(snapshot);
@@ -256,14 +272,22 @@ function renderBetPanel(snapshot, betState) {
   });
 }
 
-function renderDecisionPanel(snapshot) {
+function renderDecisionPanel(snapshot, showShortcutLabels) {
   const half = formatMoney(exactHalf(snapshot.hands[0].betCents));
   if (snapshot.pendingDecision === PENDING_DECISIONS.INSURANCE) {
     $('decision-question').textContent = t('insurance.question', { cost: half });
-    $('btn-decision-yes').textContent = t('insurance.yes');
-    $('btn-decision-no').textContent = t('insurance.no');
-    $('btn-decision-yes').setAttribute('aria-keyshortcuts', 'A');
-    $('btn-decision-no').setAttribute('aria-keyshortcuts', 'C');
+    $('btn-decision-yes').textContent = formatShortcutLabel(
+      t('insurance.yes'), SHORTCUT_KEYS.INSURANCE_ACCEPT, showShortcutLabels,
+    );
+    $('btn-decision-no').textContent = formatShortcutLabel(
+      t('insurance.no'), SHORTCUT_KEYS.INSURANCE_DECLINE, showShortcutLabels,
+    );
+    $('btn-decision-yes').setAttribute(
+      'aria-keyshortcuts', SHORTCUT_KEYS.INSURANCE_ACCEPT.toUpperCase(),
+    );
+    $('btn-decision-no').setAttribute(
+      'aria-keyshortcuts', SHORTCUT_KEYS.INSURANCE_DECLINE.toUpperCase(),
+    );
   } else {
     $('decision-question').textContent = t('earlySurrender.question', { half });
     $('btn-decision-yes').textContent = t('earlySurrender.yes');

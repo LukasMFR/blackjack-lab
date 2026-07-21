@@ -4,7 +4,12 @@ import {
   handleGameplayShortcut, isEditableShortcutTarget, SHORTCUT_KEYS,
 } from '../src/js/ui/keyboardShortcuts.js';
 import { setLanguage, t } from '../src/js/i18n/index.js';
+import {
+  formatShortcutLabel, loadShortcutLabelsPreference, saveShortcutLabelsPreference,
+  SHORTCUT_LABELS_DESKTOP_QUERY, shouldShowShortcutLabels,
+} from '../src/js/ui/shortcutLabels.js';
 import { assert, assertEqual, test } from './runner.js';
+import { useFakeStorage, withoutStorage } from './fakeStorage.js';
 
 function keyEvent(key, init = {}) {
   return {
@@ -251,5 +256,47 @@ test('keyboard: A/C help labels are complete in English and French', () => {
   setLanguage('fr');
   assertEqual(t('help.shortcutInsuranceAccept'), 'Accepter l’assurance');
   assertEqual(t('help.shortcutInsuranceDecline'), 'Continuer sans assurance');
+  setLanguage('en');
+});
+
+test('shortcut labels: preference defaults off and persists locally', () => {
+  const store = useFakeStorage();
+  assertEqual(loadShortcutLabelsPreference(), false, 'default is disabled');
+  saveShortcutLabelsPreference(true);
+  assertEqual(loadShortcutLabelsPreference(), true, 'enabled value is restored');
+  assertEqual(store.get('bjlab.shortcutLabels'), 'true', 'preference uses local storage');
+  saveShortcutLabelsPreference(false);
+  assertEqual(loadShortcutLabelsPreference(), false, 'disabled value is restored');
+  withoutStorage();
+});
+
+test('shortcut labels: suffixes require both the preference and desktop layout', () => {
+  assertEqual(
+    SHORTCUT_LABELS_DESKTOP_QUERY,
+    '(min-width: 1024px) and (hover: hover) and (pointer: fine)',
+  );
+  assertEqual(shouldShowShortcutLabels(false, true), false, 'disabled on desktop');
+  assertEqual(shouldShowShortcutLabels(true, false), false, 'hidden in touch/mobile layout');
+  assertEqual(shouldShowShortcutLabels(true, true), true, 'shown only in desktop layout');
+});
+
+test('shortcut labels: translated labels use centralized keys as uppercase suffixes', () => {
+  setLanguage('en');
+  assertEqual(formatShortcutLabel(t('actions.HIT'), SHORTCUT_KEYS.HIT, true), 'Hit (H)');
+  assertEqual(
+    formatShortcutLabel(t('insurance.yes'), SHORTCUT_KEYS.INSURANCE_ACCEPT, true),
+    'Take insurance (A)',
+  );
+  setLanguage('fr');
+  assertEqual(formatShortcutLabel(t('actions.HIT'), SHORTCUT_KEYS.HIT, true), 'Tirer (H)');
+  assertEqual(
+    formatShortcutLabel(t('insurance.no'), SHORTCUT_KEYS.INSURANCE_DECLINE, true),
+    'Sans assurance (C)',
+  );
+  assertEqual(
+    formatShortcutLabel(t('actions.STAND'), SHORTCUT_KEYS.STAND, false),
+    'Rester',
+    'disabled preference preserves the translated label',
+  );
   setLanguage('en');
 });

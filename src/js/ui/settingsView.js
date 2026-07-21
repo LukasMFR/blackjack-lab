@@ -163,6 +163,7 @@ export function renderSettings() {
   buildThemeList(state);
 
   renderAnimationSection();
+  renderShortcutLabelsSection();
   renderAudioSection();
   buildProfileList(state);
   buildCustomEditor(state);
@@ -245,6 +246,26 @@ function renderAnimationSection() {
   const reducedNote = $('animations-reduced-note');
   reducedNote.textContent = t('settings.animationsReduced');
   reducedNote.hidden = !controller.isReducedMotionPreferred();
+}
+
+/* --------------------------------------------- visible shortcut labels UI */
+
+function renderShortcutLabelsSection() {
+  $('set-shortcut-labels-label').textContent = t('settings.shortcutLabels');
+  const container = $('shortcut-label-controls');
+  container.textContent = '';
+  container.append(switchRow(
+    'shortcut-labels-enabled',
+    t('settings.shortcutLabelsShow'),
+    controller.getShortcutLabelsPreference(),
+    false,
+    (value) => {
+      controller.setShortcutLabelsPreference(value);
+      controller.audio.settingChanged();
+      renderShortcutLabelsSection();
+    },
+  ));
+  $('shortcut-labels-note').textContent = t('settings.shortcutLabelsNote');
 }
 
 /* ------------------------------------------------------------- audio UI */
