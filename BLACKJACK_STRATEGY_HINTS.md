@@ -3,7 +3,15 @@
 **Project:** Blackjack Lab  
 **Status:** implementation reference  
 **Verified:** 2026-07-21  
-**Scope:** total-dependent basic-strategy hints for standard blackjack profiles
+**Scope:** total-dependent basic-strategy hints for standard blackjack profiles  
+**Revision:** 1.1 — source-by-source verification completed
+
+### Verification corrections in revision 1.1
+
+- Table B: `9,9` versus dealer Ace corrected from Split to Stand.
+- Table D: `A,6` versus dealer 2 corrected from Hit to Double/Hit.
+- Table E: `8,8` versus dealer Ace now preserves the double-deck H17 DAS condition.
+- Insurance and Even Money are now treated separately for 6:5 blackjack.
 
 ## 1. Purpose
 
@@ -47,6 +55,7 @@ If the active rules do not exactly match a supported fingerprint, the applicatio
 | `R/H` | Surrender when legally available; otherwise hit |
 | `R/S` | Surrender when legally available; otherwise stand |
 | `R/P` | Surrender when legally available; otherwise split when legal/affordable; otherwise evaluate as a normal hand |
+| `R[NDAS]/P` | Surrender only when surrender is legal **and DAS is disabled**; otherwise split when legal/affordable; otherwise evaluate as a normal hand |
 
 `DAS` means **double after split**.
 
@@ -71,12 +80,25 @@ Additional rules:
 
 ## 5. Insurance and even money
 
-For all standard tables in this document:
+Treat Insurance and Even Money as separate decisions.
 
-- decline Insurance;
-- decline Even Money.
+### Insurance
 
-This is basic strategy for a player who is not using count information. The project must not infer card-counting deviations from shoe history.
+Without card-count information:
+
+- decline Insurance for every standard profile in this document;
+- this remains true at a 6:5 table;
+- do not reinterpret a normal half-bet Insurance wager as a special Even Money offer.
+
+### Even Money
+
+- With a normal 3:2 blackjack payout: decline Even Money.
+- With a 6:5 blackjack payout: accept a genuine 1:1 Even Money settlement if the game explicitly offers it.
+- With any other blackjack payout: return `UNSUPPORTED_STRATEGY` until the exact settlement has been verified.
+
+The 6:5 exception affects only the special Even Money decision. It does not change the standard hit, stand, double, split, or surrender matrices.
+
+The project must not infer card-counting deviations from shoe history.
 
 ## 6. Rule fingerprint selection
 
@@ -92,7 +114,9 @@ The resolver must use explicit rule values, including at least:
 - surrender mode and current surrender eligibility;
 - pairing rule;
 - split limits;
-- available bankroll.
+- available bankroll;
+- blackjack payout;
+- whether a genuine Even Money settlement is offered.
 
 Never select a table from the profile display name alone.
 
@@ -101,12 +125,12 @@ Never select a table from the profile display name alone.
 | Blackjack Lab profile | Strategy-table rule |
 |---|---|
 | `FRENCH_STANDARD` | Table A |
-| `EUROPEAN_ENHC` | Table A only when the resolved game is S17 and dealer blackjack takes all committed bets |
+| `EUROPEAN_ENHC` | Table A only when the resolved game is S17, surrender is disabled, and dealer blackjack takes all committed bets |
 | `LAS_VEGAS_STRIP` | Table B or C according to the actual S17/H17 setting and deck count |
 | `ATLANTIC_CITY` | Normally Table B when its resolved preset is 8-deck S17; use actual settings |
 | `VEGAS_DOWNTOWN` | Table D/E for two decks or Table F/G for one deck; use actual settings |
 | `SINGLE_DECK_3_2` | Table F or G according to S17/H17 |
-| `BLACKJACK_6_5` | Use the table for its underlying standard rule fingerprint; the 6:5 payout does not create a new hit/stand/double/split chart |
+| `BLACKJACK_6_5` | Use the table for its underlying standard rule fingerprint; keep the separate 6:5 Even Money rule in section 5 |
 | `CUSTOM` | Show a hint only when every strategy-relevant setting matches a supported fingerprint |
 
 ### Unsupported standard-rule combinations
@@ -125,7 +149,7 @@ Do not approximate these until a separately verified table is added:
 
 ## Table A — European No-Hole-Card, S17, 4–8 decks
 
-**Exact rule fingerprint:** `deckCount ∈ {4,5,6,7,8}`; `dealMode = ENHC`; `dealerSoft17 = S17`; `dealerBlackjackLossMode = ALL_BETS_LOST`; standard 52-card decks.
+**Exact rule fingerprint:** `deckCount ∈ {4,5,6,7,8}`; `dealMode = ENHC`; `dealerSoft17 = S17`; `dealerBlackjackLossMode = ALL_BETS_LOST`; `surrender = NONE`; standard 52-card decks.
 
 This is the table used by `FRENCH_STANDARD`. The French profile resolves to six decks, double on any original two cards, DAS enabled, no surrender, blackjack 3:2, and split Aces only once. The conditional codes also let the same table remain correct when a European profile restricts doubling or disables DAS.
 
@@ -205,7 +229,7 @@ This is the table used by `FRENCH_STANDARD`. The French profile resolves to six 
 | 6,6 | P/H | P | P | P | P | H | H | H | H | H |
 | 7,7 | P | P | P | P | P | P | H | H | H | H |
 | 8,8 | P | P | P | P | P | P | P | P | P | P |
-| 9,9 | P | P | P | P | P | S | P | P | S | P |
+| 9,9 | P | P | P | P | P | S | P | P | S | S |
 | 10,10 | Use hard 20 | Use hard 20 | Use hard 20 | Use hard 20 | Use hard 20 | Use hard 20 | Use hard 20 | Use hard 20 | Use hard 20 | Use hard 20 |
 | A,A | P | P | P | P | P | P | P | P | P | P |
 
@@ -278,7 +302,7 @@ This is the table used by `FRENCH_STANDARD`. The French profile resolves to six 
 |---|---|---|---|---|---|---|---|---|---|---|
 | A,2–A,3 | H | H | H | D/H | D/H | H | H | H | H | H |
 | A,4–A,5 | H | H | D/H | D/H | D/H | H | H | H | H | H |
-| A,6 | H | D/H | D/H | D/H | D/H | H | H | H | H | H |
+| A,6 | D/H | D/H | D/H | D/H | D/H | H | H | H | H | H |
 | A,7 | S | D/S | D/S | D/S | D/S | S | S | H | H | H |
 | A,8–A,10 | S | S | S | S | S | S | S | S | S | S |
 
@@ -337,7 +361,7 @@ This is the table used by `FRENCH_STANDARD`. The French profile resolves to six 
 | 5,5 | Use hard 10 | Use hard 10 | Use hard 10 | Use hard 10 | Use hard 10 | Use hard 10 | Use hard 10 | Use hard 10 | Use hard 10 | Use hard 10 |
 | 6,6 | P | P | P | P | P | P/H | H | H | H | H |
 | 7,7 | P | P | P | P | P | P | P/H | H | H | H |
-| 8,8 | P | P | P | P | P | P | P | P | P | R/P |
+| 8,8 | P | P | P | P | P | P | P | P | P | R[NDAS]/P |
 | 9,9 | P | P | P | P | P | S | P | P | S | S |
 | 10,10 | Use hard 20 | Use hard 20 | Use hard 20 | Use hard 20 | Use hard 20 | Use hard 20 | Use hard 20 | Use hard 20 | Use hard 20 | Use hard 20 |
 | A,A | P | P | P | P | P | P | P | P | P | P |
@@ -463,7 +487,7 @@ getBasicStrategyHint({
   bankroll
 }) => {
   status: "SUPPORTED" | "UNSUPPORTED_STRATEGY" | "NO_DECISION",
-  primaryAction: "HIT" | "STAND" | "DOUBLE" | "SPLIT" | "SURRENDER" | "DECLINE_INSURANCE" | null,
+  primaryAction: "HIT" | "STAND" | "DOUBLE" | "SPLIT" | "SURRENDER" | "DECLINE_INSURANCE" | "DECLINE_EVEN_MONEY" | "ACCEPT_EVEN_MONEY" | null,
   tableId: string | null,
   cellCode: string | null
 }
@@ -500,6 +524,7 @@ At minimum, automated tests should cover:
 
 - Hard 11 vs Ace → Double when legal, otherwise hit.
 - Pair 8,8 vs Ace → Split.
+- Pair 9,9 vs Ace → Stand.
 - Hard 16 vs 10 with late surrender → Surrender; otherwise hit.
 - Soft A,7 vs 2 → Stand.
 
@@ -513,8 +538,18 @@ At minimum, automated tests should cover:
 ### Deck-count separation
 
 - Two-deck hard 9 vs 2 → Double when legal; multi-deck hard 9 vs 2 → Hit.
+- Two-deck S17 soft A,6 vs 2 → Double when legal, otherwise hit.
+- Double-deck H17 pair 8,8 vs Ace with late surrender and DAS disabled → Surrender.
+- Double-deck H17 pair 8,8 vs Ace with DAS enabled → Split, even when late surrender exists.
 - Single-deck hard 8 vs 5 → Double when legal; two-deck hard 8 vs 5 → Hit.
 - Single-deck S17 soft A,7 vs Ace → Stand; multi-deck S17 soft A,7 vs Ace → Hit.
+
+### Insurance and Even Money
+
+- Standard Insurance wager without count information → Decline.
+- Genuine Even Money with blackjack paying 3:2 → Decline.
+- Genuine Even Money with blackjack paying 6:5 → Accept.
+- A normal Insurance wager at a 6:5 table must still be declined.
 
 ### Safety
 
@@ -546,6 +581,8 @@ The regulation establishes, among other points, six decks, S17, blackjack paid 3
   https://wizardofodds.com/games/blackjack/strategy/calculator/
 - Wizard of Odds — Surrender strategy details:  
   https://wizardofodds.com/games/blackjack/surrender/
+- Wizard of Odds — 6:5 Even Money exception:  
+  https://wizardofodds.com/ask-the-wizard/blackjack
 - UK-21 — Six-deck S17 ENHC, double on any two cards, DAS strategy table:  
   https://www.uk-21.org/BJ-ENHC-BS-TABLE.shtml
 
