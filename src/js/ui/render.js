@@ -64,15 +64,16 @@ export function renderStaticLabels({ showShortcutLabels = false } = {}) {
   for (const button of document.querySelectorAll('[data-action]')) {
     // Icon-bearing buttons keep their SVG: only the label span is rewritten.
     const label = button.querySelector('.btn__label');
+    // An action without a bound key still renders: a missing shortcut must
+    // cost that one button its suffix, never every label on the page.
+    const shortcutKey = SHORTCUT_KEYS[button.dataset.action] ?? '';
     (label ?? button).textContent = formatShortcutLabel(
       t(`actions.${button.dataset.action}`),
-      SHORTCUT_KEYS[button.dataset.action],
+      shortcutKey,
       showShortcutLabels,
     );
-    button.setAttribute(
-      'aria-keyshortcuts',
-      SHORTCUT_KEYS[button.dataset.action].toUpperCase(),
-    );
+    if (shortcutKey) button.setAttribute('aria-keyshortcuts', shortcutKey.toUpperCase());
+    else button.removeAttribute('aria-keyshortcuts');
   }
   for (const button of document.querySelectorAll('[data-close-dialog]')) {
     button.textContent = t('settings.close');

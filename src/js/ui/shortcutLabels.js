@@ -3,7 +3,11 @@ import * as storage from './storage.js';
 /** Local preference and layout guard for optional shortcut suffixes. */
 
 export const SHORTCUT_LABELS_STORAGE_KEY = 'shortcutLabels';
-export const SHORTCUT_LABELS_DESKTOP_QUERY = '(min-width: 1024px) and (hover: hover) and (pointer: fine)';
+// A hovering, fine pointer is the closest available proxy for "this device has
+// a keyboard". Viewport width is deliberately not part of it: the shortcuts
+// work at every width, so gating on one would make the setting look broken in
+// a narrow window.
+export const SHORTCUT_LABELS_DESKTOP_QUERY = '(hover: hover) and (pointer: fine)';
 
 /** @returns {boolean} whether the saved preference is enabled */
 export function loadShortcutLabelsPreference() {

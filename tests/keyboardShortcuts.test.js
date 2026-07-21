@@ -271,13 +271,27 @@ test('shortcut labels: preference defaults off and persists locally', () => {
 });
 
 test('shortcut labels: suffixes require both the preference and desktop layout', () => {
-  assertEqual(
-    SHORTCUT_LABELS_DESKTOP_QUERY,
-    '(min-width: 1024px) and (hover: hover) and (pointer: fine)',
-  );
+  // Pointer capability only: a narrow window still has a keyboard, so width
+  // must not decide whether the hints appear.
+  assertEqual(SHORTCUT_LABELS_DESKTOP_QUERY, '(hover: hover) and (pointer: fine)');
+  assert(!SHORTCUT_LABELS_DESKTOP_QUERY.includes('width'), 'the gate ignores viewport width');
   assertEqual(shouldShowShortcutLabels(false, true), false, 'disabled on desktop');
   assertEqual(shouldShowShortcutLabels(true, false), false, 'hidden in touch/mobile layout');
   assertEqual(shouldShowShortcutLabels(true, true), true, 'shown only in desktop layout');
+});
+
+test('shortcut labels: every action button has a bound key', () => {
+  // render.js reads SHORTCUT_KEYS[dataset.action] for each [data-action]
+  // button. Keeping the two in step here means a rename shows up as one
+  // failing assertion rather than a blank interface.
+  for (const action of Object.values(ACTIONS)) {
+    assert(SHORTCUT_KEYS[action], `${action} needs a shortcut key`);
+  }
+});
+
+test('shortcut labels: an unbound action keeps its plain translated label', () => {
+  assertEqual(formatShortcutLabel('Even money', undefined, true), 'Even money');
+  assertEqual(formatShortcutLabel('Even money', '', true), 'Even money');
 });
 
 test('shortcut labels: translated labels use centralized keys as uppercase suffixes', () => {
