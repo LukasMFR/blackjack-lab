@@ -4,12 +4,18 @@
 **Status:** implementation reference  
 **Verified:** 2026-07-21  
 **Scope:** total-dependent basic-strategy hints for standard blackjack profiles  
-**Revision:** 1.1 — source-by-source verification completed
+**Revision:** 1.2 — independent cell-by-cell re-verification against the cited charts
+
+### Verification corrections in revision 1.2
+
+- Table B: hard `11` versus dealer Ace corrected from Double/Hit to Hit. Doubling 11 against an Ace is an H17 play in 4–8-deck games; the S17 chart hits.
+- Table D: hard `16` versus dealer 9 corrected from Surrender/Hit to Hit. Double-deck S17 surrender covers only 15 vs 10 and 16 vs 10/Ace.
+- Table D: soft `A,6` versus dealer 2 reverted to Hit. The revision 1.1 change to Double/Hit incorrectly imported the single-deck play into the double-deck table.
+- The section 9 verification cases were updated to match.
 
 ### Verification corrections in revision 1.1
 
 - Table B: `9,9` versus dealer Ace corrected from Split to Stand.
-- Table D: `A,6` versus dealer 2 corrected from Hit to Double/Hit.
 - Table E: `8,8` versus dealer Ace now preserves the double-deck H17 DAS condition.
 - Insurance and Even Money are now treated separately for 6:5 blackjack.
 
@@ -201,7 +207,7 @@ This is the table used by `FRENCH_STANDARD`. The French profile resolves to six 
 | 4–8 | H | H | H | H | H | H | H | H | H | H |
 | 9 | H | D/H | D/H | D/H | D/H | H | H | H | H | H |
 | 10 | D/H | D/H | D/H | D/H | D/H | D/H | D/H | D/H | H | H |
-| 11 | D/H | D/H | D/H | D/H | D/H | D/H | D/H | D/H | D/H | D/H |
+| 11 | D/H | D/H | D/H | D/H | D/H | D/H | D/H | D/H | D/H | H |
 | 12 | H | H | S | S | S | H | H | H | H | H |
 | 13–14 | S | S | S | S | S | H | H | H | H | H |
 | 15 | S | S | S | S | S | H | H | H | R/H | H |
@@ -293,7 +299,7 @@ This is the table used by `FRENCH_STANDARD`. The French profile resolves to six 
 | 12 | H | H | S | S | S | H | H | H | H | H |
 | 13–14 | S | S | S | S | S | H | H | H | H | H |
 | 15 | S | S | S | S | S | H | H | H | R/H | H |
-| 16 | S | S | S | S | S | H | H | R/H | R/H | R/H |
+| 16 | S | S | S | S | S | H | H | H | R/H | R/H |
 | 17–21 | S | S | S | S | S | S | S | S | S | S |
 
 ### Soft totals
@@ -302,7 +308,7 @@ This is the table used by `FRENCH_STANDARD`. The French profile resolves to six 
 |---|---|---|---|---|---|---|---|---|---|---|
 | A,2–A,3 | H | H | H | D/H | D/H | H | H | H | H | H |
 | A,4–A,5 | H | H | D/H | D/H | D/H | H | H | H | H | H |
-| A,6 | D/H | D/H | D/H | D/H | D/H | H | H | H | H | H |
+| A,6 | H | D/H | D/H | D/H | D/H | H | H | H | H | H |
 | A,7 | S | D/S | D/S | D/S | D/S | S | S | H | H | H |
 | A,8–A,10 | S | S | S | S | S | S | S | S | S | S |
 
@@ -522,7 +528,8 @@ At minimum, automated tests should cover:
 
 ### Multi-deck American S17
 
-- Hard 11 vs Ace → Double when legal, otherwise hit.
+- Hard 11 vs 10 → Double when legal, otherwise hit.
+- Hard 11 vs Ace → Hit.
 - Pair 8,8 vs Ace → Split.
 - Pair 9,9 vs Ace → Stand.
 - Hard 16 vs 10 with late surrender → Surrender; otherwise hit.
@@ -530,6 +537,7 @@ At minimum, automated tests should cover:
 
 ### Multi-deck American H17
 
+- Hard 11 vs Ace → Double when legal, otherwise hit.
 - Hard 17 vs Ace with late surrender → Surrender; otherwise stand.
 - Pair 8,8 vs Ace with late surrender → Surrender; otherwise split.
 - Soft A,7 vs 2 → Double when legal, otherwise stand.
@@ -538,7 +546,8 @@ At minimum, automated tests should cover:
 ### Deck-count separation
 
 - Two-deck hard 9 vs 2 → Double when legal; multi-deck hard 9 vs 2 → Hit.
-- Two-deck S17 soft A,6 vs 2 → Double when legal, otherwise hit.
+- Two-deck S17 soft A,6 vs 2 → Hit; single-deck S17 soft A,6 vs 2 → Double when legal, otherwise hit.
+- Two-deck S17 hard 16 vs 9 → Hit even with late surrender; multi-deck S17 hard 16 vs 9 with late surrender → Surrender.
 - Double-deck H17 pair 8,8 vs Ace with late surrender and DAS disabled → Surrender.
 - Double-deck H17 pair 8,8 vs Ace with DAS enabled → Split, even when late surrender exists.
 - Single-deck hard 8 vs 5 → Double when legal; two-deck hard 8 vs 5 → Hit.
