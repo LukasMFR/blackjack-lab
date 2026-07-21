@@ -33,7 +33,10 @@ engine using predefined shoes (soft/hard Aces, naturals, pushes, 3:2 and
 6:5 payouts, insurance, doubles, splits, split Aces, re-splitting, ENHC and
 peeked dealer blackjacks, all three dealer-blackjack loss modes, S17/H17,
 early and late surrender, bankroll guards, duplicate-card and
-duplicate-settlement prevention, legal-action calculation).
+duplicate-settlement prevention, legal-action calculation), plus the
+basic-strategy resolver (rule-fingerprint selection, the documented
+verification cases, conditional and bankroll fallbacks, insurance and
+even money, no engine mutation) and its hint rendering and persistence.
 
 The suite also covers the local multiplayer stack: the multi-seat table
 engine (turn order, per-seat insurance/surrender, disconnects during
@@ -59,11 +62,12 @@ src/js/game/             The engine: constants, card, deck, shuffle, rng,
                          handPlay (shared per-hand rules), engine (solo round
                          state machine)
 src/js/config/           Rule profiles: presets, validation, custom builder
+src/js/strategy/         Basic-strategy tables A–G + pure hint resolver
 src/js/i18n/             en.js, fr.js dictionaries + translation module
 src/js/ui/               app.js (controller), render.js (table/panels),
                          settingsView.js (dialogs), cardView.js (cards),
-                         storage.js (safe localStorage), format.js,
-                         profileSummary.js
+                         strategyHint.js (hint chip), storage.js (safe
+                         localStorage), format.js, profileSummary.js
 src/js/multiplayer/      tableEngine (authoritative multi-seat table),
                          protocol, signalling, stateSync, hostSession,
                          clientSession, peerConnection, qr, qrScanner,
@@ -114,6 +118,32 @@ reserves hooks for them (variant family field, configurable deck
 composition such as Spanish 48-card decks) but no unfinished variant is
 exposed in the interface.
 
+## Basic strategy hints (optional)
+
+An optional aid, **disabled by default** and persisted locally. When
+enabled in the settings, a discreet chip near the action buttons names
+the total-dependent basic-strategy action for the current hand
+(“Basic strategy: Hit”) and a delicate dashed outline marks the
+recommended button without ever activating it. Insurance advice appears
+inside the insurance dialog: declined without count information, exactly
+like the reference charts (a genuine even-money settlement would be
+declined at 3:2 and accepted at 6:5).
+
+The resolver (`src/js/strategy/`) is a pure module fed by engine
+snapshots. It selects one verified strategy table for the exact active
+rule fingerprint — deck count, ENHC/peek, S17/H17, dealer-blackjack loss
+mode, DAS, surrender, pairing rule, payout, never the profile name — and
+resolves conditional cells against the actions the engine actually
+allows, so an unaffordable double or a closed surrender window falls
+back correctly. Rules that match no verified table show no hint rather
+than an approximation. The tables, their rule fingerprints and their
+sources (Wizard of Odds charts, UK-21, the French regulation) are
+documented in `BLACKJACK_STRATEGY_HINTS.md`.
+
+Hints are informational only: nothing is ever played automatically, no
+card counting or shoe history is involved, and no strategy guarantees a
+profit. Solo play only.
+
 ## Languages
 
 English (default) and French. The browser language is used only as a
@@ -161,8 +191,9 @@ external or remote artwork is used anywhere in the project.
 
 ## Persistence
 
-Language, appearance, theme, selected profile, custom-rule settings, and
-the per-profile bankroll are stored in `localStorage`. Malformed saved
+Language, appearance, theme, selected profile, custom-rule settings, the
+strategy-hints preference, and the per-profile bankroll are stored in
+`localStorage`. Malformed saved
 values are discarded safely. Mid-round game state is intentionally **not**
 persisted (reloading during a round returns to betting with the last
 between-round bankroll). A confirmed reset restores the starting bankroll.
@@ -287,8 +318,9 @@ never persisted, exactly like the solo session store.
 ## Known limitations
 
 - Dedicated non-standard variants are architecture-ready but not playable.
-- Side bets, card counting aids, and strategy advice are out of scope by
-  design for this phase.
+- Side bets and card counting aids are out of scope by design for this
+  phase; strategy advice goes no further than the optional
+  total-dependent basic-strategy hints.
 - Game history is kept for the session only (last 30 rounds).
 - The custom profile keeps table stakes at the project defaults
   (min 5 / max 1000, starting bankroll 1000).
