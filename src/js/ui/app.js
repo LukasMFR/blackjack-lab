@@ -22,6 +22,7 @@ import {
   HISTORY_LIMIT, isPersistableRoundState, readSession, resetSession, saveSession,
 } from './sessionStore.js';
 import { initLanguageMenu, setLanguageMenuValue } from './languageMenu.js';
+import { handleGameplayShortcut } from './keyboardShortcuts.js';
 
 /**
  * Application controller: owns the engine instance, user preferences,
@@ -238,6 +239,7 @@ function renderAll() {
   const bets = betState();
   renderTable(snapshot, renderCtx);
   renderPanels(snapshot, bets);
+  focusInsuranceDecision(snapshot);
   renderHistory(state.history.map((entry) => ({
     ...entry,
     labels: entry.results.map((r) => t(`results.${r}`))
@@ -245,6 +247,14 @@ function renderAll() {
   })));
   renderSession({ rounds: state.roundCounter, netCents: state.sessionNetCents });
   animations.afterRender(snapshot, bets);
+}
+
+/** Enter the Insurance focus boundary without visually selecting either choice. */
+function focusInsuranceDecision(snapshot) {
+  if (snapshot.pendingDecision !== 'INSURANCE') return;
+  const panel = $('panel-decision');
+  if (document.querySelector('dialog[open]') || panel.contains(document.activeElement)) return;
+  panel.focus({ preventScroll: true });
 }
 
 function renderHeaderProfile() {
@@ -602,37 +612,21 @@ function decide(accept) {
   }
 }
 
-const SHORTCUTS = {
-  h: ACTIONS.HIT,
-  s: ACTIONS.STAND,
-  d: ACTIONS.DOUBLE,
-  p: ACTIONS.SPLIT,
-  r: ACTIONS.SURRENDER,
-};
-
 function handleShortcut(event) {
-  if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) return;
-  if (document.querySelector('dialog[open]')) return;
-  const target = event.target;
-  if (target instanceof HTMLElement
-    && (target.closest('input, select, textarea') || target.isContentEditable)) {
-    return;
-  }
-  const key = event.key.toLowerCase();
-  const snapshot = state.game.getSnapshot();
-  if (key === 'n') {
-    if (snapshot.roundState === ROUND_STATES.WAITING_FOR_BET) deal();
-    else if (snapshot.roundState === ROUND_STATES.ROUND_COMPLETE) nextRound();
-    return;
-  }
-  const action = SHORTCUTS[key];
-  if (!action) return;
-  if (snapshot.roundState !== ROUND_STATES.PLAYER_TURN || snapshot.pendingDecision) return;
-  if (!snapshot.actionAvailability[action]?.legal) {
-    gameAudio.actionRejected();
-    return;
-  }
-  performAction(action);
+  handleGameplayShortcut(event, {
+    snapshot: state.game.getSnapshot(),
+    hasOpenDialog: Boolean(document.querySelector('dialog[open]')),
+    activeElement: document.activeElement,
+    decisionButtons: {
+      accept: $('btn-decision-yes'),
+      decline: $('btn-decision-no'),
+    },
+    deal,
+    nextRound,
+    performAction,
+    decideInsurance: decide,
+    rejectAction: () => gameAudio.actionRejected(),
+  });
 }
 
 /* ------------------------------------------------------------------- boot */

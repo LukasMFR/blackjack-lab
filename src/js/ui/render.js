@@ -262,10 +262,14 @@ function renderDecisionPanel(snapshot) {
     $('decision-question').textContent = t('insurance.question', { cost: half });
     $('btn-decision-yes').textContent = t('insurance.yes');
     $('btn-decision-no').textContent = t('insurance.no');
+    $('btn-decision-yes').setAttribute('aria-keyshortcuts', 'A');
+    $('btn-decision-no').setAttribute('aria-keyshortcuts', 'C');
   } else {
     $('decision-question').textContent = t('earlySurrender.question', { half });
     $('btn-decision-yes').textContent = t('earlySurrender.yes');
     $('btn-decision-no').textContent = t('earlySurrender.no');
+    $('btn-decision-yes').removeAttribute('aria-keyshortcuts');
+    $('btn-decision-no').removeAttribute('aria-keyshortcuts');
   }
 }
 

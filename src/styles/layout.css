@@ -270,6 +270,13 @@
   gap: var(--space-3);
 }
 
+/* The decision container receives programmatic focus when it opens so focus
+   cannot remain behind it. Only its actual action buttons show a focus ring. */
+#panel-decision:focus,
+#panel-decision:focus-visible {
+  outline: none !important;
+}
+
 .panel__prompt {
   font-weight: 600;
   font-size: var(--text-l);

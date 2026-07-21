@@ -309,6 +309,8 @@ export default {
     shortcutSplit: 'Séparer',
     shortcutSurrender: 'Abandonner',
     shortcutDeal: 'Distribuer ou lancer la manche suivante',
+    shortcutInsuranceAccept: 'Accepter l’assurance',
+    shortcutInsuranceDecline: 'Continuer sans assurance',
     fairness: 'Le sabot est mélangé avec une source aléatoire cryptographique. Le croupier suit des règles fixes et ne fait jamais de choix.',
   },
   a11y: {

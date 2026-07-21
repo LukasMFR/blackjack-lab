@@ -1,6 +1,7 @@
 import { t } from '../i18n/index.js';
 import { formatMoney, formatRatio } from './format.js';
 import { profileSummaryChips } from './profileSummary.js';
+import { SHORTCUT_KEYS } from './keyboardShortcuts.js';
 import { PROFILE_IDS, PROFILES } from '../config/profiles.js';
 import { DEAL_MODES } from '../game/constants.js';
 import { CENTS_PER_UNIT } from '../game/money.js';
@@ -769,17 +770,19 @@ export function renderHelp() {
   const shortcutList = document.createElement('ul');
   shortcutList.className = 'shortcut-list';
   const shortcuts = [
-    ['H', t('help.shortcutHit')],
-    ['S', t('help.shortcutStand')],
-    ['D', t('help.shortcutDouble')],
-    ['P', t('help.shortcutSplit')],
-    ['R', t('help.shortcutSurrender')],
-    ['N', t('help.shortcutDeal')],
+    [SHORTCUT_KEYS.HIT, t('help.shortcutHit')],
+    [SHORTCUT_KEYS.STAND, t('help.shortcutStand')],
+    [SHORTCUT_KEYS.DOUBLE, t('help.shortcutDouble')],
+    [SHORTCUT_KEYS.SPLIT, t('help.shortcutSplit')],
+    [SHORTCUT_KEYS.SURRENDER, t('help.shortcutSurrender')],
+    [SHORTCUT_KEYS.DEAL, t('help.shortcutDeal')],
+    [SHORTCUT_KEYS.INSURANCE_ACCEPT, t('help.shortcutInsuranceAccept')],
+    [SHORTCUT_KEYS.INSURANCE_DECLINE, t('help.shortcutInsuranceDecline')],
   ];
   for (const [key, label] of shortcuts) {
     const li = document.createElement('li');
     const kbd = document.createElement('kbd');
-    kbd.textContent = key;
+    kbd.textContent = key.toUpperCase();
     li.append(kbd, document.createTextNode(` ${label}`));
     shortcutList.append(li);
   }

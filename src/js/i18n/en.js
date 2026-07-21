@@ -309,6 +309,8 @@ export default {
     shortcutSplit: 'Split',
     shortcutSurrender: 'Surrender',
     shortcutDeal: 'Deal or start the next round',
+    shortcutInsuranceAccept: 'Accept insurance',
+    shortcutInsuranceDecline: 'Continue without insurance',
     fairness: 'The shoe is shuffled with a cryptographic random source. The dealer follows fixed rules and never makes choices.',
   },
   a11y: {

@@ -149,8 +149,10 @@ external or remote artwork is used anywhere in the project.
 - A polite live region announces dealt cards, totals, and results.
 - Status is never conveyed by color alone (text badges everywhere).
 - `prefers-reduced-motion` disables all non-essential animation.
-- Keyboard shortcuts (H/S/D/P/R, N) documented in the help panel; they
-  never fire inside form fields or open dialogs.
+- Keyboard shortcuts (H/S/D/P/R, N) are documented in the help panel. During
+  Insurance, A accepts (Accept/Accepter) and C continues without it
+  (Continue/Continuer); those decision-only keys never conflict with normal
+  gameplay. Shortcuts never fire inside editable controls or open dialogs.
 
 ## Persistence
 
