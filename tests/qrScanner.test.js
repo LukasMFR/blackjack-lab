@@ -2,6 +2,7 @@ import { test, assert, assertEqual } from './runner.js';
 import {
   classifyCameraError,
   configureScannerVideo,
+  fullFrameScanRegion,
   getQrScanningSupport,
   QR_SCANNER_ERRORS,
   qrScanningSupported,
@@ -20,21 +21,57 @@ function fakeStream() {
   return { track, getTracks: () => [track] };
 }
 
+/**
+ * A video element faithful to the parts qr-scanner depends on: `play` only
+ * fires on a paused -> playing transition, and an autoplaying element starts on
+ * its own as soon as a stream is attached.
+ */
 function fakeVideo() {
   return {
     attributes: new Map(),
+    listeners: new Map(),
     autoplay: false,
     muted: false,
     playsInline: false,
-    srcObject: null,
+    paused: true,
     playCount: 0,
     pauseCount: 0,
+    videoWidth: 1280,
+    videoHeight: 720,
+    _srcObject: null,
+    get srcObject() { return this._srcObject; },
+    set srcObject(value) {
+      this._srcObject = value;
+      if (value && this.autoplay) this.play();
+    },
     setAttribute(name, value) { this.attributes.set(name, value); },
-    async play() { this.playCount += 1; },
-    pause() { this.pauseCount += 1; },
+    removeAttribute(name) { this.attributes.delete(name); },
+    addEventListener(type, handler) {
+      if (!this.listeners.has(type)) this.listeners.set(type, new Set());
+      this.listeners.get(type).add(handler);
+    },
+    removeEventListener(type, handler) { this.listeners.get(type)?.delete(handler); },
+    dispatch(type) {
+      for (const handler of [...(this.listeners.get(type) ?? [])]) handler();
+    },
+    async play() {
+      this.playCount += 1;
+      if (!this.paused) return; // replaying an active element emits no event
+      this.paused = false;
+      this.dispatch('play');
+    },
+    pause() {
+      this.pauseCount += 1;
+      this.paused = true;
+    },
   };
 }
 
+/**
+ * Mirrors qr-scanner's real lifecycle: the decode loop is only ever entered
+ * from the `play` listener registered in the constructor, and start() skips
+ * playback when a stream is already attached.
+ */
 class FakeScanner {
   static NO_QR_CODE_FOUND = 'No QR code found';
   static instances = [];
@@ -44,11 +81,30 @@ class FakeScanner {
     this.onResult = onResult;
     this.options = options;
     this.destroyed = false;
+    this.scanning = false;
+    this.active = false;
+    this._onPlay = () => this._scanFrame();
+    video.addEventListener('play', this._onPlay);
     FakeScanner.instances.push(this);
   }
 
-  async start() { this.started = true; }
-  destroy() { this.destroyed = true; }
+  _scanFrame() {
+    if (!this.active || this.video.paused) return;
+    this.scanning = true;
+  }
+
+  async start() {
+    this.started = true;
+    this.active = true;
+    if (this.video.srcObject) await this.video.play();
+  }
+
+  destroy() {
+    this.destroyed = true;
+    this.active = false;
+    this.scanning = false;
+    this.video.removeEventListener('play', this._onPlay);
+  }
 }
 
 test('qr scanner: camera support does not depend on BarcodeDetector', async () => {
@@ -144,11 +200,11 @@ test('qr scanner: iOS video flags, decoder callback, and cleanup are reliable', 
     onDecodeError: (error) => decodeErrors.push(error.code),
   });
 
-  assert(video.playsInline && video.muted && video.autoplay, 'video properties enabled');
+  assert(video.playsInline && video.muted, 'inline playback properties enabled');
   assert(video.attributes.has('playsinline'), 'playsinline attribute');
   assert(video.attributes.has('webkit-playsinline'), 'legacy iOS inline attribute');
   assertEqual(video.srcObject, stream, 'stream attached');
-  assertEqual(video.playCount, 1, 'video started');
+  assertEqual(video.paused, false, 'video started');
 
   const scanner = FakeScanner.instances[0];
   assertEqual(scanner.options.preferredCamera, 'environment', 'scanner preference');
@@ -192,6 +248,114 @@ test('qr scanner: closing during permission prompt releases the eventual stream'
 
 test('qr scanner: configureScannerVideo is safe to call before permission', () => {
   const video = fakeVideo();
+  video.autoplay = true;
+  video.setAttribute('autoplay', '');
   configureScannerVideo(video);
-  assert(video.muted && video.autoplay && video.playsInline, 'autoplay-safe flags');
+  assert(video.muted && video.playsInline, 'inline-playback flags');
+  assertEqual(video.autoplay, false, 'autoplay disabled so the scanner owns playback');
+  assertEqual(video.attributes.has('autoplay'), false, 'autoplay attribute removed');
+});
+
+test('qr scanner: decoding actually starts, even on an autoplaying element', async () => {
+  // Regression: the stream used to be attached and played before the scanner
+  // existed, so qr-scanner's constructor missed the one `play` event its decode
+  // loop hangs on. The preview ran but no frame was ever decoded.
+  for (const markupAutoplay of [false, true]) {
+    FakeScanner.instances = [];
+    const video = fakeVideo();
+    video.autoplay = markupAutoplay;
+    if (markupAutoplay) video.setAttribute('autoplay', '');
+    const stream = fakeStream();
+    const results = [];
+
+    await startQrScanner(video, (value) => results.push(value), {
+      env: {
+        isSecureContext: true,
+        navigator: { mediaDevices: { getUserMedia: async () => stream } },
+      },
+      Scanner: FakeScanner,
+    });
+
+    const scanner = FakeScanner.instances[0];
+    assertEqual(video.paused, false, `preview running (autoplay: ${markupAutoplay})`);
+    assertEqual(scanner.scanning, true, `decode loop running (autoplay: ${markupAutoplay})`);
+
+    scanner.onResult({ data: 'BJL1C:payload' });
+    assertEqual(results[0], 'BJL1C:payload', 'decoded payload delivered');
+  }
+});
+
+test('qr scanner: the scanner is built before the stream is attached', async () => {
+  FakeScanner.instances = [];
+  const order = [];
+  const video = fakeVideo();
+  Object.defineProperty(video, 'srcObject', {
+    get() { return this._srcObject; },
+    set(value) { if (value) order.push('srcObject'); this._srcObject = value; },
+  });
+  const stream = fakeStream();
+
+  class OrderedScanner extends FakeScanner {
+    constructor(...args) {
+      order.push('construct');
+      super(...args);
+    }
+
+    async start() {
+      order.push('start');
+      await super.start();
+    }
+  }
+
+  await startQrScanner(video, () => {}, {
+    env: {
+      isSecureContext: true,
+      navigator: { mediaDevices: { getUserMedia: async () => stream } },
+    },
+    Scanner: OrderedScanner,
+  });
+
+  assertEqual(order.join(' > '), 'construct > srcObject > start', 'setup order');
+});
+
+test('qr scanner: results arriving after stop are dropped', async () => {
+  FakeScanner.instances = [];
+  const video = fakeVideo();
+  const stream = fakeStream();
+  const results = [];
+  const decodeErrors = [];
+
+  const handle = await startQrScanner(video, (value) => results.push(value), {
+    env: {
+      isSecureContext: true,
+      navigator: { mediaDevices: { getUserMedia: async () => stream } },
+    },
+    Scanner: FakeScanner,
+    onDecodeError: (error) => decodeErrors.push(error.code),
+  });
+  const scanner = FakeScanner.instances[0];
+  handle.stop();
+
+  // An in-flight frame can resolve after the scanner was torn down.
+  scanner.onResult({ data: 'BJL1C:late' });
+  scanner.options.onDecodeError(new Error('worker closed'));
+  assertEqual(results.length, 0, 'late result ignored');
+  assertEqual(decodeErrors.length, 0, 'teardown noise is not shown to the user');
+});
+
+test('qr scanner: the whole camera frame is scanned', () => {
+  const region = fullFrameScanRegion({ videoWidth: 1280, videoHeight: 720 });
+  assertEqual(region.x, 0, 'no horizontal crop');
+  assertEqual(region.y, 0, 'no vertical crop');
+  assertEqual(region.width, 1280, 'full frame width');
+  assertEqual(region.height, 720, 'full frame height');
+  assertEqual(region.downScaledWidth, 1280, '720p is scanned at native resolution');
+  assertEqual(region.downScaledHeight, 720, 'aspect ratio preserved');
+
+  const large = fullFrameScanRegion({ videoWidth: 3840, videoHeight: 2160 });
+  assertEqual(large.downScaledWidth, 1280, 'oversized frames are capped');
+  assertEqual(large.downScaledHeight, 720, 'cap preserves the aspect ratio');
+
+  const unready = fullFrameScanRegion({ videoWidth: 0, videoHeight: 0 });
+  assertEqual(unready.width, 0, 'metadata-less frames stay empty until loadedmetadata');
 });

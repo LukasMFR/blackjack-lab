@@ -338,7 +338,9 @@
           </div>
           <div class="mp-scanner" id="join-scanner" hidden>
             <div class="mp-scanner__preview">
-              <video id="join-video" playsinline muted autoplay></video>
+              <!-- No autoplay: the QR decoder starts on the `play` event it
+                   triggers itself, so the browser must not start playback. -->
+              <video id="join-video" playsinline muted></video>
             </div>
             <button type="button" class="btn" id="join-scan-stop"></button>
           </div>
@@ -408,7 +410,8 @@
         </div>
         <div class="mp-scanner" id="invite-scanner" hidden>
           <div class="mp-scanner__preview">
-            <video id="invite-video" playsinline muted autoplay></video>
+            <!-- No autoplay: see the join-video comment. -->
+            <video id="invite-video" playsinline muted></video>
           </div>
           <button type="button" class="btn" id="invite-scan-stop"></button>
         </div>

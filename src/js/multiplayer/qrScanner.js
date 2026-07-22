@@ -99,16 +99,51 @@ export async function requestCameraStream(mediaDevices) {
   }
 }
 
-/** Apply the attributes required for reliable inline autoplay on iOS. */
+/**
+ * Apply the attributes required for reliable inline playback on iOS.
+ *
+ * `playsinline` and `muted` are what let a camera preview run inline on iOS.
+ * Autoplay is deliberately turned off: qr-scanner only starts decoding from the
+ * `play` event, so playback must be started by `scanner.start()` and not by the
+ * browser the moment the stream is attached. See startQrScanner().
+ */
 export function configureScannerVideo(video) {
   video.playsInline = true;
   video.muted = true;
-  video.autoplay = true;
+  video.autoplay = false;
   video.setAttribute('playsinline', '');
   video.setAttribute('webkit-playsinline', '');
   video.setAttribute('muted', '');
-  video.setAttribute('autoplay', '');
+  video.removeAttribute?.('autoplay');
   if ('disablePictureInPicture' in video) video.disablePictureInPicture = true;
+}
+
+/** Longest canvas edge used for decoding; caps CPU on high-resolution cameras. */
+const MAX_DECODE_EDGE = 1280;
+
+/**
+ * Scan the whole camera frame instead of qr-scanner's centred two-thirds square.
+ *
+ * The preview is cropped with `object-fit: cover`, so the default centred region
+ * does not match the area the user sees while framing the code. Pairing payloads
+ * also produce dense QR symbols that need most of the sensor resolution, so the
+ * frame is only downscaled once it exceeds MAX_DECODE_EDGE.
+ *
+ * @param {HTMLVideoElement} video
+ */
+export function fullFrameScanRegion(video) {
+  const width = video.videoWidth || 0;
+  const height = video.videoHeight || 0;
+  const longestEdge = Math.max(width, height);
+  const scale = longestEdge > MAX_DECODE_EDGE ? MAX_DECODE_EDGE / longestEdge : 1;
+  return {
+    x: 0,
+    y: 0,
+    width,
+    height,
+    downScaledWidth: Math.round(width * scale),
+    downScaledHeight: Math.round(height * scale),
+  };
 }
 
 function stopVideoResources(video, stream, scanner) {
@@ -135,6 +170,12 @@ function isEmptyFrameResult(error, Scanner) {
 /**
  * Start scanning into the supplied video element.
  *
+ * Ordering is load-bearing. qr-scanner drives its whole decode loop from the
+ * `play` listener it registers in its constructor, and `start()` skips playback
+ * entirely when a stream is already attached. So the scanner must be built
+ * before the stream is attached, and the element must still be paused when
+ * `start()` runs — otherwise the preview appears but no frame is ever decoded.
+ *
  * @param {HTMLVideoElement} video
  * @param {(text: string) => void} onResult
  * @param {object} options
@@ -157,7 +198,6 @@ export async function startQrScanner(video, onResult, {
   let stream = null;
   let scanner = null;
   let stopped = false;
-  let cameraReady = false;
   const stop = () => {
     if (stopped) return;
     stopped = true;
@@ -173,32 +213,37 @@ export async function startQrScanner(video, onResult, {
       stopVideoResources(video, stream, scanner);
       return { stop };
     }
-    video.srcObject = stream;
-    await video.play();
-    cameraReady = true;
 
-    scanner = new Scanner(video, (result) => {
-      const text = typeof result === 'string' ? result : result?.data;
-      if (typeof text === 'string' && text) onResult(text);
-    }, {
-      preferredCamera: 'environment',
-      maxScansPerSecond: 12,
-      returnDetailedScanResult: true,
-      onDecodeError(error) {
-        if (!isEmptyFrameResult(error, Scanner)) {
-          onDecodeError(new QrScannerError(QR_SCANNER_ERRORS.DECODING_FAILED, error));
-        }
-      },
-    });
+    try {
+      scanner = new Scanner(video, (result) => {
+        if (stopped) return;
+        const text = typeof result === 'string' ? result : result?.data;
+        if (typeof text === 'string' && text) onResult(text);
+      }, {
+        preferredCamera: 'environment',
+        maxScansPerSecond: 12,
+        returnDetailedScanResult: true,
+        calculateScanRegion: fullFrameScanRegion,
+        onDecodeError(error) {
+          if (!stopped && !isEmptyFrameResult(error, Scanner)) {
+            onDecodeError(new QrScannerError(QR_SCANNER_ERRORS.DECODING_FAILED, error));
+          }
+        },
+      });
+    } catch (error) {
+      throw new QrScannerError(QR_SCANNER_ERRORS.DECODING_FAILED, error);
+    }
+
+    // The scanner now owns playback: attach the stream, keep the element
+    // paused, and let start() emit the `play` event the decode loop waits for.
+    video.srcObject = stream;
+    if (video.paused === false) video.pause();
     await scanner.start();
     return { stop };
   } catch (error) {
     stop();
     throw error instanceof QrScannerError
       ? error
-      : new QrScannerError(
-        cameraReady ? QR_SCANNER_ERRORS.DECODING_FAILED : classifyCameraError(error),
-        error,
-      );
+      : new QrScannerError(classifyCameraError(error), error);
   }
 }
