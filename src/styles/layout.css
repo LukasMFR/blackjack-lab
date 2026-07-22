@@ -277,6 +277,13 @@
   padding-block-start: var(--space-2);
 }
 
+/* The insurance advice sits between the prompt and its two choices. A small
+   symmetric margin keeps the open hint line clear of both without changing
+   decision-panel spacing when hints are disabled. */
+#decision-hint {
+  margin-block: var(--space-1);
+}
+
 /* The decision container receives programmatic focus when it opens so focus
    cannot remain behind it. Only its actual action buttons show a focus ring. */
 #panel-decision:focus,
