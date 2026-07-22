@@ -66,6 +66,20 @@
   gap: var(--space-2);
 }
 
+/*
+ * The header icons are squares at every width: one fluid side drives both
+ * axes, so they never turn into rectangles when the row tightens. 40px on a
+ * 320px screen, the full 48px from roughly 440px up.
+ */
+.header-actions .btn--icon {
+  --header-btn: clamp(2.5rem, 1rem + 7.3vw, 3rem);
+  width: var(--header-btn);
+  min-width: var(--header-btn);
+  height: var(--header-btn);
+  min-height: var(--header-btn);
+  padding-inline: 0;
+}
+
 .layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -441,8 +455,8 @@
   /*
    * Compact header. Everything that competes for the single row is sized
    * from the viewport, so a 320px screen and a 640px one both fit without
-   * wrapping: the brand shrinks fastest, the actions keep a 40x44px touch
-   * target, and only the gaps and paddings give way in between.
+   * wrapping: the brand shrinks fastest, the action squares hold their
+   * floor, and only the gaps and paddings give way in between.
    */
   .brand__name {
     font-size: clamp(0.9rem, 0.3rem + 3.1vw, var(--text-l));
@@ -472,14 +486,6 @@
     margin-inline-start: auto;
     justify-content: flex-end;
     gap: clamp(0.125rem, 1vw, var(--space-2));
-  }
-
-  /* Narrower than the desktop button, never shorter: the full 44px height
-     is kept so the target stays comfortable under a thumb. */
-  .header-actions .btn--icon {
-    min-height: 2.75rem;
-    min-width: 2.5rem;
-    padding-inline: clamp(var(--space-1), 1.6vw, var(--space-3));
   }
 }
 
