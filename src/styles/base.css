@@ -8,6 +8,11 @@
 
 html {
   height: 100%;
+  /* Keep native one-finger panning and pinch zoom, but do not interpret a
+     rapid second tap as page zoom. Applying this at the document root covers
+     every page, dialog and dynamically rendered control without touch-event
+     cancellation or an accessibility-hostile viewport restriction. */
+  touch-action: manipulation;
   /* The canvas behind rubber-band overscroll. Matches the header surface and
      the <meta name="theme-color"> value, so Safari's chrome, the top edge of
      the page, and overscroll read as one continuous colour. */
