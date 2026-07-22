@@ -46,9 +46,9 @@
   width: 2rem;
   height: 2rem;
   border-radius: 50%;
+  /* Same dashed edge as the real chip, and for the same reason no outline
+     paints over it — the flying chip has to look like the one it came from. */
   border: 2px dashed rgb(255 255 255 / 0.85);
-  outline: 2px solid var(--chip-color);
-  outline-offset: -2px;
   background: var(--chip-color);
   box-shadow: 0 2px 6px rgb(0 0 0 / 0.3);
   opacity: 0;
