@@ -839,6 +839,20 @@ kbd {
   line-height: 1.65;
 }
 
+/*
+ * Buttons keep to one line everywhere else, which is right at the table: the
+ * action row is sized so its labels always fit. A settings button is a
+ * different shape — it spans the panel and carries a whole translated
+ * sentence, and there is no width at which every language fits on one line.
+ * "Informations et mentions légales" was already eating its own right padding
+ * at 375px and pushing the chevron out with it. Wrapping is a no-op wherever
+ * the label has the room, and the only alternative to overflowing where it
+ * does not. The table controls are untouched: they are not in a dialog body.
+ */
+.dialog__body .btn {
+  white-space: normal;
+}
+
 .dialog__body h3 {
   font-size: var(--text-m);
   margin-bottom: var(--space-1);
@@ -1346,6 +1360,17 @@ kbd {
 }
 
 /* Audio settings */
+/*
+ * A query container, for two reasons. It stops the panel being sized by the
+ * widest row it holds — a volume row will not go below its label plus a
+ * slider that refuses to shrink under 6rem plus its readout, and on a 320px
+ * screen that sum was wider than the settings dialog can ever be, so the
+ * panel pushed itself past the dialog and the whole body scrolled sideways.
+ * A size container takes its width from its parent instead. It then lets the
+ * rows below react to the panel's own width rather than the viewport's, which
+ * is the only measure that knows what is actually left after the dialog, its
+ * frame and its padding have taken their share.
+ */
 .audio-controls {
   display: flex;
   flex-direction: column;
@@ -1354,6 +1379,7 @@ kbd {
   border-radius: var(--radius-m);
   border: 1px solid var(--border);
   background: var(--surface-raised);
+  container: audio-panel / inline-size;
 }
 
 .audio-row {
@@ -1372,6 +1398,24 @@ kbd {
 
 .audio-row--slider .audio-row__label {
   flex: 0 0 min(38%, 13rem);
+}
+
+/*
+ * Below this the three parts of a volume row stop fitting side by side: the
+ * slider holds 6rem, the readout its digits, and the label is left with too
+ * little to read. The label takes its own line and the slider gets the full
+ * width underneath, which is roomier to drag than the sliver it would keep.
+ * 15rem of panel is about a 360px screen, so no current iPhone reaches it;
+ * an iPhone SE of the first generation does.
+ */
+@container audio-panel (max-width: 15rem) {
+  .audio-row--slider {
+    flex-wrap: wrap;
+  }
+
+  .audio-row--slider .audio-row__label {
+    flex: 1 1 100%;
+  }
 }
 
 .audio-row__value {
