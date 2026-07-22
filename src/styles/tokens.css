@@ -33,6 +33,12 @@
   --space-6: 2rem;
   --space-7: 3rem;
 
+  /* Focus ring. Every ring in the app draws its width from this token, so the
+     one rule below can retract them all at once. It stays visible by default:
+     if ui/focusModality.js never runs, the attribute is absent and keyboard
+     users still get their indicator. */
+  --focus-ring-width: 2px;
+
   /* Shape: one coherent scale for the whole app */
   --radius-s: 6px;
   --radius-m: 10px;
@@ -64,6 +70,17 @@
   --safe-right: env(safe-area-inset-right, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
+}
+
+/* Browsers match :focus-visible however the element was focused — a click on a
+   text field, and any focus JS moves after a click (a dialog opening, focus
+   returning to the button that opened it), all draw the keyboard ring. Pointing
+   at a control is already unambiguous feedback, so the ring is retracted while
+   the last interaction was a pointer. ui/focusModality.js flips the attribute
+   back to "keyboard" on the first focus-moving key press and every ring
+   returns, so keyboard navigation is never left without an indicator. */
+:root[data-input-modality="pointer"] {
+  --focus-ring-width: 0;
 }
 
 /* ---------------------------------------------------------------- classic */

@@ -79,22 +79,13 @@ dialog {
   color: var(--text);
 }
 
+/* The single focus ring for the whole app. Its width is a token so pointer
+   interaction can retract it site-wide without any rule having to know which
+   elements are focusable — see --focus-ring-width in tokens.css. */
 :focus-visible {
-  outline: 2px solid var(--focus);
+  outline: var(--focus-ring-width) solid var(--focus);
   outline-offset: 2px;
   border-radius: var(--radius-s);
-}
-
-/* Browsers match :focus-visible on form fields however they were focused,
-   so a plain click on an input draws the keyboard ring. Clicking a field is
-   already unambiguous feedback, so the ring is hidden while the last
-   interaction was a pointer. ui/focusModality.js flips the attribute back to
-   "keyboard" on the first focus-moving key press, which restores the ring —
-   keyboard navigation is never left without a visible focus indicator. */
-:root[data-input-modality="pointer"] input:focus-visible,
-:root[data-input-modality="pointer"] textarea:focus-visible,
-:root[data-input-modality="pointer"] select:focus-visible {
-  outline: none;
 }
 
 .sr-only {

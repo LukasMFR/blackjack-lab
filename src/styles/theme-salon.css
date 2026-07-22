@@ -345,8 +345,10 @@
     0 3px 7px rgb(20 8 4 / 0.35);
 }
 
+/* The clay chip clears its own outline, so it restates the ring rather than
+   inheriting it — through the shared token, so pointer focus retracts it too. */
 [data-theme="salon"] .chip:focus-visible {
-  outline: 2px solid var(--focus);
+  outline: var(--focus-ring-width) solid var(--focus);
   outline-offset: 2px;
 }
 

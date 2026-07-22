@@ -175,6 +175,10 @@ external or remote artwork is used anywhere in the project.
 ## Accessibility
 
 - Semantic landmarks, skip link, logical tab order, visible focus states.
+- The focus ring is drawn for keyboard use only: `ui/focusModality.js` records
+  the last input as `data-input-modality`, and pointer interaction collapses
+  `--focus-ring-width` to zero site-wide. Any focus-moving key press brings
+  every ring back, and the ring is visible by default if the script never runs.
 - Unavailable actions use `aria-disabled` and stay focusable, with a
   translated reason exposed via `aria-description` and `title`.
 - A polite live region announces dealt cards, totals, and results.

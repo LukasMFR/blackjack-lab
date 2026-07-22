@@ -1,16 +1,17 @@
 /**
  * Input-modality tracking for focus rings.
  *
- * Browsers match `:focus-visible` on text fields even when they are focused
- * with a mouse or a finger, so a plain click on an input draws the same ring
- * a keyboard user needs. Clicking a field is already unambiguous feedback,
- * so the ring is noise there — but removing it outright would strand
- * keyboard users.
+ * Browsers match `:focus-visible` on text fields however they were focused, and
+ * on buttons whenever script moves focus — a dialog opening, focus returning to
+ * the control that opened it. A click therefore draws the same ring a keyboard
+ * user needs. Pointing at a control is already unambiguous feedback, so the
+ * ring is noise there — but removing it outright would strand keyboard users.
  *
  * This module records how the user last interacted and exposes it as
- * `data-input-modality` on the root element. CSS suppresses the ring on
- * text-entry controls only while the modality is `pointer`; the very first
- * focus-moving key press flips it back to `keyboard` and the ring returns.
+ * `data-input-modality` on the root element. CSS collapses `--focus-ring-width`
+ * to zero while the modality is `pointer`, retracting every ring in the app at
+ * once; the very first focus-moving key press flips it back to `keyboard` and
+ * the rings return.
  */
 
 /**
