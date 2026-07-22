@@ -35,3 +35,11 @@ test('mobile gestures: viewport remains user-scalable on every page', async () =
     assert(!/maximum-scale\s*=\s*1(?:\.0+)?(?:\s|,|$)/i.test(viewport), `${page} must allow zoom`);
   }
 });
+
+test('mobile gestures: multiplayer code fields do not trigger Safari focus zoom', async () => {
+  const css = await read('src/styles/multiplayer.css');
+  assert(
+    /\.mp-code-input\s*{[^}]*font-size:\s*1rem\s*;/s.test(css),
+    'code fields must render at Safari’s 16px focus-zoom threshold',
+  );
+});
