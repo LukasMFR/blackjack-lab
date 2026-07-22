@@ -741,9 +741,31 @@ kbd {
  *   .dialog--wide: content-heavy panels (settings, help)
  * An open dialog is a column: the header never scrolls away, only the
  * body scrolls, so the close button always stays inside the viewport.
+ *
+ * Two variables set the width, so a viewport can change how much room the
+ * panel leaves without every size having to restate the whole expression:
+ *   --dialog-gutter: the clearance kept at each screen edge, on top of the
+ *                    device safe area
+ *   --dialog-width:  what the panel would like to be when there is room
+ * The phone block near the end of this section only moves the gutter.
  */
 .dialog {
-  width: min(38rem, calc(100vw - 2rem - var(--safe-left) - var(--safe-right)));
+  --dialog-gutter: 1rem;
+  --dialog-width: 38rem;
+  /* What the viewport actually leaves the panel once its gutter and the
+     device safe area are taken off. */
+  --dialog-room: calc(
+    100vw - var(--dialog-gutter) * 2 - var(--safe-left) - var(--safe-right)
+  );
+  width: min(var(--dialog-width), var(--dialog-room));
+  /*
+   * Chrome caps a modal at calc(100% - 6px - 2em) of the viewport — about 19px
+   * a side at this font size — and that cap wins over a narrower width because
+   * it is a different property, so it, not this file, was setting the gutter on
+   * a phone. Restating the cap as the room we chose puts the gutter back under
+   * our control. On wider viewports the two agree and nothing moves.
+   */
+  max-width: var(--dialog-room);
   max-height: min(calc(88dvh - var(--safe-top) - var(--safe-bottom)), 56.25rem);
   padding: 0;
   border: 1px solid var(--border-strong);
@@ -759,11 +781,11 @@ kbd {
 }
 
 .dialog--wide {
-  width: min(92vw, calc(100vw - 2rem - var(--safe-left) - var(--safe-right)), 56.25rem);
+  --dialog-width: min(92vw, 56.25rem);
 }
 
 .dialog--confirm {
-  width: min(24rem, calc(100vw - 2rem - var(--safe-left) - var(--safe-right)));
+  --dialog-width: 24rem;
 }
 
 .dialog::backdrop {
@@ -836,6 +858,55 @@ kbd {
 
 .dialog--wide kbd {
   font-size: var(--text-s);
+}
+
+/*
+ * Phones. The desktop shell spends a lot of a 390px screen before any content
+ * is drawn: a 16px gutter each side, the frame, then 24px of body padding, so
+ * a settings row had roughly two thirds of the width to live in and the panel
+ * read as a narrow slip rather than a screen. Everything here is the same
+ * shell — rounded corners, a real frame, a header above a scrolling body — with
+ * the room around and inside it cut back. It is deliberately not fullscreen:
+ * the gutter still shows the backdrop on all four sides, which is what tells
+ * you the panel is a layer over the table rather than a new page.
+ */
+@media (max-width: 640px) {
+  .dialog {
+    --dialog-gutter: var(--space-2);
+    /*
+     * A modal is centred by its auto margins, so whatever room is left over
+     * is split evenly between top and bottom. Reserving the larger of the two
+     * safe insets at both ends is therefore what keeps the panel clear of a
+     * notch: half of the total slack has to cover the deepest inset on its
+     * own. Measuring from the safe area also stops the tall panels giving up
+     * a flat 12dvh at each end on screens that have no inset to clear.
+     */
+    max-height: calc(
+      100dvh - (var(--dialog-gutter) + max(var(--safe-top), var(--safe-bottom))) * 2
+    );
+  }
+
+  /* The proportional cap is how the wider windows keep a margin around the
+     content panels. Here the gutter is the margin, so the cap steps aside. */
+  .dialog--wide {
+    --dialog-width: 56.25rem;
+  }
+
+  .dialog__header {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .dialog__body {
+    gap: var(--space-4);
+    padding: var(--space-4);
+  }
+
+  /* The wide panels grow their padding with the viewport; at this size that
+     clamp is already sitting on its floor, so it is replaced outright. */
+  .dialog--wide .dialog__body {
+    gap: var(--space-5);
+    padding: var(--space-4);
+  }
 }
 
 /* Help content: one column by default, two balanced columns once the

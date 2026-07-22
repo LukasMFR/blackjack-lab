@@ -427,6 +427,19 @@
 }
 
 /*
+ * On a phone the wood takes 10px from both edges of a 390px screen, on top of
+ * the gutter outside it and the body padding inside. Half the thickness still
+ * reads as a frame at that size — the grain and the brass line inside it are
+ * what carry the material, not the depth — and hands 10px back to the content.
+ * The brass line's radius is derived from the thickness, so it follows.
+ */
+@media (max-width: 640px) {
+  [data-theme="salon"] .dialog {
+    --dialog-frame: 5px;
+  }
+}
+
+/*
  * The brass line framing the panel interior, drawn as an overlay rather than
  * the inset shadow it used to be. An inset shadow paints in the dialog's own
  * background layer, under every descendant, so the scrolling body ran over
