@@ -316,9 +316,11 @@ kbd {
   letter-spacing: 0.04em;
 }
 
-.menu-select__button:hover {
-  border-color: var(--border-strong);
-  background: var(--surface-raised);
+@media (hover: hover) {
+  .menu-select__button:hover {
+    border-color: var(--border-strong);
+    background: var(--surface-raised);
+  }
 }
 
 .menu-select__arrow {
@@ -470,9 +472,11 @@ kbd {
   font: inherit;
 }
 
-.profile-chip:hover {
-  border-color: var(--border-strong);
-  background: var(--surface-raised);
+@media (hover: hover) {
+  .profile-chip:hover {
+    border-color: var(--border-strong);
+    background: var(--surface-raised);
+  }
 }
 
 .profile-chip__name {
@@ -957,8 +961,10 @@ kbd {
   text-underline-offset: 0.15em;
 }
 
-.info-body a:hover {
-  text-decoration-thickness: 2px;
+@media (hover: hover) {
+  .info-body a:hover {
+    text-decoration-thickness: 2px;
+  }
 }
 
 .info-links {

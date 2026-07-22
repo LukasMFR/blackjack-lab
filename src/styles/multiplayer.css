@@ -54,11 +54,20 @@
     box-shadow var(--dur-fast) var(--ease-out);
 }
 
-.mp-menu-card:hover,
 .mp-menu-card:focus-visible {
   border-color: color-mix(in srgb, var(--accent) 60%, var(--border-strong));
   transform: translateY(-2px);
   box-shadow: var(--shadow);
+}
+
+/* Touch Safari keeps :hover on the last tapped card — including a card a
+   scroll gesture merely started on — so the lift is for real pointers only. */
+@media (hover: hover) {
+  .mp-menu-card:hover {
+    border-color: color-mix(in srgb, var(--accent) 60%, var(--border-strong));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
 }
 
 /* Same circular icon badge as the settings theme picker, so the menu
@@ -162,8 +171,10 @@
   transform: none;
 }
 
-.mp-menu-card:disabled:hover {
-  border-color: var(--border);
+@media (hover: hover) {
+  .mp-menu-card:disabled:hover {
+    border-color: var(--border);
+  }
 }
 
 .mp-code-input {
@@ -251,12 +262,20 @@
 
 /* ------------------------------------------------------------ room layout */
 
+/* Header, optional host banner, and the two-column layout stack in one flow.
+   A flex gap spaces them apart on every viewport and collapses cleanly when
+   the banner is hidden, which a margin on the banner itself would not. */
+.mp-screen--table {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
 .mp-room-header {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: var(--space-2) var(--space-3);
-  margin-bottom: var(--space-3);
 }
 
 .mp-room-header .mp-title {

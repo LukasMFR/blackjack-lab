@@ -126,9 +126,11 @@
   box-shadow: none;
 }
 
-[data-theme="salon"] .app-header .menu-select__button:hover {
-  background: rgb(242 231 212 / 0.1);
-  border-color: rgb(242 231 212 / 0.48);
+@media (hover: hover) {
+  [data-theme="salon"] .app-header .menu-select__button:hover {
+    background: rgb(242 231 212 / 0.1);
+    border-color: rgb(242 231 212 / 0.48);
+  }
 }
 
 [data-theme="salon"] .menu-select__list {
@@ -387,12 +389,14 @@
   box-shadow: 0 2px 10px rgb(40 22 8 / 0.1);
 }
 
-[data-theme="salon"] .profile-chip:hover {
-  border-color: var(--border-strong);
-  background:
-    var(--tex-grain),
-    linear-gradient(180deg, var(--surface-raised), var(--surface-raised));
-  background-blend-mode: soft-light, normal;
+@media (hover: hover) {
+  [data-theme="salon"] .profile-chip:hover {
+    border-color: var(--border-strong);
+    background:
+      var(--tex-grain),
+      linear-gradient(180deg, var(--surface-raised), var(--surface-raised));
+    background-blend-mode: soft-light, normal;
+  }
 }
 
 [data-theme="salon"] .side-title {
@@ -469,10 +473,16 @@
   box-shadow: 0 2px 10px rgb(40 22 8 / 0.1);
 }
 
-[data-theme="salon"] .mp-menu-card:hover,
 [data-theme="salon"] .mp-menu-card:focus-visible {
   border-color: color-mix(in srgb, var(--gold) 55%, var(--border-strong));
   box-shadow: var(--shadow);
+}
+
+@media (hover: hover) {
+  [data-theme="salon"] .mp-menu-card:hover {
+    border-color: color-mix(in srgb, var(--gold) 55%, var(--border-strong));
+    box-shadow: var(--shadow);
+  }
 }
 
 [data-theme="salon"] .mp-menu-card--restore {
