@@ -67,7 +67,8 @@ src/js/i18n/             en.js, fr.js dictionaries + translation module
 src/js/ui/               app.js (controller), render.js (table/panels),
                          settingsView.js (dialogs), cardView.js (cards),
                          strategyHint.js (hint chip), storage.js (safe
-                         localStorage), format.js, profileSummary.js
+                         localStorage), focusModality.js (pointer vs
+                         keyboard focus rings), format.js, profileSummary.js
 src/js/multiplayer/      tableEngine (authoritative multi-seat table),
                          protocol, signalling, stateSync, hostSession,
                          clientSession, peerConnection, qr, qrScanner,

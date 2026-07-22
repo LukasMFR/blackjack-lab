@@ -282,7 +282,9 @@
         <div id="host-max-players-mount"></div>
       </div>
       <div class="switch-row">
-        <label class="switch-row__label" id="host-plays-label"></label>
+        <!-- A span, not a label: the switch is named through aria-labelledby
+             and only the switch itself is a hit target. -->
+        <span class="switch-row__label" id="host-plays-label"></span>
         <button type="button" id="host-plays" class="switch" role="switch" aria-checked="true" aria-labelledby="host-plays-label">
           <span class="switch__knob"></span>
         </button>
@@ -329,7 +331,10 @@
           <legend id="join-step1-title"></legend>
           <p class="fine-print" id="join-step1-body"></p>
           <div class="field">
-            <textarea class="text-input mp-code-input" id="join-offer-input" rows="4" spellcheck="false" autocomplete="off"></textarea>
+            <!-- Pairing codes are case-sensitive base64url: phone keyboards
+                 must not capitalise or autocorrect anything the sender did
+                 not type. Only the BJL1C/BJL1P marker is uppercase. -->
+            <textarea class="text-input mp-code-input" id="join-offer-input" rows="4" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off"></textarea>
           </div>
           <div class="mp-scanner" id="join-scanner" hidden>
             <div class="mp-scanner__preview">
@@ -360,7 +365,7 @@
         <p class="fine-print" id="join-step2-body"></p>
         <div class="mp-qr" id="join-answer-qr" role="img"></div>
         <div class="field">
-          <textarea class="text-input mp-code-input" id="join-answer-output" rows="4" readonly spellcheck="false"></textarea>
+          <textarea class="text-input mp-code-input" id="join-answer-output" rows="4" readonly spellcheck="false" autocapitalize="off" autocorrect="off"></textarea>
         </div>
         <div class="button-row">
           <button type="button" class="btn" id="join-answer-copy"></button>
@@ -384,7 +389,7 @@
         <p class="mp-waiting" id="invite-generating"></p>
         <div class="mp-qr" id="invite-offer-qr" role="img"></div>
         <div class="field">
-          <textarea class="text-input mp-code-input" id="invite-offer-output" rows="4" readonly spellcheck="false"></textarea>
+          <textarea class="text-input mp-code-input" id="invite-offer-output" rows="4" readonly spellcheck="false" autocapitalize="off" autocorrect="off"></textarea>
         </div>
         <div class="button-row">
           <button type="button" class="btn" id="invite-copy"></button>
@@ -395,7 +400,7 @@
         <h3 class="side-title" id="invite-step2-title"></h3>
         <p class="fine-print" id="invite-step2-body"></p>
         <div class="field">
-          <textarea class="text-input mp-code-input" id="invite-answer-input" rows="4" spellcheck="false" autocomplete="off"></textarea>
+          <textarea class="text-input mp-code-input" id="invite-answer-input" rows="4" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off"></textarea>
         </div>
         <div class="button-row">
           <button type="button" class="btn" id="invite-scan"></button>

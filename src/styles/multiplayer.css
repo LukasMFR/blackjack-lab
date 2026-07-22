@@ -161,8 +161,10 @@
   min-height: 2.4rem;
 }
 
+/* Only the switch itself toggles the setting, so the text is plain copy:
+   no pointer cursor promising a hit target that is not there. */
 .switch-row__label {
-  cursor: pointer;
+  cursor: default;
 }
 
 .mp-menu-card:disabled {

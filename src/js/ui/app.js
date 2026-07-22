@@ -22,6 +22,7 @@ import {
   HISTORY_LIMIT, isPersistableRoundState, readSession, resetSession, saveSession,
 } from './sessionStore.js';
 import { initLanguageMenu, setLanguageMenuValue } from './languageMenu.js';
+import { initFocusModality } from './focusModality.js';
 import { handleGameplayShortcut } from './keyboardShortcuts.js';
 import {
   loadShortcutLabelsPreference, saveShortcutLabelsPreference,
@@ -669,6 +670,7 @@ function handleShortcut(event) {
 
 function boot() {
   loadPreferences();
+  initFocusModality();
   applyAppearance();
   applyTheme();
   animations.initAnimations();

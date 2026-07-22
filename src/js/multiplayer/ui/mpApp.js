@@ -2,6 +2,7 @@ import { detectLanguage, setLanguage as setI18nLanguage, t } from '../../i18n/in
 import * as storage from '../../ui/storage.js';
 import { formatMoney } from '../../ui/format.js';
 import { initLanguageMenu, setLanguageMenuValue } from '../../ui/languageMenu.js';
+import { initFocusModality } from '../../ui/focusModality.js';
 import { buildMenuSelect } from '../../ui/menuSelect.js';
 import { AudioManager } from '../../audio/audioManager.js';
 import { createGameAudio } from '../../audio/gameAudio.js';
@@ -1145,7 +1146,6 @@ function wireEvents() {
     applyHostPlaysSwitch();
     gameAudio.settingChanged();
   });
-  $('host-plays-label').addEventListener('click', () => $('host-plays').click());
 
   // Invite wizard
   $('btn-invite').addEventListener('click', openInviteDialog);
@@ -1365,6 +1365,7 @@ async function shareText(text) {
 
 function boot() {
   applyPreferences();
+  initFocusModality();
   wireEvents();
   setLanguageMenuValue(state.language);
   renderStaticLabels();
