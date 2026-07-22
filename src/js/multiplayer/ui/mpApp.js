@@ -11,6 +11,13 @@ import { unitsToCents } from '../../game/money.js';
 import { ACTIONS, ROUND_STATES, SURRENDER_MODES } from '../../game/constants.js';
 import { getProfile, PROFILE_IDS, PROFILES } from '../../config/profiles.js';
 import { initSettingsView } from '../../ui/settingsView.js';
+import {
+  getAnimationMode, initAnimations, isReducedMotionPreferred,
+  reloadAnimationPreference, setAnimationMode,
+} from '../../ui/animations.js';
+import {
+  afterMpRender, beforeMpRender, mpBetCleared, mpChipAdded, resetMotionMemory,
+} from './mpAnimations.js';
 import { handleGameplayShortcut, SHORTCUT_KEYS } from '../../ui/keyboardShortcuts.js';
 import {
   applyShortcutLabel, loadShortcutLabelsPreference, saveShortcutLabelsPreference,
@@ -122,12 +129,10 @@ function applyAppearance() {
   document.documentElement.dataset.mode = mode;
   document.documentElement.dataset.theme = storage.getChoice('theme', ['classic', 'minimal', 'salon'], 'salon');
 
-  // The enhanced motion director is solo-table specific; multiplayer uses
-  // the classic card animations unless the player chose "off".
-  const anim = storage.getChoice('animations', ['enhanced', 'classic', 'off'], null);
-  document.documentElement.dataset.anim = anim === 'off' || (anim === null && reduceQuery.matches)
-    ? 'off'
-    : 'classic';
+  // The animation mode (enhanced by default) is owned by the shared
+  // director in ui/animations.js; re-resolving it here also picks up
+  // preference changes made in another tab.
+  reloadAnimationPreference();
 
   const meta = document.querySelector('meta[name="theme-color"]');
   const surface = getComputedStyle(document.documentElement).getPropertyValue('--surface').trim();
@@ -436,6 +441,10 @@ function renderRoom() {
     return;
   }
 
+  // The motion director captures the pre-render world (card positions,
+  // round-clearing ghosts) before the table DOM is rebuilt, and decorates
+  // the fresh render afterwards.
+  beforeMpRender(table);
   renderMpTable(table, {
     localPlayerId: localId,
     seenCardIds: state.seenCardIds,
@@ -444,6 +453,7 @@ function renderRoom() {
   renderMpHistory(payload.history ?? [], localId);
   renderTableMessage(table, localId);
   renderPanels(table, localId);
+  afterMpRender(table, localId, state.betCents);
   playSnapshotAudio(payload, table, localId);
 }
 
@@ -1161,6 +1171,7 @@ function resetRenderMemory() {
   state.betCents = 0;
   state.lastAnnouncedTurn = null;
   state.lastResultRound = 0;
+  resetMotionMemory();
 }
 
 function confirmDialog({ title, body, confirmLabel, onConfirm }) {
@@ -1327,11 +1338,13 @@ function wireEvents() {
     if (!chip || chip.disabled) return;
     state.betCents += unitsToCents(Number(chip.dataset.value));
     gameAudio.chipAdded();
+    mpChipAdded(chip);
     renderRoom();
   });
   $('mp-btn-clear').addEventListener('click', () => {
     state.betCents = 0;
     gameAudio.betCleared();
+    mpBetCleared();
     sendCommand(MESSAGE_TYPES.CLEAR_BET, {});
     renderRoom();
   });
@@ -1458,16 +1471,10 @@ const settingsController = {
   // in force (off) and stays disabled.
   getStrategyHintsPreference: () => false,
   setStrategyHintsPreference() {},
-  /** The mode this page actually uses (enhanced is solo-only). */
-  getAnimationMode() {
-    const anim = storage.getChoice('animations', ['enhanced', 'classic', 'off'], null);
-    return anim === 'off' || (anim === null && reduceQuery.matches) ? 'off' : 'classic';
-  },
-  setAnimationMode(mode) {
-    storage.setChoice('animations', mode);
-    applyAppearance();
-  },
-  isReducedMotionPreferred: () => reduceQuery.matches,
+  // The full animation modes, shared with the solo table.
+  getAnimationMode,
+  setAnimationMode,
+  isReducedMotionPreferred,
   // Rule profile and starting bankroll are fixed by the host at room
   // creation; the dialog renders them read-only, so these never run.
   setProfile() {},
@@ -1591,6 +1598,7 @@ async function shareText(text) {
 
 function boot() {
   applyPreferences();
+  initAnimations();
   initFocusModality();
   wireEvents();
   // After wireEvents: dialog close sounds are wired there, and the

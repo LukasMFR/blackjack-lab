@@ -191,7 +191,7 @@ export function renderSettings() {
   buildCustomEditor(state);
 }
 
-function buildSegment(container, values, current, labelOf, onSelect, iconOf, disabledOf) {
+function buildSegment(container, values, current, labelOf, onSelect, iconOf) {
   container.textContent = '';
   for (const value of values) {
     const option = document.createElement('button');
@@ -199,7 +199,6 @@ function buildSegment(container, values, current, labelOf, onSelect, iconOf, dis
     option.className = 'segment__option';
     option.setAttribute('role', 'radio');
     option.setAttribute('aria-checked', String(value === current));
-    option.disabled = Boolean(disabledOf?.(value));
     if (iconOf) {
       const icon = document.createElement('span');
       icon.className = 'segment__icon';
@@ -260,17 +259,11 @@ function buildThemeList(state) {
 
 function renderAnimationSection() {
   $('set-animations-label').textContent = t('settings.animations');
-  // The enhanced motion director only runs on the solo table: in
-  // multiplayer the option stays visible but disabled, and the checked
-  // value is the mode the room actually uses.
   buildSegment($('settings-animations'), ANIMATION_MODES, controller.getAnimationMode(),
     (value) => t(`settings.animations${value[0].toUpperCase()}${value.slice(1)}`),
     (value) => controller.setAnimationMode(value),
-    (value) => ANIMATION_ICONS[value],
-    isMultiplayer() ? (value) => value === 'enhanced' : null);
-  $('animations-note').textContent = isMultiplayer()
-    ? t('settings.mpAnimationsNote')
-    : t('settings.animationsNote');
+    (value) => ANIMATION_ICONS[value]);
+  $('animations-note').textContent = t('settings.animationsNote');
   // Reduced-motion users see why the default is calmer than Enhanced.
   const reducedNote = $('animations-reduced-note');
   reducedNote.textContent = t('settings.animationsReduced');

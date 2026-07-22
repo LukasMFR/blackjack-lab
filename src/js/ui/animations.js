@@ -1,18 +1,24 @@
 import { HAND_STATUS, RESULTS, ROUND_STATES } from '../game/constants.js';
-import { formatMoney } from './format.js';
 import * as storage from './storage.js';
+import {
+  animateMoney, cancelCounters, captureCardRects, clearGhosts, flipMovedCards,
+  flyChip, flyChips, ghostCardsToDiscard, staggerDealtCards, waapiSupported,
+} from './motion.js';
 
 /**
- * Motion director for the table. Reads engine snapshots and the rendered
- * DOM, never game internals: rule decisions stay in the engine, drawing
- * stays in render.js, and this module only decorates the rendered result
- * with GPU-friendly motion (transforms and opacity).
+ * Motion director for the solo table. Reads engine snapshots and the
+ * rendered DOM, never game internals: rule decisions stay in the engine,
+ * drawing stays in render.js, and this module only decorates the rendered
+ * result with GPU-friendly motion (the primitives live in motion.js).
  *
- * Modes (persisted under "animations", resolved onto <html data-anim>):
+ * It also owns the animation-mode preference shared by every page
+ * (persisted under "animations", resolved onto <html data-anim>):
  *   enhanced: full casino motion, card flights and flips, chip payouts,
- *              money count-ups, result glows;
+ *              money count-ups, result glows — the default;
  *   classic: the original light CSS animations, untouched;
  *   off: non-essential motion neutralized (see animations.css).
+ * The multiplayer room uses the same modes through its own director,
+ * multiplayer/ui/mpAnimations.js.
  *
  * Users who ask their system for reduced motion default to classic, which
  * the global reduced-motion rule keeps instant; an explicit non-off choice
@@ -37,8 +43,6 @@ const DEALER_BUST_EXTRA_MS = 250;
 /* Matches the baseDelay app.js passes to roundTransition on the deal. */
 const DEAL_BASE_DELAY_MS = 250;
 
-const MAX_GHOSTS = 24;
-
 const FX_BY_RESULT = {
   [RESULTS.WIN]: 'hand--fx-win',
   [RESULTS.BLACKJACK_WIN]: 'hand--fx-blackjack',
@@ -48,7 +52,6 @@ const FX_BY_RESULT = {
 };
 
 const reduceQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-const waapiSupported = typeof Element.prototype.animate === 'function';
 
 let chosenMode = null; // the user's explicit choice, or null for the default
 let prevSnapshot = null;
@@ -56,8 +59,6 @@ let prevRects = null; // card id -> DOMRect, captured just before a render
 let pendingDealBaseMs = 0;
 let shownBankrollCents = null;
 let shownBetCents = null;
-const counters = new Map(); // element -> requestAnimationFrame handle
-const ghosts = new Set(); // live fx-layer elements
 
 /* ----------------------------------------------------------------- mode */
 
@@ -86,10 +87,18 @@ function applyRootAttributes() {
   root.toggleAttribute('data-motion-ok', chosenMode !== null && chosenMode !== 'off');
 }
 
-/** Resolve the stored preference onto <html>. Call once at boot. */
-export function initAnimations() {
+/**
+ * Re-read the stored preference and resolve it onto <html>. Used by the
+ * multiplayer page when another tab changes the preference.
+ */
+export function reloadAnimationPreference() {
   chosenMode = storage.getChoice(STORAGE_KEY, ANIMATION_MODES, null);
   applyRootAttributes();
+}
+
+/** Resolve the stored preference onto <html>. Call once at boot. */
+export function initAnimations() {
+  reloadAnimationPreference();
   reduceQuery.addEventListener('change', applyRootAttributes);
 }
 
@@ -103,128 +112,6 @@ export function setAnimationMode(mode) {
   applyRootAttributes();
 }
 
-/* ------------------------------------------------------------- fx layer */
-
-function layer() {
-  return $('fx-layer');
-}
-
-function track(el, animation) {
-  ghosts.add(el);
-  const done = () => {
-    ghosts.delete(el);
-    el.remove();
-  };
-  animation.onfinish = done;
-  animation.oncancel = done;
-}
-
-/** Cancel and remove every in-flight ghost (stale-animation guard). */
-function clearGhosts() {
-  for (const el of [...ghosts]) {
-    for (const animation of el.getAnimations()) animation.cancel();
-    el.remove();
-    ghosts.delete(el);
-  }
-}
-
-function center(rect) {
-  return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
-}
-
-/**
- * Fly one chip ghost between two rects. The chip fades in, arcs, then is
- * absorbed at the destination. Transform/opacity only.
- * @param {{from: DOMRect, to: DOMRect, color?: string|null,
- *   delayMs?: number, durationMs?: number}} options
- */
-function flyChip({ from, to, color = null, delayMs = 0, durationMs = 520 }) {
-  if (!waapiSupported || ghosts.size >= MAX_GHOSTS) return;
-  const el = document.createElement('span');
-  el.className = 'fx-chip';
-  if (color) el.style.setProperty('--chip-color', color);
-  layer().append(el);
-  const a = center(from);
-  const b = center(to);
-  const mid = { x: (a.x + b.x) / 2, y: Math.min(a.y, b.y) - 36 };
-  const at = (p, scale, opacity) => ({
-    transform: `translate(${p.x}px, ${p.y}px) translate(-50%, -50%) scale(${scale})`,
-    opacity,
-  });
-  const animation = el.animate([
-    { ...at(a, 0.85, 0) },
-    { ...at(a, 1, 1), offset: 0.12 },
-    { ...at(mid, 1.04, 1), offset: 0.55 },
-    { ...at(b, 0.7, 1), offset: 0.88 },
-    { ...at(b, 0.45, 0) },
-  ], {
-    duration: durationMs,
-    delay: delayMs,
-    easing: 'cubic-bezier(0.3, 0.1, 0.25, 1)',
-    fill: 'backwards',
-  });
-  track(el, animation);
-}
-
-/** A small staggered stack of chip ghosts. @see flyChip */
-function flyChips({ from, to, count, delayMs = 0, color = null }) {
-  for (let i = 0; i < count; i += 1) {
-    const jitter = (i % 2 === 0 ? 1 : -1) * 5 * i;
-    flyChip({
-      from,
-      to: DOMRect.fromRect({
-        x: to.x + jitter, y: to.y, width: to.width, height: to.height,
-      }),
-      color,
-      delayMs: delayMs + i * 70,
-    });
-  }
-}
-
-/* -------------------------------------------------------- money displays */
-
-function cancelCounters() {
-  for (const handle of counters.values()) cancelAnimationFrame(handle);
-  counters.clear();
-}
-
-function bump(el) {
-  el.classList.remove('stat__value--bump');
-  void el.offsetWidth; // restart the pulse even on rapid repeats
-  el.classList.add('stat__value--bump');
-}
-
-/**
- * Count a money display from its previous value to the one already
- * rendered. Rounded to whole units mid-flight; exact at the end.
- * @param {HTMLElement} el
- * @param {number|null} fromCents
- * @param {number} toCents
- * @param {number} delayMs
- */
-function animateMoney(el, fromCents, toCents, delayMs = 0) {
-  if (fromCents === null || fromCents === toCents) return;
-  const durationMs = 560;
-  const startAt = performance.now() + delayMs;
-  el.textContent = formatMoney(fromCents);
-  const step = (now) => {
-    if (now >= startAt) {
-      const p = Math.min(1, (now - startAt) / durationMs);
-      const eased = 1 - (1 - p) ** 3;
-      if (p >= 1) {
-        el.textContent = formatMoney(toCents);
-        counters.delete(el);
-        bump(el);
-        return;
-      }
-      const value = fromCents + (toCents - fromCents) * eased;
-      el.textContent = formatMoney(Math.round(value / 100) * 100);
-    }
-    counters.set(el, requestAnimationFrame(step));
-  };
-  counters.set(el, requestAnimationFrame(step));
-}
-
 /* ----------------------------------------------------------- app hooks */
 
 /** The Deal button was accepted: flights start after the chip-stack cue. */
@@ -234,39 +121,12 @@ export function dealStarted() {
 }
 
 /**
- * Called before the engine clears the table for the next round: the real
- * cards vanish instantly with the re-render, so ghosts of them slide off
- * toward the discard side to finish the story.
+ * Called before the engine clears the table for the next round: ghosts of
+ * the rendered cards slide off toward the discard side.
  */
 export function roundClearing() {
   if (getAnimationMode() !== 'enhanced') return;
-  clearGhosts();
-  const tableRect = $('table').getBoundingClientRect();
-  const cards = [...document.querySelectorAll('#table .card')].slice(0, 14);
-  cards.forEach((card, index) => {
-    if (ghosts.size >= MAX_GHOSTS) return;
-    const rect = card.getBoundingClientRect();
-    const ghost = card.cloneNode(true);
-    ghost.classList.remove('is-dealt', 'is-revealed', 'card--fly', 'card--fly-flat');
-    ghost.removeAttribute('role');
-    ghost.setAttribute('aria-hidden', 'true');
-    ghost.style.width = `${rect.width}px`;
-    ghost.style.height = `${rect.height}px`;
-    layer().append(ghost);
-    const animation = ghost.animate([
-      { transform: `translate(${rect.left}px, ${rect.top}px)`, opacity: 1 },
-      {
-        transform: `translate(${tableRect.left - rect.width * 1.3}px, ${rect.top - 14}px) rotate(-9deg)`,
-        opacity: 0,
-      },
-    ], {
-      duration: 360,
-      delay: index * 28,
-      easing: 'cubic-bezier(0.45, 0, 0.85, 0.55)',
-      fill: 'backwards',
-    });
-    track(ghost, animation);
-  });
+  ghostCardsToDiscard($('table'), [...document.querySelectorAll('#table .card')]);
 }
 
 /** A bet chip was pressed: it flies from the rack to the bet display. */
@@ -302,6 +162,10 @@ export function rebet(sourceEl) {
 
 /* ---------------------------------------------------------- render hooks */
 
+function cardEls() {
+  return document.querySelectorAll('#dealer-cards [data-card-id], #player-hands [data-card-id]');
+}
+
 /**
  * Capture the pre-render world: card positions for FLIP moves, and any
  * running counters are settled so the render can write final values.
@@ -311,11 +175,7 @@ export function beforeRender() {
   cancelCounters();
   prevRects = null;
   if (getAnimationMode() !== 'enhanced') return;
-  prevRects = new Map();
-  const cards = document.querySelectorAll('#dealer-cards [data-card-id], #player-hands [data-card-id]');
-  for (const el of cards) {
-    prevRects.set(el.dataset.cardId, el.getBoundingClientRect());
-  }
+  prevRects = captureCardRects(cardEls());
 }
 
 /**
@@ -335,8 +195,8 @@ export function afterRender(snapshot, betView) {
 
   const betTarget = displayedBetCents(snapshot, betView);
   if (getAnimationMode() === 'enhanced') {
-    flipMovedCards();
-    const cursorMs = staggerDealtCards();
+    flipMovedCards(cardEls(), prevRects);
+    const cursorMs = staggerFreshCards();
     playTransitionEffects(snapshot, before, cursorMs, betTarget);
   }
 
@@ -354,48 +214,12 @@ function displayedBetCents(snapshot, betView) {
 }
 
 /**
- * FLIP: cards that existed before the render and moved (a split spreading
- * a pair into two hands, a re-layout) glide from their old spot to the
- * new one instead of teleporting.
- */
-function flipMovedCards() {
-  if (!prevRects || prevRects.size === 0 || !waapiSupported) return;
-  const moves = [];
-  const cards = document.querySelectorAll('#dealer-cards [data-card-id], #player-hands [data-card-id]');
-  for (const el of cards) {
-    const old = prevRects.get(el.dataset.cardId);
-    if (!old) continue;
-    const now = el.getBoundingClientRect();
-    const dx = old.left - now.left;
-    const dy = old.top - now.top;
-    const scale = now.width > 0 ? old.width / now.width : 1;
-    if (Math.abs(dx) < 1 && Math.abs(dy) < 1 && Math.abs(scale - 1) < 0.01) continue;
-    moves.push({ el, dx, dy, scale });
-  }
-  for (const { el, dx, dy, scale } of moves) {
-    el.animate([
-      { transform: `translate(${dx}px, ${dy}px) scale(${scale})`, transformOrigin: 'top left' },
-      { transform: 'none', transformOrigin: 'top left' },
-    ], { duration: 320, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' });
-  }
-}
-
-/**
- * Give every newly dealt card its flight vector from the shoe corner and
- * a stagger that matches the card sounds, then release it (.card--fly).
+ * Stagger the newly dealt cards in the same order as the card sounds:
+ * player hands first, dealer after. The dealer's fresh hole card (no id,
+ * face down) joins the initial deal.
  * @returns {number} the delay cursor after the last card, in ms
  */
-function staggerDealtCards() {
-  let cursorMs = pendingDealBaseMs;
-
-  const revealed = document.querySelector('#dealer-cards .card.is-revealed');
-  if (revealed) {
-    revealed.style.setProperty('--deal-delay', `${cursorMs}ms`);
-    cursorMs += CARD_STAGGER_MS;
-  }
-
-  // Same order as the card sounds: player hands first, dealer after. The
-  // dealer's fresh hole card (no id, face down) joins the initial deal.
+function staggerFreshCards() {
   const fresh = [
     ...document.querySelectorAll('#player-hands .card.is-dealt'),
     ...document.querySelectorAll('#dealer-cards .card.is-dealt'),
@@ -404,24 +228,13 @@ function staggerDealtCards() {
     ? document.querySelector('#dealer-cards .card--back')
     : null;
   if (holeCard) fresh.push(holeCard);
-  if (fresh.length === 0) return cursorMs;
-
-  const tableRect = $('table').getBoundingClientRect();
-  const originX = tableRect.right - tableRect.width * 0.08;
-  const originY = tableRect.top + Math.min(56, tableRect.height * 0.12);
-
-  // Batch the reads, then the writes, so layout is computed once.
-  const rects = fresh.map((el) => el.getBoundingClientRect());
-  fresh.forEach((el, index) => {
-    const rect = rects[index];
-    el.style.setProperty('--deal-x', `${Math.round(originX - rect.left - rect.width / 2)}px`);
-    el.style.setProperty('--deal-y', `${Math.round(originY - rect.top - rect.height / 2)}px`);
-    el.style.setProperty('--deal-rot', `${index % 2 === 0 ? -7 : 6}deg`);
-    el.style.setProperty('--deal-delay', `${cursorMs}ms`);
-    el.classList.add(el.classList.contains('card--back') ? 'card--fly-flat' : 'card--fly');
-    cursorMs += CARD_STAGGER_MS;
+  return staggerDealtCards({
+    tableEl: $('table'),
+    freshEls: fresh,
+    revealedEl: document.querySelector('#dealer-cards .card.is-revealed'),
+    baseMs: pendingDealBaseMs,
+    staggerMs: CARD_STAGGER_MS,
   });
-  return cursorMs;
 }
 
 /**

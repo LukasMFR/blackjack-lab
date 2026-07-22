@@ -196,7 +196,6 @@ export default {
     audioOff: 'Son désactivé',
     audioUnsupported: 'Ce navigateur ne prend pas en charge la lecture audio.',
     information: 'Informations et mentions légales',
-    mpAnimationsNote: 'Les animations améliorées ne sont disponibles qu’à la table solo. Le multijoueur utilise les animations classiques des cartes, ou aucune si elles sont désactivées.',
     mpStrategyHintsNote: 'Les conseils de stratégie de base ne sont pas disponibles en multijoueur local.',
     mpProfileNote: 'En multijoueur local, le profil de règles est choisi par l’hôte à la création du salon.',
     mpBankrollNote: 'En multijoueur local, le capital de départ est défini par l’hôte à la création du salon.',

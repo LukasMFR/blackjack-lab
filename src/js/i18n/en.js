@@ -196,7 +196,6 @@ export default {
     audioOff: 'Sound off',
     audioUnsupported: 'This browser does not support audio playback.',
     information: 'Information & legal',
-    mpAnimationsNote: 'Enhanced animations are available at the solo table only. Multiplayer uses the classic card animations, or none when animations are off.',
     mpStrategyHintsNote: 'Basic strategy hints are not available in local multiplayer.',
     mpProfileNote: 'In local multiplayer, the rule profile is chosen by the host when the room is created.',
     mpBankrollNote: 'In local multiplayer, the starting bankroll is set by the host when the room is created.',
