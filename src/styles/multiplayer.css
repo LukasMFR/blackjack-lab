@@ -147,12 +147,22 @@
   height: auto;
 }
 
-.mp-scanner video {
+.mp-scanner__preview {
   width: 100%;
-  max-height: 40vh;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
   border-radius: var(--radius-m);
-  background: #000;
+  background: var(--surface-raised);
   margin-bottom: var(--space-2);
+}
+
+.mp-scanner__preview video {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  background: transparent !important;
 }
 
 .mp-waiting {

@@ -957,6 +957,16 @@ function resetToJoinStart({ hint = null } = {}) {
 
 /* --------------------------------------------------------------- scanner */
 
+const SCANNER_TRIGGERS = Object.freeze({
+  'join-scanner': 'join-scan',
+  'invite-scanner': 'invite-scan',
+});
+
+function setScannerActive(scannerId, active) {
+  $(scannerId).hidden = !active;
+  $(SCANNER_TRIGGERS[scannerId]).hidden = active;
+}
+
 function scannerErrorText(code) {
   const key = {
     [QR_SCANNER_ERRORS.INSECURE_CONTEXT]: 'mp.cameraHttpsRequired',
@@ -975,8 +985,7 @@ async function beginScan(videoId, scannerId, onCode) {
     showToast(scannerErrorText(support.code));
     return;
   }
-  const container = $(scannerId);
-  container.hidden = false;
+  setScannerActive(scannerId, true);
   gameAudio.settingChanged();
   const controller = new AbortController();
   state.scanner = { stop: () => controller.abort() };
@@ -1000,7 +1009,7 @@ async function beginScan(videoId, scannerId, onCode) {
   } catch (error) {
     if (controller.signal.aborted) return;
     console.error(error);
-    container.hidden = true;
+    setScannerActive(scannerId, false);
     state.scanner = null;
     gameAudio.actionRejected();
     showToast(scannerErrorText(error.code));
@@ -1010,8 +1019,9 @@ async function beginScan(videoId, scannerId, onCode) {
 function stopScanner() {
   state.scanner?.stop();
   state.scanner = null;
-  $('join-scanner').hidden = true;
-  $('invite-scanner').hidden = true;
+  for (const scannerId of Object.keys(SCANNER_TRIGGERS)) {
+    setScannerActive(scannerId, false);
+  }
 }
 
 /* ------------------------------------------------------------ navigation */
