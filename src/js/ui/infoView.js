@@ -55,6 +55,10 @@ function externalLink(label, url) {
   a.href = url;
   a.target = '_blank';
   a.rel = 'noopener noreferrer';
+  // Safari keeps links out of the tab sequence unless "Press Tab to highlight
+  // each item" is on, so credit links state their place in it explicitly. Other
+  // browsers treat this as a no-op. Matches the markup links in both pages.
+  a.tabIndex = 0;
   a.textContent = label;
   return a;
 }

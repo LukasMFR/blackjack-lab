@@ -548,6 +548,16 @@ kbd {
   transition: transform var(--dur-fast) var(--ease-out);
 }
 
+/* The chip spends its own outline on the rim printed inside the dashed border,
+   which would otherwise out-cascade the shared ring and leave keyboard users
+   with no focus indicator at all. Focus swaps the rim for the ring: outline is
+   a single property, and the ring is what matters while the chip is focused.
+   The salon chip needs no swap — it draws its rim with inset shadows. */
+.chip:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus);
+  outline-offset: 2px;
+}
+
 @media (hover: hover) {
   .chip:hover:not(:disabled) {
     transform: translateY(-2px);

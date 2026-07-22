@@ -78,7 +78,11 @@
           <path d="m15.5 9.5 5 5M20.5 9.5l-5 5"/>
         </svg>
       </button>
-      <a href="index.html" id="btn-solo-link" class="btn btn--ghost btn--icon">
+      <!-- tabindex="0" on every link: Safari drops links from the tab sequence
+           unless "Press Tab to highlight each item" is switched on, and it is
+           off by default. Other browsers are unaffected — the link keeps its
+           document-order position. -->
+      <a href="index.html" id="btn-solo-link" class="btn btn--ghost btn--icon" tabindex="0">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="8" r="3.8"/>
           <path d="M5.2 20.5a6.8 6.8 0 0 1 13.6 0"/>
@@ -94,7 +98,7 @@
       <h2 class="mp-title" id="menu-title"></h2>
       <p class="mp-tagline" id="menu-tagline"></p>
       <div class="mp-menu">
-        <a class="mp-menu-card" href="index.html" id="menu-solo">
+        <a class="mp-menu-card" href="index.html" id="menu-solo" tabindex="0">
           <span class="mp-menu-card__badge" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="8" r="3.8"/>

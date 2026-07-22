@@ -19,7 +19,12 @@
   <link rel="stylesheet" href="src/styles/animations.css">
 </head>
 <body>
-  <a class="skip-link" href="#table" id="skip-link">Skip to the game table</a>
+  <!-- Every link carries tabindex="0". Safari leaves links out of the tab
+       sequence unless "Press Tab to highlight each item" is switched on, which
+       it is not by default, so an untagged link is simply unreachable by
+       keyboard there. The attribute changes nothing in other browsers: it keeps
+       the link at its natural position in document order. -->
+  <a class="skip-link" href="#table" id="skip-link" tabindex="0">Skip to the game table</a>
 
   <header class="app-header">
     <div class="brand">
@@ -83,7 +88,7 @@
           <path d="m15.5 9.5 5 5M20.5 9.5l-5 5"/>
         </svg>
       </button>
-      <a href="multiplayer.html" id="btn-multiplayer" class="btn btn--ghost btn--icon">
+      <a href="multiplayer.html" id="btn-multiplayer" class="btn btn--ghost btn--icon" tabindex="0">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="9" cy="8" r="3.6"/>
           <path d="M2.8 20a6.2 6.2 0 0 1 12.4 0"/>
