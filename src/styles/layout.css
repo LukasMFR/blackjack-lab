@@ -270,6 +270,13 @@
   gap: var(--space-3);
 }
 
+/* Keep the optional advice visually distinct from both the bankroll
+   summary above and the decision controls below. */
+#panel-actions {
+  gap: var(--space-5);
+  padding-block-start: var(--space-2);
+}
+
 /* The decision container receives programmatic focus when it opens so focus
    cannot remain behind it. Only its actual action buttons show a focus ring. */
 #panel-decision:focus,

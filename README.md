@@ -121,9 +121,9 @@ exposed in the interface.
 ## Basic strategy hints (optional)
 
 An optional aid, **disabled by default** and persisted locally. When
-enabled in the settings, a discreet chip near the action buttons names
+enabled in the settings, an open hint line near the action buttons names
 the total-dependent basic-strategy action for the current hand
-(“Basic strategy: Hit”) and a delicate dashed outline marks the
+(“Basic strategy: Hit”) and a short, detached hairline marks the
 recommended button without ever activating it. Insurance advice appears
 inside the insurance dialog: declined without count information, exactly
 like the reference charts (a genuine even-money settlement would be

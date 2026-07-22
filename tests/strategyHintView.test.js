@@ -9,7 +9,7 @@ const UNSUPPORTED = buildCustomProfile({ dealMode: 'ENHC', dealerHitsSoft17: tru
 const ALL = Object.values(ACTIONS);
 
 /**
- * Build the exact hint markup from index.html: a chip with a decorative
+ * Build the exact hint markup from index.html: a hint line with a decorative
  * icon and a text span, the action buttons, and the decision buttons.
  */
 function buildDom() {
