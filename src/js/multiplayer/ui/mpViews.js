@@ -20,7 +20,8 @@ const RESULT_BADGE_CLASS = {
 };
 
 /**
- * Lobby / sidebar player list.
+ * Lobby / sidebar player list: one avatar row per player with role tags
+ * (host, you) and a textual connection/ready state.
  * @param {object[]} players
  * @param {string|null} localPlayerId
  */
@@ -30,24 +31,59 @@ export function renderPlayerList(players, localPlayerId) {
   for (const player of players) {
     const item = document.createElement('li');
     item.className = 'mp-player';
+    if (player.playerId === localPlayerId) item.classList.add('mp-player--me');
+    if (!player.connected) item.classList.add('mp-player--disconnected');
+
+    const avatar = document.createElement('span');
+    avatar.className = 'mp-player__avatar';
+    avatar.setAttribute('aria-hidden', 'true');
+    avatar.textContent = Array.from(player.name.trim())[0]?.toLocaleUpperCase() ?? '?';
     const dot = document.createElement('span');
     dot.className = `mp-player__dot${player.connected ? ' mp-player__dot--connected' : ''}`;
-    dot.title = t(player.connected ? 'mp.status.connected' : 'mp.status.disconnected');
+    avatar.append(dot);
+
+    const body = document.createElement('span');
+    body.className = 'mp-player__body';
     const name = document.createElement('span');
     name.className = 'mp-player__name';
     name.textContent = player.name;
-    item.append(dot, name);
-    if (player.isHost) item.append(tag(t('mp.status.host')));
-    if (player.playerId === localPlayerId) item.append(tag(t('mp.status.you')));
-    if (player.ready) item.append(tag(t('mp.status.ready')));
-    if (!player.connected) item.append(tag(t('mp.status.disconnected')));
+    body.append(name);
+    const tags = [];
+    if (player.isHost) tags.push(tag(t('mp.status.host'), 'mp-player__tag--host'));
+    if (player.playerId === localPlayerId) tags.push(tag(t('mp.status.you')));
+    if (tags.length > 0) {
+      const tagRow = document.createElement('span');
+      tagRow.className = 'mp-player__tags';
+      tagRow.append(...tags);
+      body.append(tagRow);
+    }
+    item.append(avatar, body);
+
+    // The state pill restates the dot in words, so color never works alone.
+    if (!player.connected) {
+      item.append(statePill(t('mp.status.disconnected'), 'mp-player__state--off'));
+    } else if (player.ready) {
+      item.append(statePill(t('mp.status.ready'), 'mp-player__state--ready'));
+    } else {
+      const srState = document.createElement('span');
+      srState.className = 'sr-only';
+      srState.textContent = t('mp.status.connected');
+      item.append(srState);
+    }
     list.append(item);
   }
 }
 
-function tag(text) {
+function tag(text, modifier = '') {
   const el = document.createElement('span');
-  el.className = 'mp-player__tag';
+  el.className = `mp-player__tag${modifier ? ` ${modifier}` : ''}`;
+  el.textContent = text;
+  return el;
+}
+
+function statePill(text, modifier) {
+  const el = document.createElement('span');
+  el.className = `mp-player__state ${modifier}`;
   el.textContent = text;
   return el;
 }
@@ -161,7 +197,7 @@ function buildHandElement(hand, index, seat, ctx) {
   cardsEl.className = 'cards';
   cardsEl.setAttribute('role', 'group');
   cardsEl.setAttribute('aria-label', seat.hands.length > 1
-    ? `${seat.name} — ${t('hand.handN', { n: index + 1 })}`
+    ? `${seat.name}, ${t('hand.handN', { n: index + 1 })}`
     : seat.name);
   for (const card of hand.cards) {
     const cardEl = createCardElement(card);

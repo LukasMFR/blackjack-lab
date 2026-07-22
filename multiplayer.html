@@ -6,7 +6,7 @@
   <meta name="description" content="Blackjack Lab local multiplayer: host or join a fictional-money blackjack table over your own local network.">
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#f4ecdb">
-  <title>Blackjack Lab — Local multiplayer</title>
+  <title>Blackjack Lab · Local multiplayer</title>
   <link rel="icon" type="image/svg+xml" href="src/assets/logo/favicon.svg">
   <link rel="stylesheet" href="src/styles/tokens.css">
   <link rel="stylesheet" href="src/styles/base.css">
@@ -95,28 +95,56 @@
       <p class="mp-tagline" id="menu-tagline"></p>
       <div class="mp-menu">
         <a class="mp-menu-card" href="index.html" id="menu-solo">
+          <span class="mp-menu-card__badge" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="8" r="3.8"/>
+              <path d="M5.2 20.5a6.8 6.8 0 0 1 13.6 0"/>
+            </svg>
+          </span>
           <strong class="mp-menu-card__name" id="menu-solo-name"></strong>
           <span class="mp-menu-card__desc" id="menu-solo-desc"></span>
         </a>
         <button type="button" class="mp-menu-card" id="menu-host">
+          <span class="mp-menu-card__badge" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="9" cy="8.5" r="3.4"/>
+              <path d="M3.2 20a5.8 5.8 0 0 1 11.6 0"/>
+              <path d="M16.4 5.6a3.4 3.4 0 0 1 0 5.8"/>
+              <path d="M17.4 14.6a5.8 5.8 0 0 1 3.4 5.4"/>
+            </svg>
+          </span>
           <strong class="mp-menu-card__name" id="menu-host-name"></strong>
           <span class="mp-menu-card__desc" id="menu-host-desc"></span>
         </button>
         <button type="button" class="mp-menu-card" id="menu-join">
+          <span class="mp-menu-card__badge" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 4.5h4a1.5 1.5 0 0 1 1.5 1.5v12a1.5 1.5 0 0 1-1.5 1.5h-4"/>
+              <path d="M4 12h10.5"/>
+              <path d="m10.5 8 4 4-4 4"/>
+            </svg>
+          </span>
           <strong class="mp-menu-card__name" id="menu-join-name"></strong>
           <span class="mp-menu-card__desc" id="menu-join-desc"></span>
         </button>
         <button type="button" class="mp-menu-card mp-menu-card--restore" id="menu-restore" hidden>
+          <span class="mp-menu-card__badge" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1L3.5 8.4"/>
+              <path d="M3.5 3.5v4.9h4.9"/>
+              <path d="M12 8v4.5l3 1.8"/>
+            </svg>
+          </span>
           <strong class="mp-menu-card__name" id="menu-restore-name"></strong>
           <span class="mp-menu-card__desc" id="menu-restore-desc"></span>
         </button>
       </div>
       <section class="side-card mp-how" aria-labelledby="how-title">
         <h3 class="side-title" id="how-title"></h3>
-        <p class="fine-print" id="how-body-1"></p>
-        <p class="fine-print" id="how-body-2"></p>
-        <p class="fine-print" id="how-body-3"></p>
-        <p class="fine-print" id="how-body-4"></p>
+        <p class="mp-how__item" id="how-body-1"></p>
+        <p class="mp-how__item" id="how-body-2"></p>
+        <p class="mp-how__item" id="how-body-3"></p>
+        <p class="mp-how__item" id="how-body-4"></p>
       </section>
       <p class="callout callout--warning" id="webrtc-unsupported" hidden></p>
     </section>
@@ -131,6 +159,9 @@
 
       <div class="mp-room-layout">
         <div class="mp-room-main">
+          <section class="table mp-lobby" id="mp-lobby" hidden>
+            <p class="table-message" id="mp-lobby-message"></p>
+          </section>
           <section class="table mp-table" id="mp-table" hidden>
             <section class="hand-area hand-area--dealer" aria-labelledby="mp-dealer-label">
               <header class="hand-header">

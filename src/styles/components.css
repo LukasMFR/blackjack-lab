@@ -1015,6 +1015,16 @@ kbd {
   color: var(--loss);
 }
 
+/* Callouts: a quiet framed note; the warning variant strengthens the
+   frame. Both read from theme tokens only. */
+.callout {
+  padding: var(--space-3);
+  font-size: var(--text-s);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-m);
+  background: var(--surface-raised);
+}
+
 .callout--warning {
   padding: var(--space-3);
   font-size: var(--text-s);

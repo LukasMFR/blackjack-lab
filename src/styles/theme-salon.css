@@ -451,6 +451,61 @@
   border-color: color-mix(in srgb, var(--accent) 55%, var(--border-strong));
 }
 
+/* -------------------------------------------------- local multiplayer */
+
+/* The multiplayer screens reuse the salon's paper, brass and lamplight
+   materials so both pages read as one room. */
+[data-theme="salon"] .mp-title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+[data-theme="salon"] .mp-menu-card {
+  background:
+    var(--tex-grain),
+    linear-gradient(180deg, var(--surface-raised), var(--surface));
+  background-blend-mode: soft-light, normal;
+  box-shadow: 0 2px 10px rgb(40 22 8 / 0.1);
+}
+
+[data-theme="salon"] .mp-menu-card:hover,
+[data-theme="salon"] .mp-menu-card:focus-visible {
+  border-color: color-mix(in srgb, var(--gold) 55%, var(--border-strong));
+  box-shadow: var(--shadow);
+}
+
+[data-theme="salon"] .mp-menu-card--restore {
+  border-color: color-mix(in srgb, var(--gold) 45%, var(--border));
+}
+
+[data-theme="salon"] .mp-menu-card__name {
+  font-family: var(--font-display);
+  font-weight: 400;
+}
+
+[data-theme="salon"] .mp-menu-card__badge,
+[data-theme="salon"] .mp-player__avatar {
+  border-color: color-mix(in srgb, var(--gold) 50%, var(--border-strong));
+}
+
+[data-theme="salon"] .mp-player__avatar {
+  color: var(--gold);
+}
+
+/* Lamplight on the seat whose turn it is, mirroring .hand--active. */
+[data-theme="salon"] .mp-seat--active {
+  border-color: color-mix(in srgb, var(--gold) 70%, #fff2d8);
+  background: rgb(255 240 210 / 0.07);
+  box-shadow: 0 0 0 1px rgb(0 0 0 / 0.18), 0 0 26px rgb(255 210 140 / 0.14);
+}
+
+[data-theme="salon"] .mp-seat__name {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
 /* ------------------------------------------------------------------- toast */
 
 [data-theme="salon"] .toast {

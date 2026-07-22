@@ -126,7 +126,7 @@ function showScreen(id) {
 /* ------------------------------------------------------------ static text */
 
 function renderStaticLabels() {
-  document.title = `Blackjack Lab — ${t('mp.menu.title')}`;
+  document.title = `Blackjack Lab · ${t('mp.menu.title')}`;
   $('fictional-badge').textContent = t('app.fictionalBadge');
   $('experimental-badge').textContent = t('mp.badgeExperimental');
   $('language-label').textContent = t('a11y.chooseLanguage');
@@ -329,6 +329,7 @@ function renderRoom() {
   badge.textContent = payload.phase === ROOM_PHASES.LOBBY
     ? t('mp.room.lobbyBadge')
     : t('mp.room.tableBadge');
+  badge.classList.toggle('badge--accent', payload.phase !== ROOM_PHASES.LOBBY);
 
   const banner = $('room-banner');
   if (payload.paused) {
@@ -360,8 +361,12 @@ function renderRoom() {
 
   $('mp-table').hidden = !table;
   $('mp-controls').hidden = !table;
+  $('mp-lobby').hidden = Boolean(table);
   if (!table) {
     $('mp-table-message').textContent = '';
+    $('mp-lobby-message').textContent = isHost
+      ? t('mp.room.lobbyHostHint')
+      : t('mp.room.waitingForHost');
     if (!isHost) announceOnce('lobby', t('mp.room.waitingForHost'));
     return;
   }
@@ -407,7 +412,7 @@ function renderPanels(table, localId) {
   $('mp-panel-actions').hidden = !myTurn;
   $('mp-panel-wait').hidden = Boolean(isBetting || isDeciding || myTurn);
 
-  $('mp-bankroll-value').textContent = seat ? formatMoney(seat.bankrollCents) : '—';
+  $('mp-bankroll-value').textContent = seat ? formatMoney(seat.bankrollCents) : '-';
   const committed = seat
     ? seat.hands.reduce((sum, h) => sum + h.betCents, 0)
       + (seat.insurance?.taken ? seat.insurance.betCents : 0)
@@ -1123,7 +1128,7 @@ function wireEvents() {
   // Invite wizard
   $('btn-invite').addEventListener('click', openInviteDialog);
   $('invite-close').addEventListener('click', closeInviteDialog);
-  $('invite-copy').addEventListener('click', () => copyText($('invite-offer-output').value));
+  $('invite-copy').addEventListener('click', () => copyCodeField($('invite-offer-output')));
   $('invite-share').addEventListener('click', () => shareText($('invite-offer-output').value));
   $('invite-connect').addEventListener('click', connectInviteAnswer);
   $('invite-scan').addEventListener('click', () => beginScan('invite-video', 'invite-scanner', (text) => {
@@ -1153,7 +1158,7 @@ function wireEvents() {
     stopScanner();
     gameAudio.uiClick();
   });
-  $('join-answer-copy').addEventListener('click', () => copyText($('join-answer-output').value));
+  $('join-answer-copy').addEventListener('click', () => copyCodeField($('join-answer-output')));
   $('join-answer-share').addEventListener('click', () => shareText($('join-answer-output').value));
 
   // Room: host controls
@@ -1286,16 +1291,44 @@ function readStoredName() {
   }
 }
 
-async function copyText(text) {
+/**
+ * Copy a pairing code to the clipboard, byte for byte. Codes are
+ * case-sensitive base64url, so the copied text must match the displayed
+ * value exactly, including uppercase characters.
+ * @param {HTMLTextAreaElement} field - the visible code field
+ */
+async function copyCodeField(field) {
+  const text = field.value;
   if (!text) return;
   try {
-    await navigator.clipboard.writeText(text);
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+    } else {
+      copyViaSelection(field);
+    }
     gameAudio.uiClick();
     showToast(t('mp.copied'));
   } catch {
-    gameAudio.actionRejected();
-    showToast(t('mp.copyFailed'));
+    // The async Clipboard API needs a secure context; a room hosted over
+    // plain http on the local network falls back to selection copy.
+    try {
+      copyViaSelection(field);
+      gameAudio.uiClick();
+      showToast(t('mp.copied'));
+    } catch {
+      gameAudio.actionRejected();
+      showToast(t('mp.copyFailed'));
+    }
   }
+}
+
+/** Select the field's exact contents and copy them (legacy path). */
+function copyViaSelection(field) {
+  field.focus();
+  field.setSelectionRange(0, field.value.length);
+  const copied = document.execCommand('copy');
+  field.setSelectionRange(field.value.length, field.value.length);
+  if (!copied) throw new Error('execCommand copy refused');
 }
 
 async function shareText(text) {
