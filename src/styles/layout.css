@@ -4,6 +4,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  /* One row at every width: the brand is the only elastic part, so the
+     actions never drop to a second line. */
+  flex-wrap: nowrap;
   gap: var(--space-3);
   --header-pad-inline: clamp(var(--space-4), 4vw, var(--space-7));
   padding-block: calc(var(--space-3) + var(--safe-top)) var(--space-3);
@@ -18,6 +21,8 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  /* Shrinks before anything else, and can shrink past its content. */
+  flex: 0 1 auto;
   min-width: 0;
 }
 
@@ -39,16 +44,25 @@
   stroke: var(--gold);
 }
 
+/* The wordmark scales with the viewport on small screens (see the compact
+   header block below). The ellipsis is only a guard: if a theme font or a
+   translation still runs long, the name truncates instead of pushing the
+   header wider than the screen. */
 .brand__name {
   font-size: var(--text-xl);
   font-weight: 700;
   letter-spacing: -0.015em;
   white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .header-actions {
   display: flex;
   align-items: center;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
   gap: var(--space-2);
 }
 
@@ -424,12 +438,22 @@
     gap: var(--space-2);
   }
 
+  /*
+   * Compact header. Everything that competes for the single row is sized
+   * from the viewport, so a 320px screen and a 640px one both fit without
+   * wrapping: the brand shrinks fastest, the actions keep a 40x44px touch
+   * target, and only the gaps and paddings give way in between.
+   */
   .brand__name {
-    font-size: var(--text-l);
+    font-size: clamp(0.9rem, 0.3rem + 3.1vw, var(--text-l));
   }
 
   .brand__logo {
-    height: 1.6rem;
+    height: clamp(1.15rem, 0.6rem + 3.1vw, 1.6rem);
+  }
+
+  .brand {
+    gap: clamp(var(--space-1), 1.5vw, var(--space-3));
   }
 
   /* Language lives in the settings panel on small screens. */
@@ -438,16 +462,24 @@
   }
 
   .app-header {
-    flex-wrap: wrap;
-    row-gap: var(--space-1);
+    --header-pad-inline: clamp(var(--space-2), 2vw, var(--space-5));
     padding-block: calc(var(--space-2) + var(--safe-top)) var(--space-2);
+    gap: var(--space-2);
     min-height: 3.25rem;
   }
 
   .header-actions {
     margin-inline-start: auto;
-    flex-wrap: wrap;
     justify-content: flex-end;
+    gap: clamp(0.125rem, 1vw, var(--space-2));
+  }
+
+  /* Narrower than the desktop button, never shorter: the full 44px height
+     is kept so the target stays comfortable under a thumb. */
+  .header-actions .btn--icon {
+    min-height: 2.75rem;
+    min-width: 2.5rem;
+    padding-inline: clamp(var(--space-1), 1.6vw, var(--space-3));
   }
 }
 
@@ -543,27 +575,24 @@
 
   /* The side notch insets shrink the usable width to roughly a portrait
      phone's, so the header gets the same compact treatment as max-width
-     640px: smaller brand, no language select (it lives in the settings
-     panel), and wrapping instead of overlapping when space runs out. */
+     640px: smaller brand and no language select (it lives in the settings
+     panel). The row itself never wraps — the brand absorbs the squeeze. */
   .app-header {
     --header-pad-inline: var(--space-3);
-    flex-wrap: wrap;
-    row-gap: var(--space-1);
     padding-block: calc(var(--space-1) + var(--safe-top)) var(--space-1);
     min-height: 2.5rem;
   }
 
   .brand__name {
-    font-size: var(--text-l);
+    font-size: clamp(0.9rem, 0.3rem + 3.1vw, var(--text-l));
   }
 
   .brand__logo {
-    height: 1.6rem;
+    height: clamp(1.15rem, 0.6rem + 3.1vw, 1.6rem);
   }
 
   .header-actions {
     margin-inline-start: auto;
-    flex-wrap: wrap;
     justify-content: flex-end;
   }
 
