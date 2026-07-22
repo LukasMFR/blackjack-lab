@@ -897,10 +897,24 @@ kbd {
   gap: var(--space-2);
 }
 
-.field-group legend {
+/*
+ * The group's heading is a plain span, and the fieldset is named by pointing
+ * aria-labelledby at it, rather than the <legend> this used to be.
+ *
+ * Safari adds a rendered legend's margin box to its fieldset's intrinsic
+ * block size on top of laying the legend out as a flex item, so every group
+ * measured 30px taller than it drew. A dialog sized to its content — the
+ * join wizard, which is short enough not to reach its maximum height — then
+ * opened 30px too tall and snapped back to the right size the moment
+ * something made Safari lay it out again, which read as the window resizing
+ * under the pointer. The taller dialogs hid the same error behind their
+ * maximum height. Naming the group through ARIA keeps the grouping and its
+ * accessible name while removing the box that was counted twice; the
+ * spacing is unchanged, since the column gap always drew it.
+ */
+.field-group__label {
   font-weight: 700;
   font-size: var(--text-s);
-  margin-bottom: var(--space-2);
 }
 
 .field-group--danger {
