@@ -437,12 +437,6 @@ kbd {
   white-space: nowrap;
 }
 
-.badge--fictional {
-  border-color: var(--accent);
-  color: var(--accent);
-  text-transform: uppercase;
-}
-
 /* ------------------------------------------------------- sidebar cards */
 
 .side-card {

@@ -2,7 +2,6 @@
 export default {
   app: {
     title: 'Blackjack Lab',
-    fictionalBadge: 'Play money',
     fictionalNote: 'All chips are fictional. No real money is ever involved.',
   },
   nav: {
@@ -197,6 +196,10 @@ export default {
     audioOff: 'Sound off',
     audioUnsupported: 'This browser does not support audio playback.',
     information: 'Information & legal',
+    mpAnimationsNote: 'Enhanced animations are available at the solo table only. Multiplayer uses the classic card animations, or none when animations are off.',
+    mpStrategyHintsNote: 'Basic strategy hints are not available in local multiplayer.',
+    mpProfileNote: 'In local multiplayer, the rule profile is chosen by the host when the room is created.',
+    mpBankrollNote: 'In local multiplayer, the starting bankroll is set by the host when the room is created.',
   },
   info: {
     title: 'Information & legal',
@@ -329,8 +332,13 @@ export default {
     shortcutSplit: 'Split',
     shortcutSurrender: 'Surrender',
     shortcutDeal: 'Deal or start the next round',
+    shortcutDealMp: 'Deal or start the next round (host only)',
     shortcutInsuranceAccept: 'Accept insurance',
     shortcutInsuranceDecline: 'Continue without insurance',
+    mpTitle: 'Playing together',
+    mpBody1: 'Each player bets from their own device, then marks themselves Ready. The host deals the round once every bet is in.',
+    mpBody2: 'Hands are played one at a time. The host device runs the table and validates every action, so it must keep its page open.',
+    mpNoRoom: 'Host or join a room to see the rules of its table here.',
     fairness: 'The shoe is shuffled with a cryptographic random source. The dealer follows fixed rules and never makes choices.',
   },
   a11y: {
@@ -366,7 +374,6 @@ export default {
     7: 'Seven', 8: 'Eight', 9: 'Nine', 10: 'Ten',
   },
   mp: {
-    badgeExperimental: 'Experimental',
     back: 'Back',
     copy: 'Copy code',
     copied: 'Code copied.',

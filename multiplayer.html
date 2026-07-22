@@ -34,8 +34,6 @@
         <path class="brand__logo-line" d="M48 1L48 93" fill="none" stroke-width="1.3"/>
       </svg>
       <h1 class="brand__name">Blackjack Lab</h1>
-      <span class="badge badge--fictional" id="fictional-badge"></span>
-      <span class="badge badge--experimental" id="experimental-badge"></span>
     </div>
     <div class="header-actions">
       <div class="menu-select select--compact" id="language-menu">
@@ -88,6 +86,19 @@
           <path d="M5.2 20.5a6.8 6.8 0 0 1 13.6 0"/>
         </svg>
       </a>
+      <button type="button" id="btn-help" class="btn btn--ghost btn--icon" aria-haspopup="dialog">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M9.6 9.3a2.5 2.5 0 0 1 4.9.7c0 1.7-2.5 2.3-2.5 3.6"/>
+          <path d="M12 16.6h.01"/>
+        </svg>
+      </button>
+      <button type="button" id="btn-settings" class="btn btn--ghost btn--icon" aria-haspopup="dialog">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20.50 9.72A8.8 8.8 0 0 1 20.50 14.28L18.22 13.90A6.5 6.5 0 0 1 16.75 16.43L18.22 18.22A8.8 8.8 0 0 1 14.28 20.50L13.46 18.33A6.5 6.5 0 0 1 10.54 18.33L9.72 20.50A8.8 8.8 0 0 1 5.78 18.22L7.25 16.43A6.5 6.5 0 0 1 5.78 13.90L3.50 14.28A8.8 8.8 0 0 1 3.50 9.72L5.78 10.10A6.5 6.5 0 0 1 7.25 7.57L5.78 5.78A8.8 8.8 0 0 1 9.72 3.50L10.54 5.67A6.5 6.5 0 0 1 13.46 5.67L14.28 3.50A8.8 8.8 0 0 1 18.22 5.78L16.75 7.57A6.5 6.5 0 0 1 18.22 10.10Z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </button>
     </div>
   </header>
 
@@ -178,7 +189,8 @@
             <div class="mp-seats" id="mp-seats"></div>
           </section>
 
-          <section class="controls" id="mp-controls" hidden>
+          <section class="controls" id="mp-controls" hidden aria-labelledby="mp-controls-label">
+            <h3 class="sr-only" id="mp-controls-label"></h3>
             <div class="status-strip">
               <div class="stat">
                 <span class="stat__label" id="mp-bankroll-label"></span>
@@ -203,16 +215,54 @@
             </div>
 
             <div id="mp-panel-actions" class="panel" hidden>
-              <div class="button-row button-row--actions" role="group">
-                <button type="button" data-action="HIT" class="btn btn--action btn--action-primary"><span class="btn__label"></span></button>
-                <button type="button" data-action="STAND" class="btn btn--action btn--action-primary"><span class="btn__label"></span></button>
-                <button type="button" data-action="DOUBLE" class="btn btn--action btn--action-secondary"><span class="btn__label"></span></button>
-                <button type="button" data-action="SPLIT" class="btn btn--action btn--action-secondary"><span class="btn__label"></span></button>
+              <div class="button-row button-row--actions" role="group" aria-labelledby="mp-controls-label">
+                <button type="button" data-action="HIT" class="btn btn--action btn--action-primary">
+                  <span class="btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="6" y="3.5" width="12" height="17" rx="2.2"/>
+                      <path d="M12 8.75v6.5M8.75 12h6.5"/>
+                    </svg>
+                  </span>
+                  <span class="btn__label"></span>
+                </button>
+                <button type="button" data-action="STAND" class="btn btn--action btn--action-primary">
+                  <span class="btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M18 11V6a2 2 0 0 0-4 0v5"/>
+                      <path d="M14 10V4a2 2 0 0 0-4 0v2"/>
+                      <path d="M10 10.5V6a2 2 0 0 0-4 0v8"/>
+                      <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/>
+                    </svg>
+                  </span>
+                  <span class="btn__label"></span>
+                </button>
+                <button type="button" data-action="DOUBLE" class="btn btn--action btn--action-secondary">
+                  <span class="btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <ellipse cx="12" cy="7" rx="7" ry="3"/>
+                      <path d="M5 7v4.75c0 1.66 3.13 3 7 3s7-1.34 7-3V7"/>
+                      <path d="M5 11.75v4.75c0 1.66 3.13 3 7 3s7-1.34 7-3v-4.75"/>
+                    </svg>
+                  </span>
+                  <span class="btn__label"></span>
+                </button>
+                <button type="button" data-action="SPLIT" class="btn btn--action btn--action-secondary">
+                  <span class="btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 21v-7"/>
+                      <path d="M12 14 5.5 7.5m6.5 6.5 6.5-6.5"/>
+                      <path d="M10 7.5H5.5V12"/>
+                      <path d="M14 7.5h4.5V12"/>
+                    </svg>
+                  </span>
+                  <span class="btn__label"></span>
+                </button>
                 <button type="button" data-action="SURRENDER" class="btn btn--action"></button>
               </div>
             </div>
 
-            <div id="mp-panel-decision" class="panel" hidden>
+            <div id="mp-panel-decision" class="panel" role="dialog" aria-modal="true" tabindex="-1"
+              aria-labelledby="mp-decision-question" hidden>
               <p class="panel__prompt" id="mp-decision-question"></p>
               <div class="button-row">
                 <button type="button" id="mp-btn-decision-no" class="btn"></button>
@@ -422,6 +472,91 @@
         <p class="field__error" id="invite-error" role="alert" hidden></p>
       </section>
     </div>
+  </dialog>
+
+  <!-- Settings: the same dialog as the solo table. Sections the room cannot
+       change are rendered disabled by settingsView's multiplayer mode. -->
+  <dialog class="dialog dialog--wide" id="dialog-settings" aria-labelledby="settings-title">
+    <div class="dialog__page" id="settings-page-main">
+    <header class="dialog__header">
+      <h2 id="settings-title"></h2>
+      <button type="button" class="btn btn--ghost dialog__close" data-close-dialog></button>
+    </header>
+    <div class="dialog__body" id="settings-body">
+      <fieldset class="field-group">
+        <legend id="set-language-label"></legend>
+        <div class="segment" id="settings-language" role="radiogroup"></div>
+      </fieldset>
+      <fieldset class="field-group">
+        <legend id="set-appearance-label"></legend>
+        <div class="segment" id="settings-appearance" role="radiogroup"></div>
+      </fieldset>
+      <fieldset class="field-group">
+        <legend id="set-theme-label"></legend>
+        <div class="theme-list" id="settings-theme" role="radiogroup"></div>
+      </fieldset>
+      <fieldset class="field-group">
+        <legend id="set-animations-label"></legend>
+        <div class="segment" id="settings-animations" role="radiogroup"></div>
+        <p class="fine-print" id="animations-note"></p>
+        <p class="fine-print" id="animations-reduced-note" hidden></p>
+      </fieldset>
+      <fieldset class="field-group">
+        <legend id="set-shortcut-labels-label"></legend>
+        <div class="audio-controls" id="shortcut-label-controls"></div>
+        <p class="fine-print" id="shortcut-labels-note"></p>
+      </fieldset>
+      <fieldset class="field-group">
+        <legend id="set-strategy-hints-label"></legend>
+        <div class="audio-controls" id="strategy-hint-controls"></div>
+        <p class="fine-print" id="strategy-hints-note"></p>
+      </fieldset>
+      <fieldset class="field-group">
+        <legend id="set-audio-label"></legend>
+        <div class="audio-controls" id="audio-controls"></div>
+      </fieldset>
+      <fieldset class="field-group">
+        <legend id="set-profile-label"></legend>
+        <p class="fine-print" id="profile-note"></p>
+        <div class="profile-list" id="profile-list" role="radiogroup"></div>
+        <p class="fine-print" id="profile-change-note"></p>
+      </fieldset>
+      <form class="custom-editor" id="custom-editor" hidden></form>
+      <div class="field-group field-group--danger">
+        <button type="button" id="btn-set-bankroll" class="btn btn--danger"></button>
+        <p class="fine-print" id="bankroll-locked-note" hidden></p>
+      </div>
+      <div class="field-group field-group--info">
+        <button type="button" id="btn-open-info" class="btn info-entry">
+          <span id="btn-open-info-label"></span>
+          <svg class="info-entry__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m9 6 6 6-6 6"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    </div>
+    <div class="dialog__page" id="settings-page-info" hidden>
+      <header class="dialog__header dialog__header--sub">
+        <button type="button" id="btn-info-back" class="btn btn--ghost btn--icon dialog__back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M19 12H5"/>
+            <path d="m12 19-7-7 7-7"/>
+          </svg>
+        </button>
+        <h2 id="info-title" tabindex="-1"></h2>
+        <button type="button" class="btn btn--ghost dialog__close" data-close-dialog></button>
+      </header>
+      <div class="dialog__body info-body" id="info-body"></div>
+    </div>
+  </dialog>
+
+  <dialog class="dialog dialog--wide" id="dialog-help" aria-labelledby="help-title">
+    <header class="dialog__header">
+      <h2 id="help-title"></h2>
+      <button type="button" class="btn btn--ghost dialog__close" data-close-dialog></button>
+    </header>
+    <div class="dialog__body" id="help-body"></div>
   </dialog>
 
   <!-- Generic confirmation -->

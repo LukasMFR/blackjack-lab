@@ -117,20 +117,6 @@
   color: var(--text-muted);
 }
 
-.badge--experimental {
-  border: 1px solid var(--border-strong);
-  color: var(--text-muted);
-}
-
-/* This page carries two badges next to the brand; on phone widths they
-   wrap under the wordmark instead of clipping at the screen edge. */
-@media (max-width: 640px) {
-  .brand {
-    flex-wrap: wrap;
-    row-gap: var(--space-1);
-  }
-}
-
 /* ------------------------------------------------------------- forms */
 
 /* Host/join forms live in dialog bodies (settings-style modals). */
@@ -294,14 +280,17 @@
   color: var(--accent);
 }
 
+/* Same column proportions and gap as the solo page's .layout grid, so the
+   felt and the sidebar sit identically in both modes. */
 .mp-room-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(14rem, 19rem);
-  gap: var(--space-4);
+  grid-template-columns: minmax(0, 1fr) clamp(19rem, 26vw, 23rem);
+  gap: clamp(var(--space-4), 2.5vw, var(--space-6));
   align-items: start;
 }
 
-@media (max-width: 56rem) {
+/* Same breakpoint as the solo sidebar: below it, cards stack under the felt. */
+@media (max-width: 1023.98px) {
   .mp-room-layout {
     grid-template-columns: 1fr;
   }
@@ -331,6 +320,19 @@
 
 .mp-side-actions:empty {
   display: none;
+}
+
+/* Same action-bar spacing as the solo table's #panel-actions. */
+#mp-panel-actions {
+  gap: var(--space-5);
+  padding-block-start: var(--space-2);
+}
+
+/* The decision container receives programmatic focus when it opens so focus
+   cannot remain behind it. Only its actual action buttons show a focus ring. */
+#mp-panel-decision:focus,
+#mp-panel-decision:focus-visible {
+  outline: none;
 }
 
 .mp-host-buttons {

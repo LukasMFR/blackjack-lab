@@ -41,3 +41,24 @@ export function shortcutSuffix(shortcutKey, visible) {
   if (!visible || !shortcutKey) return '';
   return ` (${shortcutKey.toUpperCase()})`;
 }
+
+/**
+ * Write a translated label, appending the shortcut key as decorative text.
+ * The suffix is aria-hidden so it stays visible without entering the
+ * accessible name: aria-keyshortcuts already carries the key for assistive
+ * technology, and having both announces it twice.
+ * @param {HTMLElement} element
+ * @param {string} label
+ * @param {string} shortcutKey
+ * @param {boolean} visible
+ */
+export function applyShortcutLabel(element, label, shortcutKey, visible) {
+  // Assigning textContent first also clears any suffix left by a prior render.
+  element.textContent = label;
+  const suffix = shortcutSuffix(shortcutKey, visible);
+  if (!suffix) return;
+  const span = document.createElement('span');
+  span.setAttribute('aria-hidden', 'true');
+  span.textContent = suffix;
+  element.append(span);
+}

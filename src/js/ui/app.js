@@ -453,6 +453,12 @@ function performAction(action) {
 const controller = {
   getState: () => state,
   isRoundActive,
+  /** Facts the shared help dialog documents for this table. */
+  getHelpFacts: () => ({
+    mode: 'solo',
+    profileId: state.profileId,
+    profile: state.activeProfile,
+  }),
   setLanguage(language) {
     state.language = language;
     setI18nLanguage(language);

@@ -8,8 +8,14 @@ import { AudioManager } from '../../audio/audioManager.js';
 import { createGameAudio } from '../../audio/gameAudio.js';
 import { AUDIO_SETTINGS_KEY, sanitizeAudioSettings } from '../../audio/audioSettings.js';
 import { unitsToCents } from '../../game/money.js';
-import { ACTIONS, SURRENDER_MODES } from '../../game/constants.js';
-import { getProfile, PROFILE_IDS } from '../../config/profiles.js';
+import { ACTIONS, ROUND_STATES, SURRENDER_MODES } from '../../game/constants.js';
+import { getProfile, PROFILE_IDS, PROFILES } from '../../config/profiles.js';
+import { initSettingsView } from '../../ui/settingsView.js';
+import { handleGameplayShortcut, SHORTCUT_KEYS } from '../../ui/keyboardShortcuts.js';
+import {
+  applyShortcutLabel, loadShortcutLabelsPreference, saveShortcutLabelsPreference,
+  SHORTCUT_LABELS_DESKTOP_QUERY, shouldShowShortcutLabels,
+} from '../../ui/shortcutLabels.js';
 import { HostSession } from '../hostSession.js';
 import { ClientSession } from '../clientSession.js';
 import { MESSAGE_TYPES } from '../protocol.js';
@@ -93,6 +99,12 @@ function sound(key, options) {
 
 const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
 const reduceQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+const desktopShortcutQuery = window.matchMedia(SHORTCUT_LABELS_DESKTOP_QUERY);
+
+/** Whether gameplay buttons currently show their shortcut-letter suffix. */
+function shortcutLabelsVisible() {
+  return shouldShowShortcutLabels(loadShortcutLabelsPreference(), desktopShortcutQuery.matches);
+}
 
 /* Preference keys whose value changes the look of the page. Multiplayer has
    no settings panel of its own: they are written by the solo table. */
@@ -137,6 +149,17 @@ function applyPreferences() {
   applyAppearance();
 }
 
+/** Shared by the header language menu and the settings dialog. */
+function applyLanguage(language) {
+  state.language = language;
+  setI18nLanguage(language);
+  storage.setChoice('language', language);
+  document.documentElement.lang = language;
+  setLanguageMenuValue(language);
+  renderStaticLabels();
+  refreshRestoreCard();
+}
+
 /* -------------------------------------------------------------- screens */
 
 const SCREENS = ['screen-menu', 'screen-room'];
@@ -150,12 +173,16 @@ function showScreen(id) {
 
 function renderStaticLabels() {
   document.title = `Blackjack Lab · ${t('mp.menu.title')}`;
-  $('fictional-badge').textContent = t('app.fictionalBadge');
-  $('experimental-badge').textContent = t('mp.badgeExperimental');
   $('language-label').textContent = t('a11y.chooseLanguage');
   $('btn-solo-link').setAttribute('aria-label', t('mp.menu.solo'));
   $('btn-solo-link').title = t('mp.menu.solo');
+  $('btn-help').setAttribute('aria-label', t('a11y.openHelp'));
+  $('btn-help').title = t('nav.help');
+  $('btn-settings').setAttribute('aria-label', t('a11y.openSettings'));
+  $('btn-settings').title = t('nav.settings');
   $('fictional-note').textContent = t('app.fictionalNote');
+  $('mp-controls-label').textContent = t('a11y.controls');
+  $('live-region').setAttribute('aria-label', t('a11y.announcements'));
 
   $('menu-title').textContent = t('mp.menu.title');
   $('menu-tagline').textContent = t('mp.menu.tagline');
@@ -201,8 +228,14 @@ function renderStaticLabels() {
   $('btn-invite').textContent = t('mp.invite.open');
   $('mp-host-controls-title').textContent = t('mp.room.hostControls');
   $('btn-start-game').textContent = t('mp.room.startGame');
-  $('btn-start-round').textContent = t('mp.room.startRound');
-  $('btn-next-round').textContent = t('mp.room.nextRound');
+  // The host's deal buttons share the solo table's Deal shortcut.
+  const showShortcutLabels = shortcutLabelsVisible();
+  applyShortcutLabel($('btn-start-round'), t('mp.room.startRound'),
+    SHORTCUT_KEYS.DEAL, showShortcutLabels);
+  applyShortcutLabel($('btn-next-round'), t('mp.room.nextRound'),
+    SHORTCUT_KEYS.DEAL, showShortcutLabels);
+  $('btn-start-round').setAttribute('aria-keyshortcuts', SHORTCUT_KEYS.DEAL.toUpperCase());
+  $('btn-next-round').setAttribute('aria-keyshortcuts', SHORTCUT_KEYS.DEAL.toUpperCase());
   $('btn-end-room').textContent = t('mp.room.endRoom');
   $('btn-leave-room').textContent = t('mp.room.leaveRoom');
   $('mp-host-note').textContent = t('mp.room.hostNote');
@@ -237,8 +270,17 @@ function renderStaticLabels() {
   $('invite-close').setAttribute('aria-label', t('a11y.closeDialog'));
 
   for (const button of document.querySelectorAll('#mp-panel-actions [data-action]')) {
+    // Icon-bearing buttons keep their SVG: only the label span is rewritten.
     const label = button.querySelector('.btn__label');
-    (label ?? button).textContent = t(`actions.${button.dataset.action}`);
+    const shortcutKey = SHORTCUT_KEYS[button.dataset.action] ?? '';
+    applyShortcutLabel(
+      label ?? button,
+      t(`actions.${button.dataset.action}`),
+      shortcutKey,
+      showShortcutLabels,
+    );
+    if (shortcutKey) button.setAttribute('aria-keyshortcuts', shortcutKey.toUpperCase());
+    else button.removeAttribute('aria-keyshortcuts');
   }
   updateSoundButton();
   buildHostFormControls();
@@ -434,6 +476,7 @@ function renderPanels(table, localId) {
   $('mp-panel-decision').hidden = !isDeciding;
   $('mp-panel-actions').hidden = !myTurn;
   $('mp-panel-wait').hidden = Boolean(isBetting || isDeciding || myTurn);
+  if (isDeciding) focusPendingDecision();
 
   $('mp-bankroll-value').textContent = seat ? formatMoney(seat.bankrollCents) : '-';
   const committed = seat
@@ -482,16 +525,38 @@ function renderBetPanel(table, seat) {
   });
 }
 
+/**
+ * Enter the decision panel's focus boundary without visually selecting either
+ * choice. The panel declares aria-modal, so focus must never stay behind it —
+ * that holds for early surrender exactly as much as for insurance.
+ */
+function focusPendingDecision() {
+  const panel = $('mp-panel-decision');
+  if (document.querySelector('dialog[open]') || panel.contains(document.activeElement)) return;
+  panel.focus({ preventScroll: true });
+}
+
 function renderDecisionPanel(seat) {
   const half = formatMoney(seat.hands[0].betCents / 2);
+  const showShortcutLabels = shortcutLabelsVisible();
   if (seat.pendingDecision === SEAT_DECISIONS.INSURANCE) {
     $('mp-decision-question').textContent = t('insurance.question', { cost: half });
-    $('mp-btn-decision-yes').textContent = t('insurance.yes');
-    $('mp-btn-decision-no').textContent = t('insurance.no');
+    applyShortcutLabel($('mp-btn-decision-yes'), t('insurance.yes'),
+      SHORTCUT_KEYS.INSURANCE_ACCEPT, showShortcutLabels);
+    applyShortcutLabel($('mp-btn-decision-no'), t('insurance.no'),
+      SHORTCUT_KEYS.INSURANCE_DECLINE, showShortcutLabels);
+    $('mp-btn-decision-yes').setAttribute(
+      'aria-keyshortcuts', SHORTCUT_KEYS.INSURANCE_ACCEPT.toUpperCase(),
+    );
+    $('mp-btn-decision-no').setAttribute(
+      'aria-keyshortcuts', SHORTCUT_KEYS.INSURANCE_DECLINE.toUpperCase(),
+    );
   } else {
     $('mp-decision-question').textContent = t('earlySurrender.question', { half });
     $('mp-btn-decision-yes').textContent = t('earlySurrender.yes');
     $('mp-btn-decision-no').textContent = t('earlySurrender.no');
+    $('mp-btn-decision-yes').removeAttribute('aria-keyshortcuts');
+    $('mp-btn-decision-no').removeAttribute('aria-keyshortcuts');
   }
 }
 
@@ -1127,14 +1192,8 @@ function wireEvents() {
 
   initLanguageMenu({
     onSelect: (language) => {
-      state.language = language;
-      setI18nLanguage(language);
-      storage.setChoice('language', language);
-      document.documentElement.lang = language;
-      setLanguageMenuValue(language);
       gameAudio.settingChanged();
-      renderStaticLabels();
-      refreshRestoreCard();
+      applyLanguage(language);
     },
   });
 
@@ -1305,6 +1364,10 @@ function wireEvents() {
   $('mp-btn-decision-yes').addEventListener('click', () => sendDecision(true));
   $('mp-btn-decision-no').addEventListener('click', () => sendDecision(false));
 
+  // Keyboard shortcuts (same keys as the solo table).
+  document.addEventListener('keydown', handleMpShortcut);
+  desktopShortcutQuery.addEventListener('change', () => renderStaticLabels());
+
   // The host page owns every connection: closing it drops all players.
   window.addEventListener('beforeunload', (event) => {
     if (state.role === 'host' && state.hostSession
@@ -1337,6 +1400,143 @@ function readStoredName() {
   } catch {
     return '';
   }
+}
+
+/* ------------------------------------------------------ settings & help */
+
+/**
+ * Controller for the shared settings/help dialogs (settingsView.js in
+ * multiplayer mode). Preferences that work here (language, appearance,
+ * theme, audio, shortcut labels) read and write the shared store; settings
+ * the room fixes report the value actually in force at this table, so the
+ * dialog never displays a solo-only choice as active.
+ */
+const settingsController = {
+  getState: () => ({
+    language: state.language,
+    appearance: storage.getChoice('appearance', ['system', 'light', 'dark'], 'system'),
+    theme: storage.getChoice('theme', ['classic', 'minimal', 'salon'], 'salon'),
+    // The room's profile (chosen by the host), never the solo selection.
+    profileId: currentPayload()?.room?.profileId ?? null,
+    customProfile: null,
+  }),
+  isRoundActive: () => false,
+  getHelpFacts() {
+    const room = currentPayload()?.room ?? null;
+    let profile = null;
+    if (state.role === 'host') {
+      profile = state.hostSession?.config.profile ?? null;
+    } else if (room && room.profileId !== 'CUSTOM') {
+      // Clients cannot resolve the host's custom rules; named presets they can.
+      profile = PROFILES[room.profileId] ?? null;
+    }
+    return {
+      mode: 'multiplayer',
+      profileId: room?.profileId ?? null,
+      profile,
+      minBetCents: room ? unitsToCents(room.minBetUnits) : null,
+      maxBetCents: room ? unitsToCents(room.maxBetUnits) : null,
+    };
+  },
+  setLanguage(language) {
+    applyLanguage(language);
+  },
+  setAppearance(appearance) {
+    storage.setChoice('appearance', appearance);
+    applyAppearance();
+  },
+  setTheme(theme) {
+    storage.setChoice('theme', theme);
+    applyAppearance();
+  },
+  getShortcutLabelsPreference: () => loadShortcutLabelsPreference(),
+  setShortcutLabelsPreference(enabled) {
+    saveShortcutLabelsPreference(enabled === true);
+    renderStaticLabels();
+  },
+  // Strategy hints never render in multiplayer: the switch shows the state
+  // in force (off) and stays disabled.
+  getStrategyHintsPreference: () => false,
+  setStrategyHintsPreference() {},
+  /** The mode this page actually uses (enhanced is solo-only). */
+  getAnimationMode() {
+    const anim = storage.getChoice('animations', ['enhanced', 'classic', 'off'], null);
+    return anim === 'off' || (anim === null && reduceQuery.matches) ? 'off' : 'classic';
+  },
+  setAnimationMode(mode) {
+    storage.setChoice('animations', mode);
+    applyAppearance();
+  },
+  isReducedMotionPreferred: () => reduceQuery.matches,
+  // Rule profile and starting bankroll are fixed by the host at room
+  // creation; the dialog renders them read-only, so these never run.
+  setProfile() {},
+  applyCustomSettings() {},
+  getStartingBankrollCents: () => 0,
+  setStartingBankroll() {},
+  audio: gameAudio,
+  audioSupported: () => audioManager.supported,
+  getAudioSettings: () => audioManager.settings,
+  setAudioSettings(patch) {
+    audioManager.updateSettings(patch);
+    updateSoundButton();
+  },
+  restoreAudioDefaults() {
+    audioManager.restoreDefaults();
+    updateSoundButton();
+  },
+  playTestSound: () => audioManager.playTestSound(),
+};
+
+/* -------------------------------------------------------------- keyboard */
+
+/**
+ * Route gameplay keys through the same dispatcher as the solo table. The
+ * shared handler expects an engine-style snapshot, so the local player's
+ * slice of the table snapshot is adapted: their pending decision, whether
+ * it is their turn, and (for the host) whether the Deal key may start or
+ * clear a round.
+ */
+function handleMpShortcut(event) {
+  const payload = currentPayload();
+  const table = payload?.table;
+  if (!table || $('screen-room').hidden || payload.paused) return;
+  const localId = myPlayerId();
+  const seat = table.seats.find((s) => s.playerId === localId) ?? null;
+  const isHost = state.role === 'host';
+
+  let roundState = null;
+  if (table.state === TABLE_STATES.PLAYER_TURN && table.activePlayerId === localId) {
+    roundState = ROUND_STATES.PLAYER_TURN;
+  } else if (isHost && table.state === TABLE_STATES.BETTING) {
+    roundState = ROUND_STATES.WAITING_FOR_BET;
+  } else if (isHost && table.state === TABLE_STATES.ROUND_COMPLETE) {
+    roundState = ROUND_STATES.ROUND_COMPLETE;
+  }
+
+  handleGameplayShortcut(event, {
+    snapshot: {
+      pendingDecision: seat?.pendingDecision ?? null,
+      roundState,
+      actionAvailability: seat?.actionAvailability ?? {},
+    },
+    hasOpenDialog: Boolean(document.querySelector('dialog[open]')),
+    activeElement: document.activeElement,
+    decisionButtons: {
+      accept: $('mp-btn-decision-yes'),
+      decline: $('mp-btn-decision-no'),
+    },
+    // The host buttons already guard themselves: a disabled button
+    // ignores click() entirely.
+    deal: () => $('btn-start-round').click(),
+    nextRound: () => $('btn-next-round').click(),
+    performAction: (action) => {
+      gameAudio.actionAccepted(action);
+      sendCommand(MESSAGE_TYPES.GAME_ACTION, { action });
+    },
+    decideInsurance: (accept) => sendDecision(accept),
+    rejectAction: () => gameAudio.actionRejected(),
+  });
 }
 
 /**
@@ -1393,6 +1593,9 @@ function boot() {
   applyPreferences();
   initFocusModality();
   wireEvents();
+  // After wireEvents: dialog close sounds are wired there, and the
+  // multiplayer mode of the settings view deliberately skips them.
+  initSettingsView(settingsController, { mode: 'multiplayer' });
   setLanguageMenuValue(state.language);
   renderStaticLabels();
   refreshRestoreCard();

@@ -2,7 +2,6 @@
 export default {
   app: {
     title: 'Blackjack Lab',
-    fictionalBadge: 'Argent fictif',
     fictionalNote: 'Tous les jetons sont fictifs. Aucun argent réel n’est jamais en jeu.',
   },
   nav: {
@@ -197,6 +196,10 @@ export default {
     audioOff: 'Son désactivé',
     audioUnsupported: 'Ce navigateur ne prend pas en charge la lecture audio.',
     information: 'Informations et mentions légales',
+    mpAnimationsNote: 'Les animations améliorées ne sont disponibles qu’à la table solo. Le multijoueur utilise les animations classiques des cartes, ou aucune si elles sont désactivées.',
+    mpStrategyHintsNote: 'Les conseils de stratégie de base ne sont pas disponibles en multijoueur local.',
+    mpProfileNote: 'En multijoueur local, le profil de règles est choisi par l’hôte à la création du salon.',
+    mpBankrollNote: 'En multijoueur local, le capital de départ est défini par l’hôte à la création du salon.',
   },
   info: {
     title: 'Informations et mentions légales',
@@ -329,8 +332,13 @@ export default {
     shortcutSplit: 'Séparer',
     shortcutSurrender: 'Abandonner',
     shortcutDeal: 'Distribuer ou lancer la manche suivante',
+    shortcutDealMp: 'Distribuer ou lancer la manche suivante (hôte uniquement)',
     shortcutInsuranceAccept: 'Accepter l’assurance',
     shortcutInsuranceDecline: 'Continuer sans assurance',
+    mpTitle: 'Jouer à plusieurs',
+    mpBody1: 'Chaque joueur mise depuis son propre appareil, puis se déclare prêt. L’hôte distribue la manche quand toutes les mises sont placées.',
+    mpBody2: 'Les mains se jouent l’une après l’autre. L’appareil hôte fait tourner la table et valide chaque action : il doit garder sa page ouverte.',
+    mpNoRoom: 'Hébergez ou rejoignez un salon pour voir ici les règles de sa table.',
     fairness: 'Le sabot est mélangé avec une source aléatoire cryptographique. Le croupier suit des règles fixes et ne fait jamais de choix.',
   },
   a11y: {
@@ -366,7 +374,6 @@ export default {
     7: 'Sept', 8: 'Huit', 9: 'Neuf', 10: 'Dix',
   },
   mp: {
-    badgeExperimental: 'Expérimental',
     back: 'Retour',
     copy: 'Copier le code',
     copied: 'Code copié.',

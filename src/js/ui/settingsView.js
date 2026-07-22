@@ -1,7 +1,6 @@
 import { t } from '../i18n/index.js';
 import { formatMoney, formatRatio } from './format.js';
 import { profileSummaryChips } from './profileSummary.js';
-import { SHORTCUT_KEYS } from './keyboardShortcuts.js';
 import { PROFILE_IDS, PROFILES } from '../config/profiles.js';
 import { DEAL_MODES } from '../game/constants.js';
 import { CENTS_PER_UNIT } from '../game/money.js';
@@ -10,16 +9,26 @@ import {
   MAX_BANKROLL_CENTS, MIN_BANKROLL_CENTS, parseStartingBankroll,
 } from './bankrollSettings.js';
 import { renderInfoPage } from './infoView.js';
+import { renderHelpBody } from './helpView.js';
 
 /**
- * Settings and help dialogs. Receives a controller object from app.js and
+ * Settings and help dialogs, shared by the solo table and the local
+ * multiplayer room. Receives a controller object (app.js or mpApp.js) and
  * never talks to the engine directly.
+ *
+ * In multiplayer mode the dialog stays complete: settings the room cannot
+ * change (rule profile, bankroll, strategy hints, enhanced animations) are
+ * shown disabled with the value actually in force at the table, never the
+ * value the solo page has stored.
  */
 
 const $ = (id) => document.getElementById(id);
 
 let controller = null;
 let customDraft = null;
+let viewMode = 'solo'; // 'solo' | 'multiplayer'
+
+const isMultiplayer = () => viewMode === 'multiplayer';
 
 const APPEARANCES = ['system', 'light', 'dark'];
 const THEMES = ['classic', 'minimal', 'salon'];
@@ -58,30 +67,39 @@ const THEME_ICONS = {
   salon: svg('<path d="m3.5 8 1.6 9.5h13.8L20.5 8l-4.6 3.2L12 5l-3.9 6.2z"/>'),
 };
 
-/** @param {object} appController */
-export function initSettingsView(appController) {
+/**
+ * @param {object} appController
+ * @param {{mode?: 'solo'|'multiplayer'}} [options]
+ */
+export function initSettingsView(appController, { mode = 'solo' } = {}) {
   controller = appController;
+  viewMode = mode;
 
-  for (const dialog of document.querySelectorAll('dialog')) {
-    dialog.addEventListener('click', (event) => {
-      if (event.target === dialog) dialog.close();
-    });
-    // One close sound per dialog, whatever closed it (button, Esc, backdrop).
-    dialog.addEventListener('close', () => controller.audio.dialogClosed());
-  }
-  for (const button of document.querySelectorAll('[data-close-dialog]')) {
-    button.addEventListener('click', () => button.closest('dialog').close());
+  // The multiplayer page wires its own dialog sounds and close buttons
+  // (its pairing dialogs need them before settings exist); wiring them
+  // twice would play two sounds per close.
+  if (!isMultiplayer()) {
+    for (const dialog of document.querySelectorAll('dialog')) {
+      dialog.addEventListener('click', (event) => {
+        if (event.target === dialog) dialog.close();
+      });
+      // One close sound per dialog, whatever closed it (button, Esc, backdrop).
+      dialog.addEventListener('close', () => controller.audio.dialogClosed());
+    }
+    for (const button of document.querySelectorAll('[data-close-dialog]')) {
+      button.addEventListener('click', () => button.closest('dialog').close());
+    }
   }
 
   $('btn-settings').addEventListener('click', () => openSettings());
-  $('btn-profile').addEventListener('click', () => openSettings());
+  $('btn-profile')?.addEventListener('click', () => openSettings());
   $('btn-help').addEventListener('click', () => {
     renderHelp();
     controller.audio.dialogOpened();
     $('dialog-help').showModal();
   });
   $('btn-set-bankroll').addEventListener('click', () => {
-    if (controller.isRoundActive()) return;
+    if (isMultiplayer() || controller.isRoundActive()) return;
     openBankrollDialog();
   });
   $('btn-open-info').addEventListener('click', () => {
@@ -92,9 +110,10 @@ export function initSettingsView(appController) {
     controller.audio.uiClick();
     showMainPage();
   });
-  $('btn-bankroll-cancel').addEventListener('click', () => $('dialog-bankroll').close());
-  $('bankroll-amount').addEventListener('input', clearBankrollError);
-  $('bankroll-form').addEventListener('submit', submitBankroll);
+  // The bankroll dialog only exists on the solo page.
+  $('btn-bankroll-cancel')?.addEventListener('click', () => $('dialog-bankroll').close());
+  $('bankroll-amount')?.addEventListener('input', clearBankrollError);
+  $('bankroll-form')?.addEventListener('submit', submitBankroll);
 }
 
 function openSettings() {
@@ -147,7 +166,9 @@ export function renderSettings() {
   $('set-theme-label').textContent = t('settings.theme');
   $('set-profile-label').textContent = t('settings.profile');
   $('profile-note').textContent = t('profiles.presetNote');
-  $('profile-change-note').textContent = t('settings.profileChangeNote');
+  $('profile-change-note').textContent = isMultiplayer()
+    ? t('settings.mpProfileNote')
+    : t('settings.profileChangeNote');
   $('btn-open-info-label').textContent = t('settings.information');
   renderBankrollButton();
 
@@ -170,7 +191,7 @@ export function renderSettings() {
   buildCustomEditor(state);
 }
 
-function buildSegment(container, values, current, labelOf, onSelect, iconOf) {
+function buildSegment(container, values, current, labelOf, onSelect, iconOf, disabledOf) {
   container.textContent = '';
   for (const value of values) {
     const option = document.createElement('button');
@@ -178,6 +199,7 @@ function buildSegment(container, values, current, labelOf, onSelect, iconOf) {
     option.className = 'segment__option';
     option.setAttribute('role', 'radio');
     option.setAttribute('aria-checked', String(value === current));
+    option.disabled = Boolean(disabledOf?.(value));
     if (iconOf) {
       const icon = document.createElement('span');
       icon.className = 'segment__icon';
@@ -238,11 +260,17 @@ function buildThemeList(state) {
 
 function renderAnimationSection() {
   $('set-animations-label').textContent = t('settings.animations');
+  // The enhanced motion director only runs on the solo table: in
+  // multiplayer the option stays visible but disabled, and the checked
+  // value is the mode the room actually uses.
   buildSegment($('settings-animations'), ANIMATION_MODES, controller.getAnimationMode(),
     (value) => t(`settings.animations${value[0].toUpperCase()}${value.slice(1)}`),
     (value) => controller.setAnimationMode(value),
-    (value) => ANIMATION_ICONS[value]);
-  $('animations-note').textContent = t('settings.animationsNote');
+    (value) => ANIMATION_ICONS[value],
+    isMultiplayer() ? (value) => value === 'enhanced' : null);
+  $('animations-note').textContent = isMultiplayer()
+    ? t('settings.mpAnimationsNote')
+    : t('settings.animationsNote');
   // Reduced-motion users see why the default is calmer than Enhanced.
   const reducedNote = $('animations-reduced-note');
   reducedNote.textContent = t('settings.animationsReduced');
@@ -275,18 +303,22 @@ function renderStrategyHintsSection() {
   $('set-strategy-hints-label').textContent = t('settings.strategyHints');
   const container = $('strategy-hint-controls');
   container.textContent = '';
+  // Hints never render in multiplayer: the switch stays visible but
+  // disabled, showing the off state actually in force at the table.
   container.append(switchRow(
     'strategy-hints-enabled',
     t('settings.strategyHintsShow'),
     controller.getStrategyHintsPreference(),
-    false,
+    isMultiplayer(),
     (value) => {
       controller.setStrategyHintsPreference(value);
       controller.audio.settingChanged();
       renderStrategyHintsSection();
     },
   ));
-  $('strategy-hints-note').textContent = t('settings.strategyHintsNote');
+  $('strategy-hints-note').textContent = isMultiplayer()
+    ? t('settings.mpStrategyHintsNote')
+    : t('settings.strategyHintsNote');
 }
 
 /* ------------------------------------------------------------- audio UI */
@@ -431,7 +463,9 @@ function buildProfileList(state) {
     option.className = 'profile-option';
     option.setAttribute('role', 'radio');
     option.setAttribute('aria-checked', String(id === state.profileId));
-    option.disabled = locked && id !== state.profileId;
+    // Multiplayer: the host fixed the profile at room creation, so the whole
+    // list is read-only; the checked entry is the room's actual profile.
+    option.disabled = isMultiplayer() || (locked && id !== state.profileId);
 
     const name = document.createElement('span');
     name.className = 'profile-option__name';
@@ -571,7 +605,7 @@ function defaultDraft(state) {
 
 function buildCustomEditor(state) {
   const form = $('custom-editor');
-  if (state.profileId !== 'CUSTOM') {
+  if (isMultiplayer() || state.profileId !== 'CUSTOM') {
     form.hidden = true;
     customDraft = null;
     return;
@@ -667,12 +701,16 @@ function parseDraft(draft) {
  * that already holds committed bets.
  */
 function renderBankrollButton() {
-  const locked = controller.isRoundActive();
+  // Multiplayer: the host fixed the starting bankroll at room creation, so
+  // the button stays visible but permanently disabled.
+  const locked = isMultiplayer() || controller.isRoundActive();
   const button = $('btn-set-bankroll');
   button.textContent = t('settings.setBankroll');
   button.disabled = locked;
   const note = $('bankroll-locked-note');
-  note.textContent = t('settings.bankrollLocked');
+  note.textContent = isMultiplayer()
+    ? t('settings.mpBankrollNote')
+    : t('settings.bankrollLocked');
   note.hidden = !locked;
 }
 
@@ -743,92 +781,6 @@ function submitBankroll(event) {
 /* -------------------------------------------------------------- help body */
 
 export function renderHelp() {
-  const state = controller.getState();
-  const profile = state.activeProfile;
   $('help-title').textContent = t('help.title');
-  const body = $('help-body');
-  body.textContent = '';
-
-  // Two columns on wide screens (CSS collapses them to one below the
-  // breakpoint): rules of play on the left, this-table facts on the right.
-  const columns = document.createElement('div');
-  columns.className = 'help-columns';
-  const left = document.createElement('div');
-  left.className = 'help-col';
-  const right = document.createElement('div');
-  right.className = 'help-col';
-  columns.append(left, right);
-  body.append(columns);
-
-  const section = (column, titleText) => {
-    const wrap = document.createElement('section');
-    wrap.className = 'help-section';
-    const h = document.createElement('h3');
-    h.textContent = titleText;
-    wrap.append(h);
-    column.append(wrap);
-    return wrap;
-  };
-
-  const paragraph = (parent, text, className) => {
-    const p = document.createElement('p');
-    if (className) p.className = className;
-    p.textContent = text;
-    parent.append(p);
-  };
-
-  paragraph(section(left, t('help.goal')), t('help.goalBody'));
-  paragraph(section(left, t('help.blackjack')), t('help.blackjackBody'));
-
-  const actionsSection = section(left, t('help.actionsTitle'));
-  const actionList = document.createElement('ul');
-  actionList.className = 'help-list';
-  const actionRows = [
-    ['actions.HIT', 'help.hitBody'],
-    ['actions.STAND', 'help.standBody'],
-    ['actions.DOUBLE', 'help.doubleBody'],
-    ['actions.SPLIT', 'help.splitBody'],
-    ['actions.SURRENDER', 'help.surrenderBody'],
-  ];
-  for (const [nameKey, bodyKey] of actionRows) {
-    const li = document.createElement('li');
-    const strong = document.createElement('strong');
-    strong.textContent = `${t(nameKey)} : `;
-    li.append(strong, document.createTextNode(t(bodyKey)));
-    actionList.append(li);
-  }
-  actionsSection.append(actionList);
-
-  paragraph(section(left, t('help.insuranceTitle')), t('help.insuranceBody'));
-
-  const tableSection = section(
-    right,
-    `${t('help.tableTitle')} : ${t(`profiles.${state.profileId}.name`)}`
-  );
-  paragraph(tableSection, profileSummaryChips(profile).join(' · '));
-  paragraph(tableSection, t('profiles.presetNote'), 'fine-print');
-
-  const shortcutsSection = section(right, t('help.shortcutsTitle'));
-  const shortcutList = document.createElement('ul');
-  shortcutList.className = 'shortcut-list';
-  const shortcuts = [
-    [SHORTCUT_KEYS.HIT, t('help.shortcutHit')],
-    [SHORTCUT_KEYS.STAND, t('help.shortcutStand')],
-    [SHORTCUT_KEYS.DOUBLE, t('help.shortcutDouble')],
-    [SHORTCUT_KEYS.SPLIT, t('help.shortcutSplit')],
-    [SHORTCUT_KEYS.SURRENDER, t('help.shortcutSurrender')],
-    [SHORTCUT_KEYS.DEAL, t('help.shortcutDeal')],
-    [SHORTCUT_KEYS.INSURANCE_ACCEPT, t('help.shortcutInsuranceAccept')],
-    [SHORTCUT_KEYS.INSURANCE_DECLINE, t('help.shortcutInsuranceDecline')],
-  ];
-  for (const [key, label] of shortcuts) {
-    const li = document.createElement('li');
-    const kbd = document.createElement('kbd');
-    kbd.textContent = key.toUpperCase();
-    li.append(kbd, document.createTextNode(` ${label}`));
-    shortcutList.append(li);
-  }
-  shortcutsSection.append(shortcutList);
-
-  paragraph(right, t('help.fairness'), 'fine-print');
+  renderHelpBody($('help-body'), controller.getHelpFacts());
 }
