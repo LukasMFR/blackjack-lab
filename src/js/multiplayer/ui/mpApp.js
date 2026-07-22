@@ -785,19 +785,20 @@ function showInviteError(text) {
   gameAudio.actionRejected();
 }
 
+/** @returns {Promise<boolean>} whether the answer was applied to the session. */
 async function connectInviteAnswer() {
   $('invite-error').hidden = true;
   const raw = $('invite-answer-input').value.trim();
-  if (!raw || !state.inviteLink) return;
+  if (!raw || !state.inviteLink) return false;
   const decoded = await decodeSignal(raw, { expectKind: SIGNAL_KINDS.ANSWER });
   if (!decoded.ok) {
     showInviteError(signalErrorText(decoded.code));
-    return;
+    return false;
   }
   if (decoded.signal.sessionId !== state.hostSession.sessionId
     || decoded.signal.peerId !== state.invitePeerId) {
     showInviteError(signalErrorText('WRONG_ROOM'));
-    return;
+    return false;
   }
   try {
     // The link belongs to the session from here on: the dialog-close
@@ -808,9 +809,11 @@ async function connectInviteAnswer() {
     await acceptAnswer(link, decoded.signal.description);
     $('invite-connect').disabled = true;
     setTimeout(() => { $('invite-connect').disabled = false; }, 500);
+    return true;
   } catch (error) {
     console.error(error);
     showInviteError(t('mp.errors.connectFailed'));
+    return false;
   }
 }
 
@@ -1006,6 +1009,24 @@ function scannerErrorText(code) {
   return t(key);
 }
 
+/**
+ * Voice a scan once — and only once — the wizard confirms it took the code.
+ *
+ * `onCode` may work asynchronously (the invite wizard applies the answer and
+ * opens the peer connection), so the chime waits for its verdict instead of
+ * firing on detection alone. A code that decodes but is stale, from another
+ * room, or unusable stays silent and is reported by its own error message.
+ *
+ * @param {boolean|Promise<boolean>} imported - what the onCode callback returned
+ */
+function confirmScanImport(imported) {
+  Promise.resolve(imported).then((accepted) => {
+    if (accepted === true) gameAudio.qrScanned();
+  }, (error) => {
+    console.error(error);
+  });
+}
+
 async function beginScan(videoId, scannerId, onCode) {
   stopScanner();
   const support = getQrScanningSupport();
@@ -1021,8 +1042,9 @@ async function beginScan(videoId, scannerId, onCode) {
   try {
     const scanner = await startQrScanner($(videoId), (text) => {
       if (!text.startsWith('BJL')) return;
-      onCode(text);
+      const imported = onCode(text);
       stopScanner();
+      confirmScanImport(imported);
     }, {
       signal: controller.signal,
       onDecodeError(error) {
@@ -1153,9 +1175,11 @@ function wireEvents() {
   $('invite-copy').addEventListener('click', () => copyCodeField($('invite-offer-output')));
   $('invite-share').addEventListener('click', () => shareText($('invite-offer-output').value));
   $('invite-connect').addEventListener('click', connectInviteAnswer);
+  // The scanned answer is only "imported" once it is actually applied to the
+  // session, so the callback hands connectInviteAnswer's verdict back.
   $('invite-scan').addEventListener('click', () => beginScan('invite-video', 'invite-scanner', (text) => {
     $('invite-answer-input').value = text;
-    connectInviteAnswer();
+    return connectInviteAnswer();
   }));
   $('invite-scan-stop').addEventListener('click', () => {
     stopScanner();
@@ -1173,8 +1197,10 @@ function wireEvents() {
     showJoinPage('start');
     $('join-waiting').textContent = '';
   });
+  // Scanning the invitation only fills the field; Continue validates it.
   $('join-scan').addEventListener('click', () => beginScan('join-video', 'join-scanner', (text) => {
     $('join-offer-input').value = text;
+    return true;
   }));
   $('join-scan-stop').addEventListener('click', () => {
     stopScanner();

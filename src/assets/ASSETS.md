@@ -109,7 +109,7 @@ with `loudnorm I=-17`).
 - Files: `audio/results/win.mp3`, `audio/results/blackjack.mp3`,
   `audio/results/push.mp3`, `audio/results/loss.mp3`,
   `audio/results/bust-1..2.mp3`, `audio/results/knock.mp3`,
-  `audio/ui/invalid.mp3`
+  `audio/ui/invalid.mp3`, `audio/ui/scan-success.mp3`
 - Creator: generated locally for this project (procedural synthesis:
   felt-mallet/celesta partials, band-limited noise bursts; NumPy script,
   rendered to WAV, encoded to MP3 with ffmpeg).
@@ -118,6 +118,12 @@ with `loudnorm I=-17`).
 - Design intent: an elegant, restrained result hierarchy (blackjack >
   win > push > loss), deliberately avoiding slot-machine or arcade
   celebration.
+- `ui/scan-success.mp3` confirms an imported pairing QR code in local
+  multiplayer. It is the positive counterpart of `ui/invalid.mp3` and
+  belongs to the interface family rather than the result family: a
+  single short A5 → D6 mallet gesture (the same D major the win and
+  blackjack sounds are built on) with an F#6 sparkle and a brief
+  band-limited noise strike, 0.60 s, mono, peak-normalized to −3 dBFS.
 
 ### Casino-room ambience
 

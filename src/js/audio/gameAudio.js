@@ -100,6 +100,13 @@ export function createGameAudio(manager) {
     roundCleared() { manager.playSound('cardShove', { gainScale: 0.7 }); },
     bankrollReset() { manager.playSound('chipHandle'); },
 
+    /**
+     * A pairing QR code was read from the camera and accepted by the wizard.
+     * Never called for a frame that merely failed to decode, nor for a code
+     * the pairing flow went on to reject.
+     */
+    qrScanned() { manager.playSound('uiScanSuccess'); },
+
     dialogOpened() { manager.playSound('uiOpen'); },
     dialogClosed() { manager.playSound('uiClose'); },
     settingChanged() { manager.playSound('uiToggle'); },

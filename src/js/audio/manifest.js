@@ -81,6 +81,9 @@ export const SOUNDS = Object.freeze({
   uiOpen: { files: ['ui/open.mp3'], gain: 0.4, ui: true },
   uiClose: { files: ['ui/close.mp3'], gain: 0.35, ui: true },
   uiInvalid: { files: ['ui/invalid.mp3'], gain: 0.65, ui: true },
+  // The positive counterpart of uiInvalid: a pairing QR code was read and
+  // accepted. Levelled to match it so the two answers feel like a pair.
+  uiScanSuccess: { files: ['ui/scan-success.mp3'], gain: 0.6, ui: true },
 });
 
 /**

@@ -1,8 +1,11 @@
+import { access } from 'node:fs/promises';
 import { test, assert, assertEqual } from './runner.js';
 import { AudioManager } from '../src/js/audio/audioManager.js';
 import { createGameAudio, resultSoundKey } from '../src/js/audio/gameAudio.js';
 import { DEFAULT_AUDIO_SETTINGS, sanitizeAudioSettings } from '../src/js/audio/audioSettings.js';
-import { SOUNDS, allSoundFiles, MUSIC_TRACK } from '../src/js/audio/manifest.js';
+import {
+  AUDIO_BASE, SOUNDS, allSoundFiles, MUSIC_TRACK,
+} from '../src/js/audio/manifest.js';
 
 /* ------------------------------------------------- fake Web Audio context */
 
@@ -159,6 +162,13 @@ test('manifest: every sound has files and a sane gain', () => {
   assert(allSoundFiles().length >= 25, 'preload list covers the library');
 });
 
+test('manifest: every referenced audio file is actually bundled', async () => {
+  const root = new URL('../', import.meta.url);
+  for (const file of allSoundFiles().concat(MUSIC_TRACK)) {
+    await access(new URL(`${AUDIO_BASE}${file}`, root));
+  }
+});
+
 /* ---------------------------------------------------------- unlock rules */
 
 test('no AudioContext exists before the first user gesture', () => {
@@ -295,10 +305,14 @@ test('effects toggle gates gameplay sounds; UI toggle gates only UI sounds', asy
   await settle();
   manager.updateSettings({ uiSoundsEnabled: false });
   assertEqual(manager.playSound('uiClick'), false, 'ui sound gated');
+  assertEqual(manager.playSound('uiScanSuccess'), false, 'scan chime gated');
   assertEqual(manager.playSound('cardDeal'), true, 'gameplay sound not gated');
   manager.updateSettings({ uiSoundsEnabled: true, effectsEnabled: false });
   assertEqual(manager.playSound('cardDeal'), false, 'effects channel off');
   assertEqual(manager.playSound('uiClick'), false, 'ui rides the effects channel');
+  assertEqual(manager.playSound('uiScanSuccess'), false, 'scan chime too');
+  manager.updateSettings({ effectsEnabled: true, muted: true });
+  assertEqual(manager.playSound('uiScanSuccess'), false, 'mute silences the chime');
   manager.dispose();
 });
 
@@ -518,6 +532,20 @@ test('a mid-round bust gets its thud; a round-ending bust defers to the result',
   });
   audio.roundTransition(twoHands, oneBusted);
   assertEqual(fake.calls.filter((c) => c.key === 'bust').length, 1, 'mid-round thud');
+});
+
+test('a successful QR scan is voiced once, on its own interface sound', () => {
+  const fake = recordingManager();
+  const audio = createGameAudio(fake);
+  audio.qrScanned();
+  assertEqual(fake.calls.length, 1, 'one sound');
+  assertEqual(fake.calls[0].key, 'uiScanSuccess');
+  assertEqual(SOUNDS.uiScanSuccess.ui, true, 'gated by the interface preference');
+  assert(!SOUNDS.uiScanSuccess.important, 'a scan must not duck the music');
+  // A rejected code and a failed camera keep using the negative feedback.
+  fake.calls.length = 0;
+  audio.actionRejected();
+  assertEqual(fake.calls[0].key, 'uiInvalid', 'failure stays distinct');
 });
 
 test('music track constant points into the manifest base', () => {
