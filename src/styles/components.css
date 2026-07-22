@@ -97,6 +97,12 @@ kbd {
 .btn__icon {
   display: inline-flex;
   flex-shrink: 0;
+  /* Safari re-snaps in-flow SVG rasterization to a different device pixel
+     when hint-driven repaints land during card animations, making the icons
+     jiggle. Compositing each icon on its own layer keeps its raster
+     position fixed across repaints. Verified against screen recordings;
+     a paint-only marker was not enough to stop it. */
+  transform: translateZ(0);
 }
 
 .btn--icon {
