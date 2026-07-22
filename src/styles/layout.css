@@ -273,8 +273,8 @@
 /* Keep the optional advice visually distinct from both the bankroll
    summary above and the decision controls below. */
 #panel-actions {
-  gap: var(--space-5);
-  padding-block-start: var(--space-2);
+  gap: var(--space-4);
+  padding-block-start: 0;
 }
 
 /* The decision container receives programmatic focus when it opens so focus
