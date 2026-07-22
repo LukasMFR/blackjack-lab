@@ -90,28 +90,50 @@ function sound(key, options) {
 
 /* ---------------------------------------------------------- preferences */
 
-function applyPreferences() {
-  state.language = storage.getChoice('language', ['en', 'fr'], null) ?? detectLanguage();
-  setI18nLanguage(state.language);
-  document.documentElement.lang = state.language;
+const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+const reduceQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 
+/* Preference keys whose value changes the look of the page. Multiplayer has
+   no settings panel of its own: they are written by the solo table. */
+const APPEARANCE_KEYS = ['appearance', 'theme', 'animations']
+  .map((key) => storage.PREFIX + key);
+
+/**
+ * Resolve the appearance tokens on <html> from the stored preferences and the
+ * current system settings. Re-runnable: called again whenever the OS
+ * appearance flips or another tab changes a preference.
+ */
+function applyAppearance() {
   const appearance = storage.getChoice('appearance', ['system', 'light', 'dark'], 'system');
-  const dark = window.matchMedia('(prefers-color-scheme: dark)');
-  const mode = appearance === 'system' ? (dark.matches ? 'dark' : 'light') : appearance;
+  const mode = appearance === 'system' ? (darkQuery.matches ? 'dark' : 'light') : appearance;
   document.documentElement.dataset.mode = mode;
   document.documentElement.dataset.theme = storage.getChoice('theme', ['classic', 'minimal', 'salon'], 'salon');
 
   // The enhanced motion director is solo-table specific; multiplayer uses
   // the classic card animations unless the player chose "off".
   const anim = storage.getChoice('animations', ['enhanced', 'classic', 'off'], null);
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  document.documentElement.dataset.anim = anim === 'off' || (anim === null && reduced)
+  document.documentElement.dataset.anim = anim === 'off' || (anim === null && reduceQuery.matches)
     ? 'off'
     : 'classic';
 
   const meta = document.querySelector('meta[name="theme-color"]');
   const surface = getComputedStyle(document.documentElement).getPropertyValue('--surface').trim();
   if (meta && surface) meta.setAttribute('content', surface);
+}
+
+darkQuery.addEventListener('change', applyAppearance);
+reduceQuery.addEventListener('change', applyAppearance);
+// A preference changed in another tab (the solo settings panel): a null key
+// means the whole store was cleared.
+window.addEventListener('storage', (event) => {
+  if (event.key === null || APPEARANCE_KEYS.includes(event.key)) applyAppearance();
+});
+
+function applyPreferences() {
+  state.language = storage.getChoice('language', ['en', 'fr'], null) ?? detectLanguage();
+  setI18nLanguage(state.language);
+  document.documentElement.lang = state.language;
+  applyAppearance();
 }
 
 /* -------------------------------------------------------------- screens */

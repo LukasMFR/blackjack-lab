@@ -3,7 +3,8 @@
  * instead of corrupting the game.
  */
 
-const PREFIX = 'bjlab.';
+/** Key prefix, exported so cross-tab `storage` events can be matched. */
+export const PREFIX = 'bjlab.';
 
 function read(key) {
   try {
