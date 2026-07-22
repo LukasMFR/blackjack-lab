@@ -1,5 +1,7 @@
 import { test, assert, assertEqual } from './runner.js';
-import { installFakeDom, makeEvent, dispatch, FakeElement } from './fakeDom.js';
+import {
+  installFakeDom, makeEvent, dispatch, runFrame, FakeElement,
+} from './fakeDom.js';
 import { bindMenuSelect } from '../src/js/ui/menuSelect.js';
 
 /*
@@ -15,8 +17,11 @@ const LANGUAGES = [
   { value: 'es', label: 'Español' },
 ];
 
-/** Build the hand-written header markup that bindMenuSelect drives. */
-function buildMenu(document, id = 'language') {
+/**
+ * Build the hand-written header markup that bindMenuSelect drives. The menu
+ * is appended to `parent`, so a fixture can put it inside a scroll container.
+ */
+function buildMenu(document, id = 'language', parent = document) {
   const root = new FakeElement('div');
   root.className = 'menu-select';
   root.id = `${id}-menu`;
@@ -55,7 +60,7 @@ function buildMenu(document, id = 'language') {
   listbox.append(...optionEls);
 
   root.append(button, listbox);
-  document.append(root);
+  parent.append(root);
   return {
     root, button, glyph, listbox, optionEls,
   };
@@ -65,8 +70,8 @@ function buildMenu(document, id = 'language') {
  * Bind a menu and record every aria-expanded write, so a gesture that closes
  * and immediately reopens is visible rather than hidden by the final state.
  */
-function harness(document, id = 'language') {
-  const parts = buildMenu(document, id);
+function harness(document, id = 'language', parent = document) {
+  const parts = buildMenu(document, id, parent);
   const selected = [];
   const menu = bindMenuSelect({ root: parts.root, onSelect: (value) => selected.push(value) });
   menu.setValue('en');
@@ -279,4 +284,65 @@ test('menuSelect: a stale pointer gesture does not affect a later keyboard click
   // A keyboard-driven click carries no gesture and must read the live state.
   dispatch(menu.button, makeEvent('click', { detail: 0 }));
   assert(isOpen(menu), 'the keyboard click opens the closed menu');
+});
+
+/* ---------------------------------------------------------- placement band */
+
+/** A scrolling panel body with a menu inside it, both given real boxes. */
+function inScroller(document) {
+  const scroller = new FakeElement('div');
+  scroller.className = 'dialog__body';
+  scroller.style.overflowY = 'auto';
+  scroller.rect = {
+    top: 200, bottom: 600, left: 0, right: 400, width: 400, height: 400,
+  };
+  document.append(scroller);
+  const menu = harness(document, 'decks', scroller);
+  return { scroller, menu };
+}
+
+/** Place the trigger, then let the anchor tracker see the new position. */
+function moveTrigger(menu, top) {
+  menu.button.rect = {
+    top, bottom: top + 32, left: 40, right: 200, width: 160, height: 32,
+  };
+  runFrame();
+}
+
+test('menuSelect: the panel is sized to the region its trigger scrolls in', () => {
+  const document = installFakeDom();
+  const { menu } = inScroller(document);
+
+  moveTrigger(menu, 300);
+  press(menu.button);
+
+  // Room below the trigger stops at the scrolling region's edge (600), not at
+  // the viewport's (800): 600 - 332 - two gaps.
+  assertEqual(menu.listbox.style.maxHeight, '252px', 'panel capped to the region');
+  assertEqual(menu.listbox.style.top, '340px', 'panel hangs under the trigger');
+});
+
+test('menuSelect: a trigger scrolled out of its region takes its panel with it', () => {
+  const document = installFakeDom();
+  const { menu } = inScroller(document);
+
+  moveTrigger(menu, 300);
+  press(menu.button);
+  assert(isOpen(menu), 'menu opens while the trigger shows');
+
+  // Scrolled above the region: a fixed panel would otherwise keep floating
+  // over the dialog header and the rule under it.
+  moveTrigger(menu, 120);
+  assert(!isOpen(menu), 'menu closes with its trigger');
+});
+
+test('menuSelect: a menu with no scrolling ancestor still uses the viewport', () => {
+  const document = installFakeDom();
+  const menu = harness(document);
+
+  press(menu.button);
+
+  // Default trigger box is top 100, bottom 132; 800 - 132 - two gaps is well
+  // past the cap, so the panel takes its full height.
+  assertEqual(menu.listbox.style.maxHeight, '288px', 'panel capped by its own maximum');
 });

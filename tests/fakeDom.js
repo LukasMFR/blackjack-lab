@@ -31,6 +31,8 @@ export class FakeElement {
     this.listeners = new Map();
     this.classes = new Set();
     this.ownText = '';
+    /** Set to give this element a box of its own; null shares the default. */
+    this.rect = null;
 
     // Layout stubs. Fixed values keep reposition() deterministic.
     this.offsetHeight = 200;
@@ -53,6 +55,12 @@ export class FakeElement {
 
   get children() {
     return this.childNodes;
+  }
+
+  /** The parent when it is an element; null at the document, as in the DOM. */
+  get parentElement() {
+    const parent = this.parentNode;
+    return parent && !parent.isDocument ? parent : null;
   }
 
   get isConnected() {
@@ -159,8 +167,9 @@ export class FakeElement {
 
   /* ------------------------------------------------------------ layout */
 
+  /** Assign `rect` to place an element; otherwise every box shares one. */
   getBoundingClientRect() {
-    return {
+    return this.rect ?? {
       top: 100, left: 40, width: 160, height: 32, bottom: 132, right: 200,
     };
   }
@@ -247,11 +256,25 @@ export function dispatch(node, event, { retargetTo } = {}) {
   return event;
 }
 
+/** Callbacks handed to requestAnimationFrame, the newest one last. */
+const pendingFrames = [];
+
+/**
+ * Run the frame callback queued last, as the browser would on the next tick,
+ * and drop the rest. A test drives the loop one frame at a time; letting it
+ * run on its own would spin, because the tracker re-arms itself every frame.
+ */
+export function runFrame() {
+  const callback = pendingFrames.pop();
+  pendingFrames.length = 0;
+  callback?.(0);
+}
+
 /**
  * Install a fresh document plus the globals menuSelect.js touches.
  *
- * requestAnimationFrame records callbacks without running them: the module's
- * anchor tracker re-arms itself every frame, so running them would spin.
+ * requestAnimationFrame records callbacks without running them; a test that
+ * needs one steps the loop through runFrame.
  *
  * @returns {FakeDocument}
  */
@@ -261,10 +284,14 @@ export function installFakeDom() {
   globalThis.window = {
     innerWidth: 1280,
     innerHeight: 800,
+    // Only the inline style is modelled: a fixture makes an element a scroll
+    // container by setting style.overflowY on it, as the stylesheet would.
+    getComputedStyle: (el) => ({ overflowY: el?.style?.overflowY ?? 'visible' }),
     setTimeout: (...args) => setTimeout(...args),
     clearTimeout: (...args) => clearTimeout(...args),
   };
-  globalThis.requestAnimationFrame = () => 1;
+  pendingFrames.length = 0;
+  globalThis.requestAnimationFrame = (callback) => pendingFrames.push(callback);
   globalThis.cancelAnimationFrame = () => {};
   return document;
 }

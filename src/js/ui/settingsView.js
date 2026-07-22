@@ -10,6 +10,7 @@ import {
 } from './bankrollSettings.js';
 import { renderInfoPage } from './infoView.js';
 import { renderHelpBody } from './helpView.js';
+import { openDialog, resetDialogScroll } from './dialogs.js';
 
 /**
  * Settings and help dialogs, shared by the solo table and the local
@@ -96,7 +97,7 @@ export function initSettingsView(appController, { mode = 'solo' } = {}) {
   $('btn-help').addEventListener('click', () => {
     renderHelp();
     controller.audio.dialogOpened();
-    $('dialog-help').showModal();
+    openDialog($('dialog-help'));
   });
   $('btn-set-bankroll').addEventListener('click', () => {
     if (isMultiplayer() || controller.isRoundActive()) return;
@@ -119,9 +120,13 @@ export function initSettingsView(appController, { mode = 'solo' } = {}) {
 function openSettings() {
   // A previous visit may have been closed on the information page.
   showMainPage({ restore: false });
+  // The remembered offset belongs to the visit that just ended; a fresh
+  // visit starts at the top and so must the position the back arrow returns
+  // to if the reader steps into the information page straight away.
+  settingsScrollTop = 0;
   renderSettings();
   controller.audio.dialogOpened();
-  $('dialog-settings').showModal();
+  openDialog($('dialog-settings'));
 }
 
 /* ------------------------------------------------------- information page */
@@ -142,7 +147,9 @@ function showInfoPage() {
   $('settings-page-info').hidden = false;
   // The dialog is named by whichever page title it currently shows.
   $('dialog-settings').setAttribute('aria-labelledby', 'info-title');
-  $('info-body').scrollTop = 0;
+  // A page swap is an opening too: the information page always starts at
+  // its own title, never where a previous visit left it.
+  resetDialogScroll($('settings-page-info'));
   $('info-title').focus();
 }
 
@@ -727,7 +734,7 @@ function openBankrollDialog() {
   clearBankrollError();
 
   controller.audio.dialogOpened();
-  $('dialog-bankroll').showModal();
+  openDialog($('dialog-bankroll'));
   input.select();
 }
 

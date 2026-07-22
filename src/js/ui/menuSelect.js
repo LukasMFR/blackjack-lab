@@ -26,6 +26,9 @@ const MENU_GAP_PX = 8;
 /** Tallest the panel may grow before it scrolls; mirrors the CSS max-height. */
 const MENU_MAX_HEIGHT_PX = 288;
 
+/** Shortest a panel may be squeezed to: about two options plus its padding. */
+const MENU_MIN_HEIGHT_PX = 88;
+
 /** How long consecutive keystrokes count as one typeahead search. */
 const TYPEAHEAD_RESET_MS = 500;
 
@@ -35,6 +38,21 @@ const OPENING_KEYS = new Set(['ArrowDown', 'ArrowUp', 'Enter', ' ']);
 const CHEVRON_SVG = '<svg class="menu-select__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
 
 const CHECK_SVG = '<svg class="menu-select__check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>';
+
+/**
+ * The nearest ancestor that clips its scrolled content, or null when nothing
+ * between the element and the page does.
+ *
+ * @param {HTMLElement} el
+ * @returns {HTMLElement|null}
+ */
+function scrollClipAncestor(el) {
+  for (let node = el.parentElement; node; node = node.parentElement) {
+    const { overflowY } = window.getComputedStyle(node);
+    if (overflowY === 'auto' || overflowY === 'scroll' || overflowY === 'hidden') return node;
+  }
+  return null;
+}
 
 /**
  * Attach dropdown behaviour to existing markup.
@@ -68,17 +86,45 @@ export function bindMenuSelect({ root, onSelect, onValueShown }) {
 
   /* ------------------------------------------------------------ placement */
 
+  /*
+   * The band the panel must stay inside: the viewport, narrowed to the
+   * scrolling region the trigger lives in when there is one. Fixed placement
+   * escapes that region on purpose, so without this the panel would be free
+   * to cover the dialog header and the rule under it — chrome that is meant
+   * to stay above the scrolling content, not below a menu belonging to it.
+   */
+  function clipBand() {
+    let top = 0;
+    let bottom = window.innerHeight;
+    const scroller = scrollClipAncestor(button);
+    if (scroller) {
+      const rect = scroller.getBoundingClientRect();
+      top = Math.max(top, rect.top);
+      bottom = Math.min(bottom, rect.bottom);
+    }
+    return { top, bottom };
+  }
+
+  /** Whether the trigger still shows inside the band its panel may use. */
+  function anchorIsVisible(rect, band) {
+    return rect.bottom > band.top && rect.top < band.bottom;
+  }
+
   // Fixed placement has to be recomputed by hand: below the trigger when
-  // there is room, flipped above when there is not, clamped to the viewport.
+  // there is room, flipped above when there is not, clamped to the band.
   function reposition() {
     const rect = button.getBoundingClientRect();
     listbox.style.minWidth = `${rect.width}px`;
 
-    const below = window.innerHeight - rect.bottom - MENU_GAP_PX * 2;
-    const above = rect.top - MENU_GAP_PX * 2;
+    const band = clipBand();
+    const below = band.bottom - rect.bottom - MENU_GAP_PX * 2;
+    const above = rect.top - band.top - MENU_GAP_PX * 2;
     const flipUp = below < listbox.scrollHeight && above > below;
 
-    listbox.style.maxHeight = `${Math.min(MENU_MAX_HEIGHT_PX, flipUp ? above : below)}px`;
+    // The floor keeps a usable, scrollable panel on a band too short to hold
+    // one; the panel scrolls internally rather than collapsing to nothing.
+    const room = Math.max(MENU_MIN_HEIGHT_PX, flipUp ? above : below);
+    listbox.style.maxHeight = `${Math.min(MENU_MAX_HEIGHT_PX, room)}px`;
     const height = listbox.offsetHeight;
     listbox.style.top = flipUp
       ? `${rect.top - height - MENU_GAP_PX}px`
@@ -103,6 +149,16 @@ export function bindMenuSelect({ root, onSelect, onValueShown }) {
     }
 
     const rect = button.getBoundingClientRect();
+
+    // Scrolling the trigger out of its own region takes the menu with it,
+    // as a native select closes when its field leaves the view. Focus is
+    // already on the trigger and stays there, so the keyboard path is
+    // unchanged: the reader scrolls back and reopens.
+    if (!anchorIsVisible(rect, clipBand())) {
+      closeMenu({ restoreFocus: false });
+      return;
+    }
+
     const anchor = `${rect.top}:${rect.left}:${rect.width}`;
     if (anchor !== lastAnchor) {
       lastAnchor = anchor;

@@ -59,6 +59,9 @@
   --dur-med: 260ms;
 
   /* Layers */
+  /* A dialog header only has to beat its own scrolling body, so it sits well
+     below the shared layers rather than competing with them. */
+  --z-dialog-header: 1;
   --z-controls: 10;
   --z-menu: 20;
   --z-toast: 30;

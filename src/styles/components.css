@@ -770,7 +770,17 @@ kbd {
   background: rgb(0 0 0 / 0.5);
 }
 
+/*
+ * The header and the rule that closes it are one fixed layer above the
+ * scrolling body. Positioning it lifts the whole strip, border included, out
+ * of the in-flow paint order, so scrolled content can never be composited
+ * over the rule at the pixel where the two boxes meet. The rule takes its
+ * colour from the theme (a brass line in the salon, a plain border
+ * elsewhere), so this must hold for every theme rather than one of them.
+ */
 .dialog__header {
+  position: relative;
+  z-index: var(--z-dialog-header);
   flex-shrink: 0;
   display: flex;
   align-items: center;

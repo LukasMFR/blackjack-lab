@@ -11,6 +11,7 @@ import { unitsToCents } from '../../game/money.js';
 import { ACTIONS, ROUND_STATES, SURRENDER_MODES } from '../../game/constants.js';
 import { getProfile, PROFILE_IDS, PROFILES } from '../../config/profiles.js';
 import { initSettingsView } from '../../ui/settingsView.js';
+import { openDialog, resetDialogScroll } from '../../ui/dialogs.js';
 import {
   getAnimationMode, initAnimations, isReducedMotionPreferred,
   reloadAnimationPreference, setAnimationMode,
@@ -696,7 +697,7 @@ function openHostDialog() {
   $('host-name').value = readStoredName();
   buildHostFormControls();
   gameAudio.dialogOpened();
-  $('dialog-host').showModal();
+  openDialog($('dialog-host'));
 }
 
 function createHostRoom(event) {
@@ -814,7 +815,7 @@ async function openInviteDialog() {
   $('invite-answer-input').value = '';
   $('invite-generating').textContent = t('mp.invite.generating');
   gameAudio.dialogOpened();
-  dialog.showModal();
+  openDialog(dialog);
   try {
     const { link, description } = await createHostLink({
       onClose: () => {},
@@ -925,7 +926,7 @@ function openJoinDialog({ hint = null } = {}) {
     note.hidden = true;
   }
   gameAudio.dialogOpened();
-  $('dialog-join').showModal();
+  openDialog($('dialog-join'));
 }
 
 function showJoinPage(page) {
@@ -935,6 +936,8 @@ function showJoinPage(page) {
     'aria-labelledby',
     page === 'start' ? 'join-title' : 'join-step2-title',
   );
+  // Each wizard step starts at its own heading, like any other modal opening.
+  resetDialogScroll($(page === 'start' ? 'join-page-start' : 'join-page-answer'));
   if (page === 'answer') $('join-step2-title').focus();
 }
 
@@ -1180,7 +1183,7 @@ function confirmDialog({ title, body, confirmLabel, onConfirm }) {
   $('confirm-accept').textContent = confirmLabel;
   const dialog = $('dialog-confirm');
   gameAudio.dialogOpened();
-  dialog.showModal();
+  openDialog(dialog);
   $('confirm-accept').onclick = () => {
     dialog.close();
     onConfirm();
