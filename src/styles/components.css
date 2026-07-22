@@ -780,7 +780,7 @@ kbd {
  */
 .dialog__header {
   position: relative;
-  z-index: var(--z-dialog-header);
+  z-index: var(--z-dialog-chrome);
   flex-shrink: 0;
   display: flex;
   align-items: center;

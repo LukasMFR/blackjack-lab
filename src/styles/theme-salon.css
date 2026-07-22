@@ -410,7 +410,10 @@
 /* ------------------------------------------------- dialogs: framed panels */
 
 [data-theme="salon"] .dialog {
-  border: 10px solid transparent;
+  /* Thickness of the wood frame, so the brass line inside it can round to
+     match: the panel's inner corner is the outer one less the frame. */
+  --dialog-frame: 10px;
+  border: var(--dialog-frame) solid transparent;
   border-radius: var(--radius-l);
   background:
     var(--tex-grain) padding-box,
@@ -419,9 +422,28 @@
     linear-gradient(180deg, var(--wood-hi), var(--wood-lo)) border-box;
   background-blend-mode: soft-light, normal, soft-light, normal;
   box-shadow:
-    inset 0 0 0 1px var(--brass-line),
     0 0 0 1px var(--wood-edge),
     0 24px 60px rgb(10 4 2 / 0.5);
+}
+
+/*
+ * The brass line framing the panel interior, drawn as an overlay rather than
+ * the inset shadow it used to be. An inset shadow paints in the dialog's own
+ * background layer, under every descendant, so the scrolling body ran over
+ * the foot of the frame and left the panel hanging open at the bottom, its
+ * last visible row sliced against bare wood. An overlay closes all four
+ * sides above the content instead. The other themes need none of this: their
+ * frame is a real border, which sits outside the box the body scrolls in and
+ * cannot be overrun.
+ */
+[data-theme="salon"] .dialog[open]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-dialog-chrome);
+  pointer-events: none;
+  border: 1px solid var(--brass-line);
+  border-radius: calc(var(--radius-l) - var(--dialog-frame));
 }
 
 [data-theme="salon"] .dialog::backdrop {
