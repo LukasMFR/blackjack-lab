@@ -28,10 +28,11 @@ function setHintLine(el, text, { muted = false } = {}) {
   el.hidden = text === '';
 }
 
-function clearHighlights() {
+function setHighlightedButton(target = null) {
   for (const button of document.querySelectorAll('.is-hinted')) {
-    button.classList.remove('is-hinted');
+    if (button !== target) button.classList.remove('is-hinted');
   }
+  if (target) target.classList.add('is-hinted');
 }
 
 function hintText(action) {
@@ -47,9 +48,9 @@ function hintText(action) {
 export function renderStrategyHint(snapshot, profile, enabled) {
   const actionHintEl = $('strategy-hint');
   const decisionHintEl = $('decision-hint');
-  clearHighlights();
 
   if (!enabled) {
+    setHighlightedButton();
     setHintLine(actionHintEl, '');
     setHintLine(decisionHintEl, '');
     return;
@@ -66,8 +67,9 @@ export function renderStrategyHint(snapshot, profile, enabled) {
     });
     if (hint.status === HINT_STATUS.SUPPORTED) {
       setHintLine(decisionHintEl, hintText(hint.primaryAction));
-      $('btn-decision-no').classList.add('is-hinted');
+      setHighlightedButton($('btn-decision-no'));
     } else {
+      setHighlightedButton();
       setHintLine(decisionHintEl, t('strategy.unsupported'), { muted: true });
     }
     return;
@@ -84,6 +86,7 @@ export function renderStrategyHint(snapshot, profile, enabled) {
     || !upcard
     || upcard.hidden
   ) {
+    setHighlightedButton();
     setHintLine(actionHintEl, '');
     return;
   }
@@ -99,11 +102,13 @@ export function renderStrategyHint(snapshot, profile, enabled) {
   if (hint.status === HINT_STATUS.SUPPORTED) {
     setHintLine(actionHintEl, hintText(hint.primaryAction));
     const button = document.querySelector(`[data-action="${hint.primaryAction}"]`);
-    if (button && !button.hidden) button.classList.add('is-hinted');
+    setHighlightedButton(button && !button.hidden ? button : null);
   } else if (hint.status === HINT_STATUS.UNSUPPORTED_STRATEGY) {
     // Discreet by design: one muted line, no highlighted button.
+    setHighlightedButton();
     setHintLine(actionHintEl, t('strategy.unsupported'), { muted: true });
   } else {
+    setHighlightedButton();
     setHintLine(actionHintEl, '');
   }
 }

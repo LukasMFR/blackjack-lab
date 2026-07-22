@@ -3,6 +3,7 @@
 /* ------------------------------------------------------------------ buttons */
 
 .btn {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -236,14 +237,10 @@ kbd {
   color: var(--text-muted);
 }
 
-/* Recommendation marker: a short, solid hairline floats above the button.
-   It is deliberately separate from the control edge so it cannot be
-   confused with focus, selection, or a pressed state. */
-.btn.is-hinted {
-  position: relative;
-}
-
-.btn.is-hinted:not(.is-disabled)::after {
+/* Recommendation marker: every button keeps the same invisible positioning
+   layer so Safari never has to re-centre its flex contents when a hint
+   appears. The recommendation class changes paint only, not layout. */
+.btn::after {
   content: '';
   position: absolute;
   top: -7px;
@@ -252,7 +249,12 @@ kbd {
   height: 2px;
   border-radius: 999px;
   background: color-mix(in srgb, var(--act, var(--accent)) 82%, var(--text));
+  opacity: 0;
   pointer-events: none;
+}
+
+.btn.is-hinted:not(.is-disabled)::after {
+  opacity: 1;
 }
 
 /*
