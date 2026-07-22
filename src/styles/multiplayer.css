@@ -305,6 +305,15 @@
   }
 }
 
+/* Felt, controls and the fictional-money note stack like the solo table
+   column, and share its gap so both pages breathe the same way. */
+.mp-room-main {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(var(--space-4), 2vw, var(--space-5));
+  min-width: 0;
+}
+
 .mp-room-side {
   display: flex;
   flex-direction: column;
