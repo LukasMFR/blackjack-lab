@@ -378,11 +378,13 @@ act in seat order (Hit / Stand / Double / Split / Surrender as the
 profile allows) → dealer plays → every seat settles independently →
 results and history sync to every device.
 
-The room shares the solo shell rather than imitating it: the same navbar
-with Help and Settings, the same action-button icons and keyboard
-shortcuts (with the host-only Deal shortcut), the same decision focus
-trap, the same card sounds, and the same three animation modes through
-its own motion director.
+The room mirrors the solo table: its own page and markup, but the same
+navbar with Help and Settings, the same action-button icons and keyboard
+shortcuts (with a host-only Deal shortcut), the same decision focus trap,
+the same card sounds, and the same three animation modes through its own
+motion director. The Help and Settings dialogs are not copies — both
+pages render them from the shared `ui/helpView.js` and
+`ui/settingsView.js` modules, which take the mode as a parameter.
 
 Disconnect policy: during betting the pending bet is refunded and the
 seat sits out; during a pending decision the offer is declined; during
@@ -415,10 +417,14 @@ never persisted, exactly like the solo session store.
 - Browsers hide local IPs behind mDNS (`.local`) candidates; on rare
   networks where mDNS resolution between devices is blocked, direct
   connections may fail even on the same Wi-Fi.
-- Room-fixed options (rule profile, starting bankroll, strategy hints)
-  stay visible in the settings dialog but disabled, showing the value the
-  table really uses; appearance, theme, language, sound, and animation
-  preferences remain per-device and apply live.
+- The rule profile and the starting bankroll are chosen by the host when
+  the room is created. They stay visible in the settings dialog but
+  disabled, showing the value the table really uses.
+- Basic strategy hints are not available in local multiplayer at all:
+  the switch stays visible but disabled and off, whatever the solo
+  preference is on that device.
+- Appearance, theme, language, sound, and animation preferences remain
+  per-device and apply live.
 - Multiplayer sessions are not persisted on any server. All money
   remains fictional.
 
