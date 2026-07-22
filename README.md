@@ -20,12 +20,15 @@ python3 -m http.server 8000
 # then open http://localhost:8000/
 ```
 
-No build step, no dependencies, no backend.
+No build step and no backend. The only third-party runtime code is the
+vendored `qr-scanner` decoder used for multiplayer pairing
+(`src/js/vendor/qr-scanner/`, MIT); it is committed, so `npm install` is
+never needed to run or serve the app.
 
 ## Running the engine checks
 
 ```bash
-node tests/run.js
+node tests/run.js   # or: npm test
 ```
 
 A zero-dependency test runner executes deterministic scenarios against the
@@ -47,6 +50,16 @@ encoder, and full host+client session scenarios over in-memory
 transports (join, rejection, turn enforcement, reconnect tokens,
 persistence restore, pause, session end).
 
+Interface and platform behaviour is covered as well: the audio layer
+(preference sanitizing, every manifest sound actually bundled, no
+`AudioContext` before a user gesture, channel gating, throttling,
+variation, and silent degradation when a file or Web Audio itself is
+missing), the camera QR scanner (decoding start-up, Safari/iOS video
+flags, secure-context and permission errors, teardown races), the
+keyboard shortcuts and decision focus traps, the shortcut-label
+preference, the custom menu widget, and the shared mobile gesture
+policy.
+
 ## Architecture
 
 The game engine is completely independent from the interface: it never
@@ -55,8 +68,9 @@ touches the DOM, and the UI never makes rule decisions.
 ```
 index.html               Solo application shell (semantic, translated at runtime)
 multiplayer.html         Local multiplayer shell (menu, pairing wizard, table)
+src/assets/              Logo, Marcellus subset, audio files, ASSETS.md sources
 src/styles/              tokens.css (theme x mode design tokens), base, layout,
-                         cards, components, multiplayer
+                         cards, components, animations, theme-salon, multiplayer
 src/js/game/             The engine: constants, card, deck, shuffle, rng,
                          shoe, handEval, money, settlement, actionRules and
                          handPlay (shared per-hand rules), engine (solo round
@@ -64,15 +78,27 @@ src/js/game/             The engine: constants, card, deck, shuffle, rng,
 src/js/config/           Rule profiles: presets, validation, custom builder
 src/js/strategy/         Basic-strategy tables A–G + pure hint resolver
 src/js/i18n/             en.js, fr.js dictionaries + translation module
+src/js/audio/            audioSettings (pure preference model), manifest
+                         (the only place that knows about files), audioManager
+                         (Web Audio graph), ambience (procedural room tone),
+                         gameAudio (snapshot diff → sound)
 src/js/ui/               app.js (controller), render.js (table/panels),
-                         settingsView.js (dialogs), cardView.js (cards),
-                         strategyHint.js (hint chip), storage.js (safe
-                         localStorage), focusModality.js (pointer vs
-                         keyboard focus rings), format.js, profileSummary.js
+                         settingsView.js / helpView.js / infoView.js (dialogs),
+                         cardView.js (cards), animations.js (solo motion
+                         director, owns the animation-mode preference),
+                         motion.js (shared motion primitives),
+                         strategyHint.js (hint chip), keyboardShortcuts.js,
+                         shortcutLabels.js, menuSelect.js, languageMenu.js,
+                         sessionStore.js (per-profile session records),
+                         storage.js (safe localStorage), focusModality.js
+                         (pointer vs keyboard focus rings), format.js,
+                         profileSummary.js, bankrollSettings.js
 src/js/multiplayer/      tableEngine (authoritative multi-seat table),
                          protocol, signalling, stateSync, hostSession,
                          clientSession, peerConnection, qr, qrScanner,
-                         ui/ (mpApp controller + mpViews rendering)
+                         ui/ (mpApp controller, mpViews rendering,
+                         mpAnimations motion director)
+src/js/vendor/           qr-scanner (MIT) — the only third-party runtime code
 tests/                   Zero-dependency runner + deterministic scenarios
 ```
 
@@ -172,6 +198,52 @@ Cards are self-contained HTML/CSS: corner indices, true pip layouts for
 number cards, framed letters for court cards, and a CSS-pattern back. No
 external or remote artwork is used anywhere in the project.
 
+## Sound
+
+Cards, chips, results, and interface feedback have sound, on both the solo
+table and the multiplayer room. Nothing is streamed: every file is bundled
+locally under `src/assets/audio/`, and its origin, license, and re-encoding
+are documented in `src/assets/ASSETS.md`.
+
+- **Layers.** Background music (crossfade-looped), a *procedural* casino
+  ambience (a synthesized low-passed room bed plus sparse, quiet, panned
+  one-shots — no large looped recording, no speech), gameplay effects, and
+  separately gated interface sounds.
+- **Mixing.** The settings dialog exposes a master switch, a mute toggle,
+  a master volume, and per-channel enable + volume for music, ambience, and
+  effects, plus an interface-sounds toggle and a “variation” toggle (small
+  random pitch/level jitter and interchangeable variants so repeated sounds
+  never turn mechanical). A test button and a restore-defaults button sit
+  next to them.
+- **Architecture.** `audio/manifest.js` is the only module that knows about
+  files; `audio/gameAudio.js` derives sounds by diffing engine snapshots
+  (card ids, hand statuses, round state — never rendered text), so the
+  engine is untouched. No `AudioContext` is created before the first user
+  gesture, and a missing file or an unavailable Web Audio API degrades to
+  silence without breaking the game.
+
+## Motion and animation
+
+Three animation modes, chosen in the settings and shared by both pages:
+
+- **Enhanced** (default): card flights with a dealt-card stagger, FLIP moves
+  on split and re-deal, chip ghosts for bets and payouts, money count-ups,
+  and result glows.
+- **Classic:** the original light CSS animations.
+- **Off:** all non-essential motion neutralized.
+
+A system `prefers-reduced-motion: reduce` setting makes *classic* the
+default and keeps it instant; an explicit choice by the user is still
+honoured. Motion primitives live in `ui/motion.js` (transform/opacity only,
+on a dedicated fx layer) and only know *how* to animate; the two directors
+decide *when* — `ui/animations.js` for the solo table, and
+`multiplayer/ui/mpAnimations.js`, which drives every seat of the
+multiplayer room from host table snapshots (card flights, bust dims, result
+glows, chip settlements, round clearing detected from the snapshot so
+client devices animate it too). Flight delays are aligned with the sound
+timing so each card lands on its sound, and animation never blocks or
+delays a legal action: engine state and controls update immediately.
+
 ## Accessibility
 
 - Semantic landmarks, skip link, logical tab order, visible focus states.
@@ -183,11 +255,21 @@ external or remote artwork is used anywhere in the project.
   translated reason exposed via `aria-description` and `title`.
 - A polite live region announces dealt cards, totals, and results.
 - Status is never conveyed by color alone (text badges everywhere).
-- `prefers-reduced-motion` disables all non-essential animation.
+- `prefers-reduced-motion` selects the classic animation mode and keeps it
+  instant; the *Off* mode neutralizes non-essential motion outright.
+- Double-tap zoom is disabled through a shared gesture policy without ever
+  blocking pan or pinch, and every page stays user-scalable; multiplayer
+  code fields avoid Safari's focus zoom.
 - Keyboard shortcuts (H/S/D/P/R, N) are documented in the help panel. During
   Insurance, A accepts (Accept/Accepter) and C continues without it
   (Continue/Continuer); those decision-only keys never conflict with normal
   gameplay. Shortcuts never fire inside editable controls or open dialogs.
+- An optional preference adds the shortcut letter to each action button.
+  It is off by default and applies only on a hovering, fine-pointer layout,
+  so touch devices never carry keyboard hints they cannot use.
+- The “Rules and help” dialog is one shared view (`ui/helpView.js`)
+  documenting the table actually in play — solo or multiplayer, with the
+  active profile, its rule chips, and the room's bet limits.
 - A pending decision is a real modal: the panel takes focus when it opens,
   traps Tab, and ignores Escape, so no table action can fire behind it. This
   applies to early surrender as well as Insurance — early surrender has no
@@ -196,12 +278,20 @@ external or remote artwork is used anywhere in the project.
 
 ## Persistence
 
-Language, appearance, theme, selected profile, custom-rule settings, the
-strategy-hints preference, and the per-profile bankroll are stored in
-`localStorage`. Malformed saved
-values are discarded safely. Mid-round game state is intentionally **not**
-persisted (reloading during a round returns to betting with the last
-between-round bankroll). A confirmed reset restores the starting bankroll.
+Everything is stored on the device only, in `localStorage` under keys
+prefixed with `bjlab.`: language, appearance, visual theme, animation mode,
+shortcut-label preference, audio settings, the strategy-hints preference,
+the selected profile and custom rules, and one session record per profile
+(chosen starting bankroll, live bankroll, rounds played, net result, and
+the recent round history). Each profile keeps an independent record, so
+switching profiles never mixes their data, and a settlement is a single
+write that can never leave the state half-updated.
+
+Malformed saved values are discarded safely. Mid-round game state is
+intentionally **not** persisted (reloading during a round returns to
+betting with the last between-round bankroll). A confirmed reset, or
+applying a new starting amount, clears that profile's bankroll, history,
+and session total.
 
 ## Local multiplayer (experimental)
 
@@ -242,7 +332,9 @@ time:
 Camera QR scanning uses `getUserMedia()` and the bundled `qr-scanner`
 decoder. It can use a trustworthy native `BarcodeDetector` implementation
 when present and otherwise falls back to its Web Worker decoder, including on
-iOS/iPadOS and macOS Safari. Camera access requires HTTPS (localhost is also
+iOS/iPadOS and macOS Safari. A short chime confirms a successfully imported
+code, so the person holding the phone does not have to watch the screen.
+Camera access requires HTTPS (localhost is also
 accepted during development); manual copy/paste remains available everywhere.
 Pairing codes are versioned, compressed (`CompressionStream`), integrity-
 checked and expire after 10 minutes; a stale or foreign code fails with
@@ -286,6 +378,12 @@ act in seat order (Hit / Stand / Double / Split / Surrender as the
 profile allows) → dealer plays → every seat settles independently →
 results and history sync to every device.
 
+The room shares the solo shell rather than imitating it: the same navbar
+with Help and Settings, the same action-button icons and keyboard
+shortcuts (with the host-only Deal shortcut), the same decision focus
+trap, the same card sounds, and the same three animation modes through
+its own motion director.
+
 Disconnect policy: during betting the pending bet is refunded and the
 seat sits out; during a pending decision the offer is declined; during
 the seat's turn (or when its turn arrives) remaining active hands stand
@@ -317,9 +415,10 @@ never persisted, exactly like the solo session store.
 - Browsers hide local IPs behind mDNS (`.local`) candidates; on rare
   networks where mDNS resolution between devices is blocked, direct
   connections may fail even on the same Wi-Fi.
-- The enhanced solo motion director does not run on the multiplayer
-  table (classic card animations are used); audio, reduced-motion,
-  theme, appearance and language preferences all apply.
+- Room-fixed options (rule profile, starting bankroll, strategy hints)
+  stay visible in the settings dialog but disabled, showing the value the
+  table really uses; appearance, theme, language, sound, and animation
+  preferences remain per-device and apply live.
 - Multiplayer sessions are not persisted on any server. All money
   remains fictional.
 
@@ -329,6 +428,7 @@ never persisted, exactly like the solo session store.
 - Side bets and card counting aids are out of scope by design for this
   phase; strategy advice goes no further than the optional
   total-dependent basic-strategy hints.
-- Game history is kept for the session only (last 30 rounds).
+- Game history is capped at the last 30 rounds per profile, kept on the
+  device only.
 - The custom profile keeps table stakes at the project defaults
   (min 5 / max 1000, starting bankroll 1000).
