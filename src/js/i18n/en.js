@@ -374,8 +374,11 @@ export default {
     share: 'Share',
     scan: 'Scan a QR code',
     scanStop: 'Stop scanning',
-    scanUnsupported: 'Camera scanning is not available in this browser. Paste the code instead.',
-    cameraDenied: 'The camera could not be used. Paste the code instead.',
+    scanUnsupported: 'This browser does not provide camera access. Try a current version of Safari or Chrome, or paste the code instead.',
+    cameraHttpsRequired: 'Camera scanning requires HTTPS. Open this page over a secure https:// connection, or paste the code instead.',
+    cameraDenied: 'Camera permission was denied. Allow camera access in your browser settings, or paste the code instead.',
+    cameraUnavailable: 'No usable camera is available. It may be disconnected or in use by another app. Paste the code instead.',
+    qrDecodeFailed: 'The camera is open, but the QR decoder failed. Try stopping and scanning again, or paste the code instead.',
     pasteCode: 'Paste the code here',
     qrLabel: 'Pairing QR code',
     menu: {

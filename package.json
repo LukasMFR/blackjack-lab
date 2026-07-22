@@ -2,10 +2,13 @@
   "name": "blackjack-lab",
   "version": "1.0.0",
   "private": true,
-  "description": "Fictional-money blackjack simulator. Vanilla HTML/CSS/JS, no dependencies.",
+  "description": "Fictional-money blackjack simulator built with vanilla HTML, CSS and JavaScript.",
   "type": "module",
   "scripts": {
     "test": "node tests/run.js",
     "serve": "python3 -m http.server 8000"
+  },
+  "dependencies": {
+    "qr-scanner": "^1.4.2"
   }
 }

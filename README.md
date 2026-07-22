@@ -234,8 +234,11 @@ time:
    opens and the player appears in the lobby.
 4. Repeat for each additional player.
 
-Camera QR scanning uses the native `BarcodeDetector` API where available
-(Chrome/Edge/Android); everywhere else the copy/paste fallback works.
+Camera QR scanning uses `getUserMedia()` and the bundled `qr-scanner`
+decoder. It can use a trustworthy native `BarcodeDetector` implementation
+when present and otherwise falls back to its Web Worker decoder, including on
+iOS/iPadOS and macOS Safari. Camera access requires HTTPS (localhost is also
+accepted during development); manual copy/paste remains available everywhere.
 Pairing codes are versioned, compressed (`CompressionStream`), integrity-
 checked and expire after 10 minutes; a stale or foreign code fails with
 a clear message. A short room code alone can never discover a room —

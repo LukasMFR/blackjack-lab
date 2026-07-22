@@ -19,7 +19,9 @@ import {
 } from '../peerConnection.js';
 import { decodeSignal, encodeSignal, SIGNAL_KINDS } from '../signalling.js';
 import { qrSvg } from '../qr.js';
-import { qrScanningSupported, startQrScanner } from '../qrScanner.js';
+import {
+  getQrScanningSupport, QR_SCANNER_ERRORS, startQrScanner,
+} from '../qrScanner.js';
 import {
   announce, renderMpHistory, renderMpTable, renderPlayerList, showToast,
 } from './mpViews.js';
@@ -955,26 +957,53 @@ function resetToJoinStart({ hint = null } = {}) {
 
 /* --------------------------------------------------------------- scanner */
 
+function scannerErrorText(code) {
+  const key = {
+    [QR_SCANNER_ERRORS.INSECURE_CONTEXT]: 'mp.cameraHttpsRequired',
+    [QR_SCANNER_ERRORS.UNSUPPORTED_BROWSER]: 'mp.scanUnsupported',
+    [QR_SCANNER_ERRORS.PERMISSION_DENIED]: 'mp.cameraDenied',
+    [QR_SCANNER_ERRORS.CAMERA_UNAVAILABLE]: 'mp.cameraUnavailable',
+    [QR_SCANNER_ERRORS.DECODING_FAILED]: 'mp.qrDecodeFailed',
+  }[code] ?? 'mp.cameraUnavailable';
+  return t(key);
+}
+
 async function beginScan(videoId, scannerId, onCode) {
   stopScanner();
-  if (!await qrScanningSupported()) {
-    showToast(t('mp.scanUnsupported'));
+  const support = getQrScanningSupport();
+  if (!support.supported) {
+    showToast(scannerErrorText(support.code));
     return;
   }
   const container = $(scannerId);
   container.hidden = false;
   gameAudio.settingChanged();
+  const controller = new AbortController();
+  state.scanner = { stop: () => controller.abort() };
+  let decodeErrorShown = false;
   try {
-    state.scanner = await startQrScanner($(videoId), (text) => {
+    const scanner = await startQrScanner($(videoId), (text) => {
       if (!text.startsWith('BJL')) return;
       onCode(text);
       stopScanner();
+    }, {
+      signal: controller.signal,
+      onDecodeError(error) {
+        if (decodeErrorShown || controller.signal.aborted) return;
+        decodeErrorShown = true;
+        gameAudio.actionRejected();
+        showToast(scannerErrorText(error.code));
+      },
     });
+    if (controller.signal.aborted) scanner.stop();
+    else state.scanner = scanner;
   } catch (error) {
+    if (controller.signal.aborted) return;
     console.error(error);
     container.hidden = true;
+    state.scanner = null;
     gameAudio.actionRejected();
-    showToast(t('mp.cameraDenied'));
+    showToast(scannerErrorText(error.code));
   }
 }
 

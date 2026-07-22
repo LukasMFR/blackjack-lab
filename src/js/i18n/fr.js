@@ -374,8 +374,11 @@ export default {
     share: 'Partager',
     scan: 'Scanner un QR code',
     scanStop: 'Arrêter le scan',
-    scanUnsupported: 'Le scan par caméra n’est pas disponible dans ce navigateur. Collez le code à la place.',
-    cameraDenied: 'La caméra n’a pas pu être utilisée. Collez le code à la place.',
+    scanUnsupported: 'Ce navigateur ne donne pas accès à la caméra. Essayez une version récente de Safari ou Chrome, ou collez le code à la place.',
+    cameraHttpsRequired: 'Le scan par caméra nécessite HTTPS. Ouvrez cette page avec une connexion sécurisée en https://, ou collez le code à la place.',
+    cameraDenied: 'L’accès à la caméra a été refusé. Autorisez-le dans les réglages du navigateur, ou collez le code à la place.',
+    cameraUnavailable: 'Aucune caméra utilisable n’est disponible. Elle est peut-être déconnectée ou utilisée par une autre application. Collez le code à la place.',
+    qrDecodeFailed: 'La caméra est ouverte, mais le décodage du QR code a échoué. Arrêtez puis relancez le scan, ou collez le code à la place.',
     pasteCode: 'Collez le code ici',
     qrLabel: 'QR code d’appairage',
     menu: {

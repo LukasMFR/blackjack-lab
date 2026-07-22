@@ -6,6 +6,7 @@ import './session.test.js';
 import './strategy.test.js';
 import './strategyHintView.test.js';
 import './qr.test.js';
+import './qrScanner.test.js';
 import './multiplayerTable.test.js';
 import './protocol.test.js';
 import './multiplayerSession.test.js';
