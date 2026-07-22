@@ -21,10 +21,6 @@
     transform var(--dur-fast) var(--ease-out);
 }
 
-.btn:hover:not(:disabled) {
-  border-color: var(--text-muted);
-}
-
 .btn:active:not(:disabled) {
   transform: translateY(1px) scale(0.99);
 }
@@ -59,31 +55,16 @@ kbd {
   color: var(--on-accent);
 }
 
-.btn--primary:hover:not(:disabled) {
-  background: var(--accent-strong);
-  border-color: var(--accent-strong);
-}
-
 .btn--ghost {
   background: transparent;
   border-color: var(--border);
   color: var(--text);
 }
 
-.btn--ghost:hover:not(:disabled) {
-  border-color: var(--border-strong);
-  background: var(--surface-raised);
-}
-
 .btn--danger {
   background: transparent;
   border-color: var(--loss);
   color: var(--loss);
-}
-
-.btn--danger:hover:not(:disabled) {
-  background: var(--loss);
-  color: var(--surface);
 }
 
 .btn--action {
@@ -161,7 +142,6 @@ kbd {
   color: var(--on-act, var(--on-accent));
 }
 
-.btn--action-primary:not(.is-disabled):hover,
 .btn--action-primary:not(.is-disabled):active {
   background: var(--act-strong, var(--accent-strong));
   border-color: var(--act-strong, var(--accent-strong));
@@ -174,9 +154,38 @@ kbd {
   border-color: color-mix(in srgb, var(--act) 42%, var(--border-strong));
 }
 
-.btn--action-secondary:not(.is-disabled):hover {
-  background: color-mix(in srgb, var(--act) 16%, var(--surface-raised));
-  border-color: color-mix(in srgb, var(--act) 72%, var(--border-strong));
+/* iOS Safari can retain :hover after a tap until another element is touched.
+   Keep hover decoration exclusive to devices that actually support hovering;
+   :active remains the short-lived pointer-down state on every input type. */
+@media (hover: hover) {
+  .btn:hover:not(:disabled) {
+    border-color: var(--text-muted);
+  }
+
+  .btn--primary:hover:not(:disabled) {
+    background: var(--accent-strong);
+    border-color: var(--accent-strong);
+  }
+
+  .btn--ghost:hover:not(:disabled) {
+    border-color: var(--border-strong);
+    background: var(--surface-raised);
+  }
+
+  .btn--danger:hover:not(:disabled) {
+    background: var(--loss);
+    color: var(--surface);
+  }
+
+  .btn--action-primary:not(.is-disabled):hover {
+    background: var(--act-strong, var(--accent-strong));
+    border-color: var(--act-strong, var(--accent-strong));
+  }
+
+  .btn--action-secondary:not(.is-disabled):hover {
+    background: color-mix(in srgb, var(--act) 16%, var(--surface-raised));
+    border-color: color-mix(in srgb, var(--act) 72%, var(--border-strong));
+  }
 }
 
 .btn--action-secondary:not(.is-disabled):active {
@@ -533,8 +542,10 @@ kbd {
   transition: transform var(--dur-fast) var(--ease-out);
 }
 
-.chip:hover:not(:disabled) {
-  transform: translateY(-2px);
+@media (hover: hover) {
+  .chip:hover:not(:disabled) {
+    transform: translateY(-2px);
+  }
 }
 
 .chip:active:not(:disabled) {
