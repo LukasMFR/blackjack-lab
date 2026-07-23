@@ -36,6 +36,7 @@ import {
   saveHandTotalFormat,
 } from './handTotalFormat.js';
 import { renderStrategyHint } from './strategyHint.js';
+import { scrollTableIntoView } from './tableScroll.js';
 
 /**
  * Application controller: owns the engine instance, user preferences,
@@ -435,6 +436,10 @@ function deal() {
     announceAfterDeal(after);
   }
   renderAll();
+  // On a phone the sticky controls can be the only thing on screen: bring the
+  // felt back before the cards land there. Measured after the render, so the
+  // freshly dealt table is what gets framed.
+  scrollTableIntoView($('table'), { instant: animations.isMotionSuppressed() });
 }
 
 function nextRound() {

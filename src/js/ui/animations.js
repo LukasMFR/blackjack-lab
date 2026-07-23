@@ -79,6 +79,17 @@ export function isReducedMotionPreferred() {
   return reduceQuery.matches;
 }
 
+/**
+ * Whether non-essential motion must be instant: animations are off, or the
+ * system asks for reduced motion and the user never overrode it here. Mirrors
+ * the data-motion-ok rule below, for motion that CSS cannot neutralize on its
+ * own (a smooth window scroll, for instance).
+ * @returns {boolean}
+ */
+export function isMotionSuppressed() {
+  return getAnimationMode() === 'off' || (reduceQuery.matches && chosenMode === null);
+}
+
 function applyRootAttributes() {
   const root = document.documentElement;
   root.dataset.anim = getAnimationMode();
