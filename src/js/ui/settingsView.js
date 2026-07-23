@@ -8,6 +8,7 @@ import { buildMenuSelect } from './menuSelect.js';
 import {
   MAX_BANKROLL_CENTS, MIN_BANKROLL_CENTS, parseStartingBankroll,
 } from './bankrollSettings.js';
+import { HAND_TOTAL_FORMAT_VALUES, HAND_TOTAL_FORMATS } from './handTotalFormat.js';
 import { renderInfoPage } from './infoView.js';
 import { renderHelpBody } from './helpView.js';
 import { openDialog, resetDialogScroll } from './dialogs.js';
@@ -60,6 +61,12 @@ const ANIMATION_ICONS = {
   enhanced: svg('<path d="M11 4.6 12.5 9l4.4 1.5-4.4 1.5L11 16.4 9.5 12 5.1 10.5 9.5 9z"/><path d="m18 15.4.8 2.3 2.3.8-2.3.8-.8 2.3-.8-2.3-2.3-.8 2.3-.8z"/>'),
   classic: svg('<path d="M5.5 10v4M9 7.5v9M12.5 5.5v13M16 7.5v9M19.5 10v4"/>'),
   off: svg('<circle cx="12" cy="12" r="8.5"/><path d="M8.5 12h7"/>'),
+};
+
+const HAND_TOTAL_ICONS = {
+  // A slash, then a card corner with a pip: the two ways of writing a value.
+  [HAND_TOTAL_FORMATS.SLASH]: svg('<path d="M8.5 19.5 15.5 4.5"/>'),
+  [HAND_TOTAL_FORMATS.STRATEGY]: svg('<rect x="5.5" y="3.5" width="13" height="17" rx="2.5"/><path d="M12 8.5 14.5 14h-5z"/><path d="M9.75 16.5h4.5"/>'),
 };
 
 const THEME_ICONS = {
@@ -192,6 +199,7 @@ export function renderSettings() {
 
   renderAnimationSection();
   renderShortcutLabelsSection();
+  renderHandTotalFormatSection();
   renderStrategyHintsSection();
   renderAudioSection();
   buildProfileList(state);
@@ -295,6 +303,25 @@ function renderShortcutLabelsSection() {
     },
   ));
   $('shortcut-labels-note').textContent = t('settings.shortcutLabelsNote');
+}
+
+/* ------------------------------------------------- hand value notation UI */
+
+function renderHandTotalFormatSection() {
+  $('set-hand-total-label').textContent = t('settings.handTotalFormat');
+  // The examples belong on the options themselves: the notation is what the
+  // choice is about, and it is the same string in every language.
+  buildSegment(
+    $('settings-hand-total'),
+    HAND_TOTAL_FORMAT_VALUES,
+    controller.getHandTotalFormat(),
+    (value) => (value === HAND_TOTAL_FORMATS.STRATEGY
+      ? `${t('settings.handTotalStrategy')} (A,4)`
+      : `${t('settings.handTotalSlash')} (5/15)`),
+    (value) => controller.setHandTotalFormat(value),
+    (value) => HAND_TOTAL_ICONS[value],
+  );
+  $('hand-total-note').textContent = t('settings.handTotalNote');
 }
 
 /* ------------------------------------------------ basic strategy hints UI */

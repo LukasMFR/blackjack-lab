@@ -1,6 +1,7 @@
 import { t } from '../i18n/index.js';
 import { formatMoney } from './format.js';
 import { createCardElement } from './cardView.js';
+import { createHandTotalElement, DEFAULT_HAND_TOTAL_FORMAT } from './handTotalFormat.js';
 import { ACTIONS, HAND_STATUS, RESULTS, ROUND_STATES, SURRENDER_MODES } from '../game/constants.js';
 import { PENDING_DECISIONS } from '../game/engine.js';
 import { exactHalf } from '../game/money.js';
@@ -82,8 +83,9 @@ export function renderStaticLabels({ showShortcutLabels = false } = {}) {
  * @param {object} snapshot - engine snapshot
  * @param {{seenCardIds: Set<string>, prevHoleHidden: boolean}} ctx - render
  *   memory used to animate only newly dealt or newly revealed cards
+ * @param {{handTotalFormat?: string}} [options] - hand value notation
  */
-export function renderTable(snapshot, ctx) {
+export function renderTable(snapshot, ctx, { handTotalFormat = DEFAULT_HAND_TOTAL_FORMAT } = {}) {
   const dealerCardsEl = $('dealer-cards');
   dealerCardsEl.textContent = '';
   dealerCardsEl.setAttribute('role', 'group');
@@ -116,11 +118,11 @@ export function renderTable(snapshot, ctx) {
   handsEl.textContent = '';
   handsEl.classList.toggle('hands--single', snapshot.hands.length <= 1);
   snapshot.hands.forEach((hand, index) => {
-    handsEl.append(buildHandElement(hand, index, snapshot, ctx));
+    handsEl.append(buildHandElement(hand, index, snapshot, ctx, handTotalFormat));
   });
 }
 
-function buildHandElement(hand, index, snapshot, ctx) {
+function buildHandElement(hand, index, snapshot, ctx, handTotalFormat) {
   const el = document.createElement('div');
   el.className = 'hand';
   if (hand.isActive) el.classList.add('hand--active');
@@ -139,11 +141,7 @@ function buildHandElement(hand, index, snapshot, ctx) {
   labelEl.className = 'hand__label';
   labelEl.textContent = label;
 
-  const totalEl = document.createElement('span');
-  totalEl.className = 'hand-total';
-  totalEl.textContent = hand.evaluation.isSoft && !hand.evaluation.isBust
-    ? `${hand.evaluation.total - 10}/${hand.evaluation.total}`
-    : String(hand.evaluation.total);
+  const totalEl = createHandTotalElement(hand.evaluation, handTotalFormat);
 
   const betEl = document.createElement('span');
   betEl.className = 'hand__bet';

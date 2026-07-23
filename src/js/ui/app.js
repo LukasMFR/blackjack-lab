@@ -31,6 +31,10 @@ import {
 import {
   loadStrategyHintsPreference, saveStrategyHintsPreference,
 } from './strategyHintSettings.js';
+import {
+  DEFAULT_HAND_TOTAL_FORMAT, loadHandTotalFormat, normalizeHandTotalFormat,
+  saveHandTotalFormat,
+} from './handTotalFormat.js';
 import { renderStrategyHint } from './strategyHint.js';
 
 /**
@@ -49,6 +53,7 @@ const state = {
   theme: 'salon', // 'classic' | 'minimal' | 'salon'
   showShortcutLabels: false,
   strategyHints: false,
+  handTotalFormat: DEFAULT_HAND_TOTAL_FORMAT,
   profileId: DEFAULT_PROFILE_ID,
   customSettings: null,
   customProfile: null,
@@ -107,6 +112,7 @@ function loadPreferences() {
   state.theme = storage.getChoice('theme', ['classic', 'minimal', 'salon'], 'salon');
   state.showShortcutLabels = loadShortcutLabelsPreference();
   state.strategyHints = loadStrategyHintsPreference();
+  state.handTotalFormat = loadHandTotalFormat();
   state.profileId = storage.getChoice('profile', PROFILE_IDS, DEFAULT_PROFILE_ID);
   state.customSettings = storage.getObject('customProfile');
 
@@ -257,7 +263,7 @@ function renderAll() {
   renderHeaderProfile();
   const snapshot = state.game.getSnapshot();
   const bets = betState();
-  renderTable(snapshot, renderCtx);
+  renderTable(snapshot, renderCtx, { handTotalFormat: state.handTotalFormat });
   renderPanels(snapshot, bets, { showShortcutLabels });
   renderStrategyHint(snapshot, state.activeProfile, state.strategyHints);
   focusPendingDecision(snapshot);
@@ -479,6 +485,12 @@ const controller = {
   setShortcutLabelsPreference(enabled) {
     state.showShortcutLabels = enabled === true;
     saveShortcutLabelsPreference(state.showShortcutLabels);
+    renderAll();
+  },
+  getHandTotalFormat: () => state.handTotalFormat,
+  setHandTotalFormat(format) {
+    state.handTotalFormat = normalizeHandTotalFormat(format);
+    saveHandTotalFormat(state.handTotalFormat);
     renderAll();
   },
   getStrategyHintsPreference: () => state.strategyHints,

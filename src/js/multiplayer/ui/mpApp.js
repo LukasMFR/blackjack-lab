@@ -24,6 +24,7 @@ import {
   applyShortcutLabel, loadShortcutLabelsPreference, saveShortcutLabelsPreference,
   SHORTCUT_LABELS_DESKTOP_QUERY, shouldShowShortcutLabels,
 } from '../../ui/shortcutLabels.js';
+import { loadHandTotalFormat, saveHandTotalFormat } from '../../ui/handTotalFormat.js';
 import { HostSession } from '../hostSession.js';
 import { ClientSession } from '../clientSession.js';
 import { MESSAGE_TYPES } from '../protocol.js';
@@ -450,7 +451,7 @@ function renderRoom() {
     localPlayerId: localId,
     seenCardIds: state.seenCardIds,
     prevHoleHidden: state.prevHoleHidden,
-  });
+  }, { handTotalFormat: loadHandTotalFormat() });
   renderMpHistory(payload.history ?? [], localId);
   renderTableMessage(table, localId);
   renderPanels(table, localId);
@@ -1469,6 +1470,13 @@ const settingsController = {
   setShortcutLabelsPreference(enabled) {
     saveShortcutLabelsPreference(enabled === true);
     renderStaticLabels();
+  },
+  // A local display choice, shared with the solo table and free to change
+  // here: it never touches the host's rules or the synced state.
+  getHandTotalFormat: () => loadHandTotalFormat(),
+  setHandTotalFormat(format) {
+    saveHandTotalFormat(format);
+    renderRoom();
   },
   // Strategy hints never render in multiplayer: the switch shows the state
   // in force (off) and stays disabled.

@@ -57,8 +57,8 @@ variation, and silent degradation when a file or Web Audio itself is
 missing), the camera QR scanner (decoding start-up, Safari/iOS video
 flags, secure-context and permission errors, teardown races), the
 keyboard shortcuts and decision focus traps, the shortcut-label
-preference, the custom menu widget, and the shared mobile gesture
-policy.
+preference, the hand value notations and their spoken form, the custom
+menu widget, and the shared mobile gesture policy.
 
 ## Architecture
 
@@ -88,7 +88,8 @@ src/js/ui/               app.js (controller), render.js (table/panels),
                          director, owns the animation-mode preference),
                          motion.js (shared motion primitives),
                          strategyHint.js (hint chip), keyboardShortcuts.js,
-                         shortcutLabels.js, menuSelect.js, languageMenu.js,
+                         shortcutLabels.js, handTotalFormat.js (hand value
+                         notation), menuSelect.js, languageMenu.js,
                          sessionStore.js (per-profile session records),
                          storage.js (safe localStorage), focusModality.js
                          (pointer vs keyboard focus rings), format.js,
@@ -267,6 +268,11 @@ delays a legal action: engine state and controls update immediately.
 - An optional preference adds the shortcut letter to each action button.
   It is off by default and applies only on a hovering, fine-pointer layout,
   so touch devices never carry keyboard hints they cannot use.
+- Hand values are written in one of two notations, chosen in the settings
+  and shared by the solo table and the multiplayer room: slash (default,
+  `5/15`) or basic-strategy rows (`A,4`, with A+2+2 and A+A+8 collapsing to
+  `A,4` and `A,9`). Whichever is on screen, a screen reader hears the
+  totals in words, so no notation has to be spelled out aloud.
 - The “Rules and help” dialog is one shared view (`ui/helpView.js`)
   documenting the table actually in play — solo or multiplayer, with the
   active profile, its rule chips, and the room's bet limits.
@@ -280,7 +286,8 @@ delays a legal action: engine state and controls update immediately.
 
 Everything is stored on the device only, in `localStorage` under keys
 prefixed with `bjlab.`: language, appearance, visual theme, animation mode,
-shortcut-label preference, audio settings, the strategy-hints preference,
+shortcut-label preference, hand value notation, audio settings, the
+strategy-hints preference,
 the selected profile and custom rules, and one session record per profile
 (chosen starting bankroll, live bankroll, rounds played, net result, and
 the recent round history). Each profile keeps an independent record, so

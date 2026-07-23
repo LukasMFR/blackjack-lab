@@ -5,6 +5,7 @@ import './bankroll.test.js';
 import './session.test.js';
 import './strategy.test.js';
 import './strategyHintView.test.js';
+import './handTotalFormat.test.js';
 import './qr.test.js';
 import './qrScanner.test.js';
 import './multiplayerTable.test.js';

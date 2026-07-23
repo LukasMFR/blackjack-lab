@@ -1,6 +1,9 @@
 import { t } from '../../i18n/index.js';
 import { formatMoney } from '../../ui/format.js';
 import { createCardElement } from '../../ui/cardView.js';
+import {
+  createHandTotalElement, DEFAULT_HAND_TOTAL_FORMAT,
+} from '../../ui/handTotalFormat.js';
 import { HAND_STATUS, RESULTS } from '../../game/constants.js';
 
 /**
@@ -93,8 +96,9 @@ function statePill(text, modifier) {
  * @param {object} table - MultiplayerTable snapshot
  * @param {{localPlayerId: string|null, seenCardIds: Set<string>,
  *   prevHoleHidden: {value: boolean}}} ctx
+ * @param {{handTotalFormat?: string}} [options] - hand value notation
  */
-export function renderMpTable(table, ctx) {
+export function renderMpTable(table, ctx, { handTotalFormat = DEFAULT_HAND_TOTAL_FORMAT } = {}) {
   const dealerCardsEl = $('mp-dealer-cards');
   dealerCardsEl.textContent = '';
   dealerCardsEl.setAttribute('role', 'group');
@@ -126,11 +130,11 @@ export function renderMpTable(table, ctx) {
   const seatsEl = $('mp-seats');
   seatsEl.textContent = '';
   for (const seat of table.seats) {
-    seatsEl.append(buildSeatElement(seat, table, ctx));
+    seatsEl.append(buildSeatElement(seat, table, ctx, handTotalFormat));
   }
 }
 
-function buildSeatElement(seat, table, ctx) {
+function buildSeatElement(seat, table, ctx, handTotalFormat) {
   const el = document.createElement('div');
   el.className = 'mp-seat';
   if (seat.isActive) el.classList.add('mp-seat--active');
@@ -159,7 +163,7 @@ function buildSeatElement(seat, table, ctx) {
     const handsEl = document.createElement('div');
     handsEl.className = 'mp-seat__hands';
     seat.hands.forEach((hand, index) => {
-      handsEl.append(buildHandElement(hand, index, seat, ctx));
+      handsEl.append(buildHandElement(hand, index, seat, ctx, handTotalFormat));
     });
     el.append(handsEl);
   }
@@ -186,7 +190,7 @@ function seatStatusText(seat, table) {
   return '';
 }
 
-function buildHandElement(hand, index, seat, ctx) {
+function buildHandElement(hand, index, seat, ctx, handTotalFormat) {
   const el = document.createElement('div');
   el.className = 'hand';
   if (hand.isActive) el.classList.add('hand--active');
@@ -208,11 +212,7 @@ function buildHandElement(hand, index, seat, ctx) {
 
   const meta = document.createElement('div');
   meta.className = 'hand__meta';
-  const totalEl = document.createElement('span');
-  totalEl.className = 'hand-total';
-  totalEl.textContent = hand.evaluation.isSoft && !hand.evaluation.isBust
-    ? `${hand.evaluation.total - 10}/${hand.evaluation.total}`
-    : String(hand.evaluation.total);
+  const totalEl = createHandTotalElement(hand.evaluation, handTotalFormat);
   const betEl = document.createElement('span');
   betEl.className = 'hand__bet';
   betEl.textContent = t('hand.bet', { amount: formatMoney(hand.betCents) });
